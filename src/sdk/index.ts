@@ -1,5 +1,6 @@
 import * as _ads from './ads';
 import * as _analytics from './analytics';
+import * as _context from './context';
 import * as _leaderboard from './leaderboard';
 import {InitializationOptions} from "../types/initialization";
 import {PlacementType} from "../types/ad-instance";
@@ -13,6 +14,10 @@ export const ads = _ads;
  * Analytics API
  */
 export const analytics = _analytics;
+/**
+ * Context API
+ */
+export const context = _context;
 /**
  * Leaderboard API
  */
