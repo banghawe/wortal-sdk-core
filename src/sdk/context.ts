@@ -1,12 +1,9 @@
-// Link
-import { MessageOptionsLink } from "../types/link/message-options-link";
-// Viber
-import { ContextChoosePayloadViber } from "../types/viber/context-viber";
-import { CustomUpdatePayloadViber } from "../types/viber/custom-update-payload-viber";
-import { SharePayloadViber } from "../types/viber/share-payload-viber";
-// SDK
-import { ContextPayload } from "../types/context-payload";
-import { ShareResult } from "../types/share-result";
+import { MessageOptionsLink } from "../types/rakuten/message-options-link";
+import { ContextChoosePayloadViber } from "../types/rakuten/context-viber";
+import { CustomUpdatePayloadViber } from "../types/rakuten/custom-update-payload-viber";
+import { SharePayloadViber } from "../types/rakuten/share-payload-viber";
+import { ShareResult } from "../types/rakuten/share-result";
+import { ContextPayload } from "../types/rakuten/context-payload";
 import { sdk } from "./index";
 
 /**
@@ -18,7 +15,6 @@ export function getId(): string {
     if (sdk.session.platform === "link" || sdk.session.platform === "viber") {
         return (window as any).wortalGame.context.getID();
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return "";
     }
 }
@@ -31,7 +27,6 @@ export function getEntryPointData(): Record<string, unknown> {
     if (sdk.session.platform === "link" || sdk.session.platform === "viber") {
         return (window as any).wortalGame.getEntryPointData();
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return {};
     }
 }
@@ -44,14 +39,17 @@ export function getEntryPointData(): Record<string, unknown> {
 export function shareAsync(payload: ContextPayload): Promise<number> {
     if (sdk.session.platform === "link") {
         return (window as any).wortalGame.shareAsync(convertToLinkMessagePayload(payload))
-            .then((result: ShareResult) => console.log(result.sharedCount))
+            .then((result: ShareResult) => {
+                return result;
+            })
             .catch((error: any) => console.error(error));
     } else if (sdk.session.platform === "viber") {
         return (window as any).wortalGame.shareAsync(convertToViberSharePayload(payload))
-            .then((result: ShareResult) => console.log(result.sharedCount))
+            .then((result: ShareResult) => {
+                return result;
+            })
             .catch((error: any) => console.error(error));
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return Promise.reject("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
     }
 }
@@ -68,7 +66,6 @@ export function updateAsync(payload: ContextPayload): Promise<void> {
         return (window as any).wortalGame.updateAsync(convertToViberUpdatePayload(payload))
             .catch((error: any) => console.error(error));
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return Promise.reject("[Wortal] Share not currently supported on platform: " + sdk.session.platform);
     }
 }
@@ -80,14 +77,11 @@ export function updateAsync(payload: ContextPayload): Promise<void> {
 export function chooseAsync(payload: ContextPayload): Promise<void> {
     if (sdk.session.platform === "link") {
         return (window as any).wortalGame.context.chooseAsync(convertToLinkMessagePayload(payload))
-            .then(() => console.log((window as any).wortalGame.context.getID()))
             .catch((error: any) => console.error(error));
     } else if (sdk.session.platform === "viber") {
         return (window as any).wortalGame.context.chooseAsync(convertToViberChoosePayload(payload))
-            .then(() => console.log((window as any).wortalGame.context.getID()))
             .catch((error: any) => console.error(error));
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return Promise.reject("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
     }
 }
@@ -99,14 +93,13 @@ export function chooseAsync(payload: ContextPayload): Promise<void> {
 export function switchAsync(contextId: string): Promise<void> {
     //TODO: add options
     if (contextId === null || contextId === "") {
-        return Promise.reject("[Wortal] Empty ID passed to switchGroupAsync().");
+        return Promise.reject("[Wortal] Empty ID passed to switchAsync().");
     }
+
     if (sdk.session.platform === "link" || sdk.session.platform === "viber") {
         return (window as any).wortalGame.context.switchAsync(contextId)
-            .then(() => console.log((window as any).wortalGame.context.getID()))
             .catch((error: any) => console.error(error));
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return Promise.reject("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
     }
 }
@@ -118,14 +111,13 @@ export function switchAsync(contextId: string): Promise<void> {
 export function createAsync(playerId: string): Promise<void> {
     //TODO: add options
     if (playerId === null || playerId === "") {
-        return Promise.reject("[Wortal] Empty ID passed to createGroupAsync().");
+        return Promise.reject("[Wortal] Empty ID passed to createAsync().");
     }
+
     if (sdk.session.platform === "link" || sdk.session.platform === "viber") {
         return (window as any).wortalGame.context.createAsync(playerId)
-            .then(() => console.log((window as any).wortalGame.context.getID()))
             .catch((error: any) => console.error(error));
     } else {
-        console.log("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
         return Promise.reject("[Wortal] Context not currently supported on platform: " + sdk.session.platform);
     }
 }
@@ -161,7 +153,6 @@ function convertToViberSharePayload(payload: ContextPayload): SharePayloadViber 
         description: payload.description,
         ui: payload.ui,
         cta: payload.caption,
-        playerIds: [],
     }
 }
 
