@@ -3,9 +3,10 @@ import * as _analytics from './analytics';
 import * as _context from './context';
 import * as _iap from './iap';
 import * as _leaderboard from './leaderboard';
+import * as _player from './player';
+import * as _session from './session';
 import { InitializationOptions } from "../types/initialization";
-import { PlacementType } from "../types/ad-instance";
-import SDKData from "../utils/sdk";
+import SDKConfig from "../utils/config";
 
 /**
  * Ads API
@@ -27,63 +28,76 @@ export const iap = _iap;
  * Leaderboard API
  */
 export const leaderboard = _leaderboard;
+/**
+ * Player API
+ */
+export const player = _player;
+/**
+ * Session API
+ */
+export const session = _session;
 
 /** @hidden */
-export const sdk = new SDKData();
+export const config = new SDKConfig();
 
 declare var __VERSION__: string;
 
 /**
- * Initializes the SDK.
- * @param options Initialization options to include.
+ * Initializes the SDK. This is called automatically after the Wortal backend interface script is loaded. There is
+ * no need to call this from the game.
+ * @param options Initialization options to include. Currently not used.
  */
 export function init(options: InitializationOptions = {}): void {
+    if (config.isInit) {
+        console.log("[Wortal] SDK Core already initialized.");
+        return;
+    }
     console.log("[Wortal] Initializing SDK Core " + __VERSION__);
-    sdk.init();
+    config.init();
 
     // Make sure we have the loading cover added to prevent the game canvas from being shown before the preroll ad finishes.
     // Link/Viber use their own loading covers and don't have preroll ads.
     if (document.readyState === "loading") {
-        if (sdk.session.platform !== "link" && sdk.session.platform !== "viber") {
+        if (config.session.platform !== "link" && config.session.platform !== "viber") {
             document.addEventListener('DOMContentLoaded', addLoadingCover);
         }
     } else {
-        if (sdk.session.platform !== "link" && sdk.session.platform !== "viber") {
+        if (config.session.platform !== "link" && config.session.platform !== "viber") {
             addLoadingCover();
         }
     }
 
     (window as any).initWortal(() => {
-        console.log("[Wortal] Platform: " + sdk.session.platform);
-        if (sdk.session.platform === "link" || sdk.session.platform === "viber") {
+        console.log("[Wortal] Platform: " + config.session.platform);
+        if (config.session.platform === "link" || config.session.platform === "viber") {
             (window as any).wortalGame.initializeAsync()
                 .then(() => {
                     (window as any).wortalGame.startGameAsync();
-                    sdk.lateInit();
+                    config.lateInit();
                     tryEnableIAP();
                     analytics.logGameStart();
                     console.log("[Wortal] SDK Core initialization complete.");
                 });
-        } else if (sdk.session.platform === "wortal") {
-            sdk.lateInit();
-            ads.showInterstitial(PlacementType.PREROLL, "Preroll", () => {}, () => {
+        } else if (config.session.platform === "wortal") {
+            config.lateInit();
+            ads.showInterstitial('preroll', "Preroll", () => {}, () => {
                 removeLoadingCover();
-                sdk.adConfig.setPrerollShown(true);
+                config.adConfig.setPrerollShown(true);
                 tryEnableIAP();
                 analytics.logGameStart();
                 console.log("[Wortal] SDK Core initialization complete.");
             });
         } else {
             removeLoadingCover();
-            sdk.lateInit();
+            config.lateInit();
             analytics.logGameStart();
             console.log("[Wortal] SDK Core initialization complete.");
         }
     }, () => {
         console.log("[Wortal] Ad blocker detected.");
         removeLoadingCover();
-        sdk.lateInit();
-        sdk.adConfig.setAdBlocked(true);
+        config.lateInit();
+        config.adConfig.setAdBlocked(true);
         tryEnableIAP();
         analytics.logGameStart();
         console.log("[Wortal] SDK Core initialization complete.");
@@ -97,7 +111,16 @@ export function init(options: InitializationOptions = {}): void {
 }
 
 /**
- * Sets the loading progress value for the game build.
+ * Sets the loading progress value for the game. This is required on some platforms. Failure to call this with 100
+ * once the game is fully loaded will result in the game failing to start.
+ * @example
+ * onGameLoadProgress(percent) {
+ *     Wortal.setLoadingProgress(percent);
+ * }
+ *
+ * onGameLoaded() {
+ *     Wortal.setLoadingProgress(100);
+ * }
  * @param value Percentage of loading complete. Range is 0 to 100.
  */
 export function setLoadingProgress(value: number): void {
@@ -107,13 +130,13 @@ export function setLoadingProgress(value: number): void {
 }
 
 function tryEnableIAP(): void {
-    if (sdk.session.platform === "viber") {
+    if (config.session.platform === "viber") {
         (window as any).wortalGame.payments.onReady(() => {
-            sdk.enableIAP();
+            config.enableIAP();
             console.log("[Wortal] IAP initialized for platform.");
         });
     } else {
-        console.log("[Wortal] IAP not supported on platform: " + sdk.session.platform);
+        console.log("[Wortal] IAP not supported on platform: " + config.session.platform);
     }
 }
 

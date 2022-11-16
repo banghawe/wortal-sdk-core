@@ -1,9 +1,7 @@
-import {PlayerData} from "../types/player";
-import {sdk} from "../sdk";
+import { PlayerData } from "../types/player";
+import { config } from "../api";
 
-/**
- * Details about the current player.
- */
+/** @hidden */
 export default class Player {
     protected _current: PlayerData = {
         id: "",
@@ -13,7 +11,6 @@ export default class Player {
         daysSinceFirstPlay: 0,
     };
 
-    /** @hidden */
     init(): Player {
         this._current.id = this.setId();
         this._current.name = this.setName();
@@ -22,48 +19,28 @@ export default class Player {
         return this;
     }
 
-    /**
-     * Player's ID.
-     * @returns String ID.
-     */
     get id(): string {
         return this._current.id;
     }
 
-    /**
-     * Player's name.
-     * @returns String name.
-     */
     get name(): string {
         return this._current.name;
     }
 
-    /**
-     * Player's photo.
-     * @returns URL to the player's photo.
-     */
     get photo(): string {
         return this._current.photo;
     }
 
-    /**
-     * Is this the first time the player is playing this game or not.
-     * @returns True if it is the first time.
-     */
     get isFirstPlay(): boolean {
         return this._current.isFirstPlay;
     }
 
-    /**
-     * The number of days that have passed since the player's first time playing this game.
-     * @returns Number of days since first play.
-     */
     get daysSinceFirstPlay(): number {
         return this._current.daysSinceFirstPlay;
     }
 
     protected setId(): string {
-        switch (sdk.session.platform) {
+        switch (config.session.platform) {
             case "viber":
             case "link":
                 return (window as any).wortalGame.player.getID();
@@ -75,7 +52,7 @@ export default class Player {
     }
 
     protected setName(): string {
-        switch (sdk.session.platform) {
+        switch (config.session.platform) {
             case "viber":
             case "link":
                 return (window as any).wortalGame.player.getName();
@@ -87,7 +64,7 @@ export default class Player {
     }
 
     protected setPhoto(): string {
-        switch (sdk.session.platform) {
+        switch (config.session.platform) {
             case "viber":
             case "link":
                 return (window as any).wortalGame.player.getPhoto();
@@ -99,7 +76,7 @@ export default class Player {
     }
 
     protected setIsFirstPlay(): boolean {
-        switch (sdk.session.platform) {
+        switch (config.session.platform) {
             case "viber":
             case "link":
                 return (window as any).wortalGame.player.hasPlayed();
@@ -112,12 +89,12 @@ export default class Player {
     }
 
     protected isWortalFirstPlay(): boolean {
-        const cookieDate = this.getCookie(sdk.session.gameId);
+        const cookieDate = this.getCookie(config.session.gameId);
         if (cookieDate !== "") {
             this._current.daysSinceFirstPlay = this.getTimeFromCookieCreation(cookieDate);
             return false;
         } else {
-            this.setCookie(sdk.session.gameId);
+            this.setCookie(config.session.gameId);
             return true;
         }
     }

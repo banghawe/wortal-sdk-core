@@ -4,6 +4,7 @@
  */
 export interface LocalizableContent {
     /** Text will be used if not finding matching locale */
-    default: string,
-    localizations: Record<string, string>
+    default: string;
+    /** Key value pairs of localized strings */
+    localizations: Record<string, string>;
 }
