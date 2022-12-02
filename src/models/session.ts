@@ -66,6 +66,12 @@ export default class Session {
                 subdomain = url[2].split(".");
                 id = subdomain[0];
                 break;
+            case "gd":
+                // Example URL: "https://revision.gamedistribution.com/b712105e1fff4bceb87667522d798f97"
+                // ID: b712105e1fff4bceb87667522d798f97
+                url = document.URL.split("/");
+                id = url[3];
+                break;
             case "debug":
             default:
                 id = "debug";

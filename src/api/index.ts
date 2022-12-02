@@ -47,16 +47,16 @@ declare var __VERSION__: string;
  * no need to call this from the game.
  * @param options Initialization options to include. Currently not used.
  */
-export function init(options: InitializationOptions = {}): void {
+export function init(options?: InitializationOptions): void {
     if (config.isInit) {
-        console.log("[Wortal] SDK Core already initialized.");
+        console.warn("[Wortal] SDK Core already initialized.");
         return;
     }
     console.log("[Wortal] Initializing SDK Core " + __VERSION__);
     config.init();
 
     // Make sure we have the loading cover added to prevent the game canvas from being shown before the preroll ad finishes.
-    // Link/Viber use their own loading covers and don't have preroll ads.
+    // Link/Viber use their own loading covers.
     if (document.readyState === "loading") {
         if (config.session.platform !== "link" && config.session.platform !== "viber") {
             document.addEventListener('DOMContentLoaded', addLoadingCover);
@@ -69,6 +69,8 @@ export function init(options: InitializationOptions = {}): void {
 
     (window as any).initWortal(() => {
         console.log("[Wortal] Platform: " + config.session.platform);
+        // Link and Viber have the same init sequence. No pre-roll ads. No loading cover is added.
+        // Initialize the Link/Viber SDK, report loading progress, game shows on 100% and startGameAsync.
         if (config.session.platform === "link" || config.session.platform === "viber") {
             (window as any).wortalGame.initializeAsync()
                 .then(() => {
@@ -78,21 +80,37 @@ export function init(options: InitializationOptions = {}): void {
                     analytics.logGameStart();
                     console.log("[Wortal] SDK Core initialization complete.");
                 });
+        // Wortal shows preroll ad, removes cover after.
         } else if (config.session.platform === "wortal") {
             config.lateInit();
-            ads.showInterstitial('preroll', "Preroll", () => {}, () => {
+            ads.showInterstitial('preroll', "Preroll", () => {
+            }, () => {
                 removeLoadingCover();
                 config.adConfig.setPrerollShown(true);
                 tryEnableIAP();
                 analytics.logGameStart();
                 console.log("[Wortal] SDK Core initialization complete.");
             });
+        // GD shows preroll ad, removes cover after. We keep this separate from Wortal because we may
+        // pass in some options later on.
+        } else if (config.session.platform === "gd") {
+            config.lateInit();
+            ads.showInterstitial('preroll', "Preroll", () => {
+            }, () => {
+                removeLoadingCover();
+                config.adConfig.setPrerollShown(true);
+                tryEnableIAP();
+                analytics.logGameStart();
+                console.log("[Wortal] SDK Core initialization complete.");
+            });
+        // Debug or unknown platform.
         } else {
             removeLoadingCover();
             config.lateInit();
             analytics.logGameStart();
             console.log("[Wortal] SDK Core initialization complete.");
         }
+    // Ads are blocked.
     }, () => {
         console.log("[Wortal] Ad blocker detected.");
         removeLoadingCover();
@@ -124,8 +142,10 @@ export function init(options: InitializationOptions = {}): void {
  * @param value Percentage of loading complete. Range is 0 to 100.
  */
 export function setLoadingProgress(value: number): void {
-    if ((window as any).wortalGame) {
-        (window as any).wortalGame.setLoadingProgress(value);
+    if (config.session.platform === "link" || config.session.platform === "viber") {
+        if ((window as any).wortalGame) {
+            (window as any).wortalGame.setLoadingProgress(value);
+        }
     }
 }
 

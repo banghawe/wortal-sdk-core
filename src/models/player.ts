@@ -64,6 +64,7 @@ export default class Player {
             case "link":
                 return (window as any).wortalGame.player.getID();
             case "wortal":
+            case "gd":
             case "debug":
             default:
                 return "wortal-player";
@@ -76,6 +77,7 @@ export default class Player {
             case "link":
                 return (window as any).wortalGame.player.getName();
             case "wortal":
+            case "gd":
             case "debug":
             default:
                 return "WortalPlayer";
@@ -88,6 +90,7 @@ export default class Player {
             case "link":
                 return (window as any).wortalGame.player.getPhoto();
             case "wortal":
+            case "gd":
             case "debug":
             default:
                 return "wortal-player-photo";
@@ -101,6 +104,7 @@ export default class Player {
                 return (window as any).wortalGame.player.hasPlayed();
             case "wortal":
                 return this.isWortalFirstPlay();
+            case "gd":
             case "debug":
             default:
                 return false;
