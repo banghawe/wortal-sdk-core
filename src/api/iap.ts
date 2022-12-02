@@ -17,7 +17,13 @@ export function isEnabled(): boolean {
  * @example
  * Wortal.iap.getCatalogAsync()
  *  .then(products => console.log(products));
- * @returns Array of products available to the player. Returns an empty list if
+ * @returns Array of products available to the player. Returns an empty list if purchases are not supported in the
+ * player's region.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getCatalogAsync(): Promise<Product[]> {
     return Promise.resolve().then(() => {
@@ -46,6 +52,12 @@ export function getCatalogAsync(): Promise<Product[]> {
  * Wortal.iap.getPurchasesAsync()
  *  .then(purchases => console.log(purchases));
  * @returns Array of purchases.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getPurchasesAsync(): Promise<Purchase[]> {
     return Promise.resolve().then(() => {
@@ -75,6 +87,12 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
  * }).then(purchase => console.log(purchase));
  * @param purchase Object defining the product ID and purchase information.
  * @returns Information about the purchase.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
     return Promise.resolve().then(() => {
@@ -105,6 +123,12 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
  * @example
  * Wortal.iap.consumePurchaseAsync('abc123');
  * @param token String representing the purchaseToken of the item to consume.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function consumePurchaseAsync(token: string): Promise<void> {
     return Promise.resolve().then(() => {

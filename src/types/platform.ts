@@ -1,2 +1,2 @@
 /** @hidden */
-export type Platform = 'wortal' | 'link' | 'viber' | 'debug'
+export type Platform = 'wortal' | 'link' | 'viber' | 'gd' | 'debug'
