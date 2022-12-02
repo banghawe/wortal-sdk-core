@@ -49,6 +49,7 @@ export function logGameEnd(): void {
  * @example
  * Wortal.analytics.logLevelStart('Level 3');
  * @param level Name of the level.
+ * @throws {ErrorMessage} INVALID_PARAM
  */
 export function logLevelStart(level: string): void {
     if (!isValidString(level)) {
@@ -80,6 +81,7 @@ export function logLevelStart(level: string): void {
  * @param level Name of the level.
  * @param score Score the player achieved.
  * @param wasCompleted Was the level completed or not.
+ * @throws {ErrorMessage} INVALID_PARAM
  */
 export function logLevelEnd(level: string, score: string, wasCompleted: boolean): void {
     if (!isValidString(level)) {
@@ -165,6 +167,7 @@ export function logTutorialEnd(tutorial: string, wasCompleted: boolean): void {
  * @example
  * Wortal.analytics.logLevelUp('Level 7');
  * @param level Level the player achieved.
+ * @throws {ErrorMessage} INVALID_PARAM
  */
 export function logLevelUp(level: string): void {
     if (!isValidString(level)) {
@@ -187,6 +190,7 @@ export function logLevelUp(level: string): void {
  * @example
  * Wortal.analytics.logScore('100');
  * @param score Score the player achieved.
+ * @throws {ErrorMessage} INVALID_PARAM
  */
 export function logScore(score: string): void {
     if (!isValidString(score)) {
@@ -211,6 +215,7 @@ export function logScore(score: string): void {
  * Wortal.analytics.logGameChoice('Character', 'Blue');
  * @param decision Decision the player was faced with.
  * @param choice Choice the player made.
+ * @throws {ErrorMessage} INVALID_PARAM
  */
 export function logGameChoice(decision: string, choice: string): void {
     if (!isValidString(decision)) {

@@ -36,6 +36,12 @@ export function getId(): string {
  * }).then(result => console.log(result); // Contains shareCount with number of friends the share was sent to.
  * @param payload Object defining the share message.
  * @returns Number of friends the message was shared with.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function shareAsync(payload: ContextPayload): Promise<number> {
     return Promise.resolve().then(() => {
@@ -77,6 +83,12 @@ export function shareAsync(payload: ContextPayload): Promise<number> {
  *     data: { exampleData: 'yourData' },
  * });
  * @param payload Object defining the update message.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function updateAsync(payload: ContextPayload): Promise<void> {
     return Promise.resolve().then(() => {
@@ -112,6 +124,12 @@ export function updateAsync(payload: ContextPayload): Promise<void> {
  *     data: { exampleData: 'yourData' },
  * });
  * @param payload Object defining the options for the context choice.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function chooseAsync(payload: ContextPayload): Promise<void> {
     return Promise.resolve().then(() => {
@@ -142,6 +160,12 @@ export function chooseAsync(payload: ContextPayload): Promise<void> {
  * @example
  * Wortal.context.switchAsync('abc123');
  * @param contextId ID of the context to switch to.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function switchAsync(contextId: string): Promise<void> {
     //TODO: add options
@@ -166,6 +190,12 @@ export function switchAsync(contextId: string): Promise<void> {
  * @example
  * Wortal.context.createAsync('player123');
  * @param playerId ID of player to create a context with.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function createAsync(playerId: string): Promise<void> {
     //TODO: add options

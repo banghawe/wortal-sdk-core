@@ -19,6 +19,7 @@ import { config } from "./index";
  * @param description Description of the placement.
  * @param beforeAd Callback for before the ad is shown. Pause the game here.
  * @param afterAd Callback for after the ad is shown. Resume the game here.
+ * @throws {ErrorMessage} INVALID_PARAM - Check error.message for details.
  */
 export function showInterstitial(placement: PlacementType, description: string,
                                  beforeAd: Function, afterAd: Function): void {
@@ -71,7 +72,7 @@ export function showInterstitial(placement: PlacementType, description: string,
  * Shows a rewarded ad. These are longer, optional ads that the player can earn a reward for watching. The player
  * must be notified of the ad and give permission to show before it can be shown.
  * @example
- * // This examples shows the game flow independent of the outcome of the ad.
+ * // This example shows the game flow independent of the outcome of the ad.
  * Wortal.ads.showRewarded('BonusCoins', pauseGame, resumeGame, skipBonus, addBonusCoins);
  *
  * // This example shows the game flow depending on the outcome of the ad.
@@ -81,6 +82,7 @@ export function showInterstitial(placement: PlacementType, description: string,
  * @param afterAd Callback for after the ad is shown. Resume the game here.
  * @param adDismissed Callback for when the player dismissed the ad. Do not reward the player.
  * @param adViewed Callback for when the player has successfully watched the ad. Reward the player here.
+ * @throws {ErrorMessage} INVALID_PARAM - Check error.message for details.
  */
 export function showRewarded(description: string, beforeAd: Function, afterAd: Function,
                              adDismissed: Function, adViewed: Function): void {

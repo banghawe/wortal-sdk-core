@@ -44,6 +44,12 @@ export function isFirstPlay(): boolean {
  *      console.log(data['lives']);
  *  });
  * @param keys Array of keys for the data to get.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getDataAsync(keys: string[]): Promise<any> {
     return Promise.resolve().then(() => {
@@ -76,6 +82,11 @@ export function getDataAsync(keys: string[]): Promise<any> {
  *     lives: 3,
  * });
  * @param data Key-value pairs of the data to upload. Nullable values will remove the data.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function setDataAsync(data: Record<string, unknown>): Promise<void> {
     return Promise.resolve().then(() => {
@@ -100,6 +111,11 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
  * }).then(players => console.log(players.length);
  * @param payload Options for the friends to get.
  * @returns Array of connected players.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Promise<ConnectedPlayer[]> {
     return Promise.resolve().then(() => {
@@ -140,6 +156,11 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
  *  });
  *  @returns Object with player ID and signature.
  *  @see Signature
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getSignedPlayerInfoAsync(): Promise<object> {
     return Promise.resolve().then(() => {

@@ -11,6 +11,12 @@ import { config } from "./index";
  * Wortal.leaderboard.getLeaderboardAsync('global')
  *  .then(leaderboard => console.log(leaderboard.name());
  * @param name Name of the leaderboard.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
     return Promise.resolve().then(() => {
@@ -42,6 +48,12 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
  * @param details Optional additional details about the entry.
  * @returns The new entry if one was created, updated entry if the score is higher, or the old entry if no new
  * high score was achieved.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function sendEntryAsync(name: string, score: number, details: string = ""): Promise<LeaderboardEntry> {
     return Promise.resolve().then(() => {
@@ -73,6 +85,12 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
  * @param count Number of entries to get.
  * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
  * @returns Array of LeaderboardEntry.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getEntriesAsync(name: string, count: number, offset: number = 0): Promise<LeaderboardEntry[]> {
     return Promise.resolve().then(() => {
@@ -104,6 +122,12 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
  *  .then(entry => console.log(entry.rank());
  * @param name Name of the leaderboard.
  * @returns LeaderboardEntry for the player.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
     return Promise.resolve().then(() => {
@@ -133,6 +157,12 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
  *  .then(entries => console.log(entries);
  * @param name Name of the leaderboard.
  * @returns Number of entries.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getEntryCountAsync(name: string): Promise<number> {
     return Promise.resolve().then(() => {
@@ -164,6 +194,12 @@ export function getEntryCountAsync(name: string): Promise<number> {
  * @param count Number of entries to get.
  * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
  * @returns Array of LeaderboardEntry.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * <li>NOT_SUPPORTED</li>
+ * <li>RETHROW_FROM_PLATFORM</li>
+ * </ul>
  */
 export function getConnectedPlayersEntriesAsync(name: string, count: number, offset: number): Promise<LeaderboardEntry[]> {
     return Promise.resolve().then(() => {
