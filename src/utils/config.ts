@@ -2,6 +2,7 @@ import AdConfig from "../models/ad-config";
 import Player from "../models/player";
 import Session from "../models/session";
 import GameState from "../models/game-data";
+import { InitializationOptions } from "../types/initialization";
 
 /** @hidden */
 export default class SDKConfig {
@@ -14,15 +15,21 @@ export default class SDKConfig {
     private _session!: Session;
 
     private _isIAPEnabled: boolean = false;
+    private _isDebugMode: boolean = false;
     private _isInit: boolean = false;
 
-    init(): void {
+    init(options?: InitializationOptions): void {
+        if (typeof options !== "undefined") {
+            if (typeof options.debugMode !== "undefined") {
+                this._isDebugMode = options.debugMode;
+            }
+        }
         this._session = new Session();
         this._game = new GameState();
         this._isInit = true;
     }
 
-    lateInit(): void {
+    lateInit(options?: InitializationOptions): void {
         // We call these late because they sometimes depend on a platform SDK to be initialized already so that we
         // can use the platform's API.
         this._player = new Player().init();
@@ -55,5 +62,9 @@ export default class SDKConfig {
 
     get isInit(): boolean {
         return this._isInit;
+    }
+
+    get isDebugMode(): boolean {
+        return this._isDebugMode;
     }
 }
