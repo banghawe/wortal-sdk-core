@@ -4,7 +4,7 @@
 
 Add the SDK Core script in the `<head>` of your game's `index.html`:
 
-`<script src="https://cdn.html5gameportal.com/wortal-sdk/wortal-core-1.3.0.js"></script>`
+`<script src="https://cdn.html5gameportal.com/wortal-sdk/wortal-core-1.4.0.js"></script>`
 
 ## How to Use
 
