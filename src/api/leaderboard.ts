@@ -1,7 +1,12 @@
 import Leaderboard from "../models/leaderboard";
 import LeaderboardEntry from "../models/leaderboard-entry";
-import { rakutenLeaderboardEntryToWortal, rakutenLeaderboardToWortal } from "../utils/converters";
-import { invalidParams, notSupported, rethrowRakuten } from "../utils/error-handler";
+import {
+    facebookLeaderboardEntryToWortal,
+    facebookLeaderboardToWortal,
+    rakutenLeaderboardEntryToWortal,
+    rakutenLeaderboardToWortal
+} from "../utils/converters";
+import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
 import { isValidString } from "../utils/validators";
 import { config } from "./index";
 
@@ -11,11 +16,15 @@ import { config } from "./index";
  * Wortal.leaderboard.getLeaderboardAsync('global')
  *  .then(leaderboard => console.log(leaderboard.name());
  * @param name Name of the leaderboard.
+ * @returns {Promise<Leaderboard>} A promise that resolves with the matching leaderboard, rejecting if one is not found.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
- * <li>INVALID_PARAM</li>
  * <li>NOT_SUPPORTED</li>
- * <li>RETHROW_FROM_PLATFORM</li>
+ * <li>LEADERBOARD_NOT_FOUND</li>
+ * <li>NETWORK_FAILURE</li>
+ * <li>CLIENT_UNSUPPORTED_OPERATION</li>
+ * <li>INVALID_OPERATION</li>
+ * <li>INVALID_PARAM</li>
  * </ul>
  */
 export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
@@ -28,14 +37,14 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return (window as any).wortalGame.getLeaderboardAsync(name)
                 .then((result: any) => {
-                    return rakutenLeaderboardToWortal(result);
+                    if (platform === "link" || platform === "viber") {
+                        return rakutenLeaderboardToWortal(result);
+                    } else if (platform === "facebook") {
+                        return facebookLeaderboardToWortal(result);
+                    }
                 })
                 .catch((e: any) => {
-                    if (platform === "link" || platform === "viber") {
-                        throw rethrowRakuten(e, "leaderboard.getLeaderboardAsync");
-                    } else {
-                        throw Error(e);
-                    }
+                    throw rethrowPlatformError(e, "leaderboard.getLeaderboardAsync");
                 });
         } else {
             throw notSupported("Leaderboard API not currently supported on platform: " + platform, "leaderboard.getLeaderboardAsync");
@@ -44,20 +53,24 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
 }
 
 /**
- * Sends an entry to be added to the leaderboard, or updated if already existing. Will only update if the score
- * is a higher than the player's previous entry.
+ * Updates the player's score. If the player has an existing score, the old score will only be replaced if the new
+ * score is better than it. NOTE: If the leaderboard is associated with a specific context, the game must be in that
+ * context to set a score for the player.
  * @example
  * Wortal.leaderboard.sendEntryAsync('global', 100);
  * @param name Name of the leaderboard.
- * @param score Score for the entry.
- * @param details Optional additional details about the entry.
- * @returns The new entry if one was created, updated entry if the score is higher, or the old entry if no new
- * high score was achieved.
+ * @param score Score for the entry. Must be a 64-bit integer number.
+ * @param details Optional metadata to associate with the stored score. Must be less than 2KB in size.
+ * @returns {Promise<LeaderboardEntry>} Resolves with the current leaderboard entry for the player after the update.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
- * <li>INVALID_PARAM</li>
  * <li>NOT_SUPPORTED</li>
- * <li>RETHROW_FROM_PLATFORM</li>
+ * <li>LEADERBOARD_WRONG_CONTEXT</li>
+ * <li>NETWORK_FAILURE</li>
+ * <li>CLIENT_UNSUPPORTED_OPERATION</li>
+ * <li>INVALID_PARAM</li>
+ * <li>INVALID_OPERATION</li>
+ * <li>RATE_LIMITED</li>
  * </ul>
  */
 export function sendEntryAsync(name: string, score: number, details: string = ""): Promise<LeaderboardEntry> {
@@ -71,14 +84,14 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
             return (window as any).wortalGame.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.setScoreAsync(score, details))
                 .then((entry: any) => {
-                    return rakutenLeaderboardEntryToWortal(entry);
+                    if (platform === "link" || platform === "viber") {
+                        return rakutenLeaderboardEntryToWortal(entry);
+                    } else if (platform === "facebook") {
+                        return facebookLeaderboardEntryToWortal(entry);
+                    }
                 })
                 .catch((e: any) => {
-                    if (platform === "link" || platform === "viber") {
-                        throw rethrowRakuten(e, "leaderboard.sendEntryAsync");
-                    } else {
-                        throw Error(e);
-                    }
+                    throw rethrowPlatformError(e, "leaderboard.sendEntryAsync");
                 });
         } else {
             throw notSupported("Leaderboard API not currently supported on platform: " + platform, "leaderboard.sendEntryAsync");
@@ -87,19 +100,20 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
 }
 
 /**
- * Gets a list of leaderboard entries in the leaderboard.
+ * Retrieves a set of leaderboard entries, ordered by score ranking in the leaderboard.
  * @example
  * Wortal.leaderboard.getEntriesAsync('global', 10)
  *  .then(entries => console.log(entries);
  * @param name Name of the leaderboard.
  * @param count Number of entries to get.
  * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
- * @returns Array of LeaderboardEntry.
+ * @returns {Promise<LeaderboardEntry[]>} Resolves with the leaderboard entries that match the query.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
- * <li>INVALID_PARAM</li>
  * <li>NOT_SUPPORTED</li>
- * <li>RETHROW_FROM_PLATFORM</li>
+ * <li>INVALID_PARAM</li>
+ * <li>NETWORK_FAILURE</li>
+ * <li>RATE_LIMITED</li>
  * </ul>
  */
 export function getEntriesAsync(name: string, count: number, offset: number = 0): Promise<LeaderboardEntry[]> {
@@ -114,15 +128,15 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
                 .then((leaderboard: any) => leaderboard.getEntriesAsync(count, offset))
                 .then((entries: any) => {
                     return entries.map((entry: any) => {
-                        return rakutenLeaderboardEntryToWortal(entry)
+                        if (platform === "link" || platform === "viber") {
+                            return rakutenLeaderboardEntryToWortal(entry);
+                        } else if (platform === "facebook") {
+                            return facebookLeaderboardEntryToWortal(entry);
+                        }
                     })
                 })
                 .catch((e: any) => {
-                    if (platform === "link" || platform === "viber") {
-                        throw rethrowRakuten(e, "leaderboard.getEntriesAsync");
-                    } else {
-                        throw Error(e);
-                    }
+                    throw rethrowPlatformError(e, "leaderboard.getEntriesAsync");
                 });
         } else {
             throw notSupported("Leaderboard API not currently supported on platform: " + platform, "leaderboard.getEntriesAsync");
@@ -131,17 +145,19 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
 }
 
 /**
- * Gets the player's entry in the leaderboard.
+ * Retrieves the leaderboard's entry for the current player, or null if the player has not set one yet.
  * @example
  * Wortal.leaderboard.getPlayerEntryAsync('global')
  *  .then(entry => console.log(entry.rank());
  * @param name Name of the leaderboard.
- * @returns LeaderboardEntry for the player.
+ * @returns {Promise<LeaderboardEntry>} Resolves with the current leaderboard entry for the player.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
- * <li>INVALID_PARAM</li>
  * <li>NOT_SUPPORTED</li>
- * <li>RETHROW_FROM_PLATFORM</li>
+ * <li>INVALID_PARAM</li>
+ * <li>INVALID_OPERATION</li>
+ * <li>NETWORK_FAILURE</li>
+ * <li>RATE_LIMITED</li>
  * </ul>
  */
 export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
@@ -155,14 +171,14 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
             return (window as any).wortalGame.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.getPlayerEntryAsync())
                 .then((entry: any) => {
-                    return rakutenLeaderboardEntryToWortal(entry);
+                    if (platform === "link" || platform === "viber") {
+                        return rakutenLeaderboardEntryToWortal(entry);
+                    } else if (platform === "facebook") {
+                        return facebookLeaderboardEntryToWortal(entry);
+                    }
                 })
                 .catch((e: any) => {
-                    if (platform === "link" || platform === "viber") {
-                        throw rethrowRakuten(e, "leaderboard.getPlayerEntryAsync");
-                    } else {
-                        throw Error(e);
-                    }
+                    throw rethrowPlatformError(e, "leaderboard.getPlayerEntryAsync");
                 });
         } else {
             throw notSupported("Leaderboard API not currently supported on platform: " + platform, "leaderboard.getPlayerEntryAsync");
@@ -176,12 +192,13 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
  * Wortal.leaderboard.getEntryCountAsync('global')
  *  .then(entries => console.log(entries);
  * @param name Name of the leaderboard.
- * @returns Number of entries.
+ * @returns {Promise<number>} Number of entries.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
- * <li>INVALID_PARAM</li>
  * <li>NOT_SUPPORTED</li>
- * <li>RETHROW_FROM_PLATFORM</li>
+ * <li>INVALID_PARAM</li>
+ * <li>NETWORK_FAILURE</li>
+ * <li>RATE_LIMITED</li>
  * </ul>
  */
 export function getEntryCountAsync(name: string): Promise<number> {
@@ -198,11 +215,7 @@ export function getEntryCountAsync(name: string): Promise<number> {
                     return count;
                 })
                 .catch((e: any) => {
-                    if (platform === "link" || platform === "viber") {
-                        throw rethrowRakuten(e, "leaderboard.getEntryCountAsync");
-                    } else {
-                        throw Error(e);
-                    }
+                    throw rethrowPlatformError(e, "leaderboard.getEntryCountAsync");
                 });
         } else {
             throw notSupported("Leaderboard API not currently supported on platform: " + platform, "leaderboard.getEntryCountAsync");
@@ -211,19 +224,21 @@ export function getEntryCountAsync(name: string): Promise<number> {
 }
 
 /**
- * Gets a list of leaderboard entries of connected players in the leaderboard.
+ * Retrieves the leaderboard score entries of the current player's connected players (including the current player),
+ * ordered by local rank within the set of connected players.
  * @example
  * Wortal.leaderboard.getConnectedPlayersEntriesAsync('global')
  *  .then(entries => console.log(entries);
  * @param name Name of the leaderboard.
  * @param count Number of entries to get.
  * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
- * @returns Array of LeaderboardEntry.
+ * @returns {Promise<LeaderboardEntry[]>} Resolves with the leaderboard entries that match the query.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
- * <li>INVALID_PARAM</li>
  * <li>NOT_SUPPORTED</li>
- * <li>RETHROW_FROM_PLATFORM</li>
+ * <li>INVALID_PARAM</li>
+ * <li>NETWORK_FAILURE</li>
+ * <li>RATE_LIMITED</li>
  * </ul>
  */
 export function getConnectedPlayersEntriesAsync(name: string, count: number, offset: number): Promise<LeaderboardEntry[]> {
@@ -238,15 +253,15 @@ export function getConnectedPlayersEntriesAsync(name: string, count: number, off
                 .then((leaderboard: any) => leaderboard.getConnectedPlayerEntriesAsync(count, offset))
                 .then((entries: any) => {
                     return entries.map((entry: any) => {
-                        return rakutenLeaderboardEntryToWortal(entry)
+                        if (platform === "link" || platform === "viber") {
+                            return rakutenLeaderboardEntryToWortal(entry);
+                        } else if (platform === "facebook") {
+                            return facebookLeaderboardEntryToWortal(entry);
+                        }
                     })
                 })
                 .catch((e: any) => {
-                    if (platform === "link" || platform === "viber") {
-                        throw rethrowRakuten(e, "leaderboard.getConnectedPlayersEntriesAsync");
-                    } else {
-                        throw Error(e);
-                    }
+                    throw rethrowPlatformError(e, "leaderboard.getConnectedPlayersEntriesAsync");
                 });
         } else {
             throw notSupported("Leaderboard API not currently supported on platform: " + platform, "leaderboard.getConnectedPlayersEntriesAsync");

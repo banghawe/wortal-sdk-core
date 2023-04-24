@@ -1,6 +1,6 @@
 import { InterstitialAd, RewardedAd } from "../models/ad-instance";
 import { AdInstanceData, PlacementType } from "../types/ad-instance";
-import { invalidParams, notSupported } from "../utils/error-handler";
+import { invalidParams } from "../utils/error-handler";
 import { config } from "./index";
 
 /**
@@ -19,10 +19,15 @@ import { config } from "./index";
  * @param description Description of the placement.
  * @param beforeAd Callback for before the ad is shown. Pause the game here.
  * @param afterAd Callback for after the ad is shown. Resume the game here.
- * @throws {ErrorMessage} INVALID_PARAM - Check error.message for details.
+ * @param noFill Callback for when the ad is not filled. This can happen if the platform has no ads to show or if the
+ * rate limit has been reached. If this is not provided, the afterAd callback will be used.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * </ul>
  */
 export function showInterstitial(placement: PlacementType, description: string,
-                                 beforeAd: Function, afterAd: Function): void {
+                                 beforeAd: Function, afterAd: Function, noFill?: Function): void {
     let platform = config.session.platform;
 
     // Validate the callbacks. Invalid params will cause the adBreak API to throw an error.
@@ -31,6 +36,9 @@ export function showInterstitial(placement: PlacementType, description: string,
     }
     if (afterAd === undefined || typeof afterAd !== "function") {
         afterAd = () => console.warn("[Wortal] AfterAd function missing or invalid.");
+    }
+    if (noFill === undefined || typeof noFill !== "function") {
+        noFill = afterAd;
     }
 
     // Validate the placement type. Invalid types can cause policy violations.
@@ -50,7 +58,7 @@ export function showInterstitial(placement: PlacementType, description: string,
     // game being frozen, waiting for callbacks that will never come.
     if (config.adConfig.isAdBlocked) {
         console.log("[Wortal] Ads are blocked, skipping..");
-        afterAd();
+        noFill();
         return;
     }
 
@@ -62,7 +70,9 @@ export function showInterstitial(placement: PlacementType, description: string,
         description: description,
         beforeAd: beforeAd,
         afterAd: afterAd,
+        noFill: noFill,
     };
+
     const ad = new InterstitialAd(data);
     ad.show();
 }
@@ -81,10 +91,15 @@ export function showInterstitial(placement: PlacementType, description: string,
  * @param afterAd Callback for after the ad is shown. Resume the game here.
  * @param adDismissed Callback for when the player dismissed the ad. Do not reward the player.
  * @param adViewed Callback for when the player has successfully watched the ad. Reward the player here.
- * @throws {ErrorMessage} INVALID_PARAM - Check error.message for details.
+ * @param noFill Callback for when the ad is not filled. This can happen if the platform has no ads to show or if
+ * the rate limit has been reached. If this is not provided, the afterAd callback will be used.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAM</li>
+ * </ul>
  */
 export function showRewarded(description: string, beforeAd: Function, afterAd: Function,
-                             adDismissed: Function, adViewed: Function): void {
+                             adDismissed: Function, adViewed: Function, noFill?: Function): void {
 
     // Validate the callbacks. Invalid params will cause the adBreak API to throw an error.
     if (beforeAd === undefined || typeof beforeAd !== "function") {
@@ -101,6 +116,9 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
         // would be the case here.
         throw invalidParams("AdViewed function missing or invalid.", "ads.showRewarded");
     }
+    if (noFill === undefined || typeof noFill !== "function") {
+        noFill = afterAd;
+    }
 
     // Don't bother calling if the ads are blocked, the Wortal backend will not respond which can lead to the
     // game being frozen, waiting for callbacks that will never come.
@@ -108,7 +126,7 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
         console.log("[Wortal] Ads are blocked, skipping..");
         // Call both of these as some situations might require resuming the game flow in adDismissed instead of afterAd.
         adDismissed();
-        afterAd();
+        noFill();
         return;
     }
 
@@ -122,7 +140,9 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
         afterAd: afterAd,
         adDismissed: adDismissed,
         adViewed: adViewed,
+        noFill: noFill,
     };
+
     const ad = new RewardedAd(data);
     ad.show();
 }

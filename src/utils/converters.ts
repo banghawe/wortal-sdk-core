@@ -1,6 +1,6 @@
 import Leaderboard from "../models/leaderboard";
 import LeaderboardEntry from "../models/leaderboard-entry";
-import { ContextPayload } from "../types/context-payload";
+import { ContextPayload } from "../types/context";
 
 /** @hidden */
 export function contextToLinkMessagePayload(payload: ContextPayload): ContextPayload {
@@ -131,5 +131,30 @@ export function rakutenLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
         score: entry.$leaderboardEntry.score,
         timestamp: entry.$leaderboardEntry.timestamp,
         details: entry.$leaderboardEntry.extraData,
+    });
+}
+
+/** @hidden */
+export function facebookLeaderboardToWortal(leaderboard: any): Leaderboard {
+    return new Leaderboard(
+        leaderboard.getName(), leaderboard.getName(), leaderboard.getContextID()
+    );
+}
+
+/** @hidden */
+export function facebookLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
+    return new LeaderboardEntry({
+        formattedScore: entry.getFormattedScore(),
+        player: {
+            id: entry.getPlayer().getID(),
+            name: entry.getPlayer().getName(),
+            photo: entry.getPlayer().getPhoto(),
+            isFirstPlay: false,
+            daysSinceFirstPlay: 0,
+        },
+        rank: entry.getRank(),
+        score: entry.getScore(),
+        timestamp: entry.getTimestamp(),
+        details: entry.getExtraData(),
     });
 }
