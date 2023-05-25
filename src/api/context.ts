@@ -164,7 +164,7 @@ export function shareAsync(payload: ContextPayload): Promise<number> {
 /**
  * This invokes a dialog that contains a custom game link that users can copy to their clipboard, or share.
  * A blob of data can be attached to the custom link - game sessions initiated from the link will be able to access the
- * data through FBInstant.getEntryPointData(). This data should be less than or equal to 1000 characters when
+ * data through Wortal.session.getEntryPointData(). This data should be less than or equal to 1000 characters when
  * stringified. The provided text and image will be used to generate the link preview, with the game name as the title
  * of the preview. The text is recommended to be less than 44 characters. The image is recommended to either be a square
  * or of the aspect ratio 1.91:1. The returned promise will resolve when the dialog is closed regardless if the user
