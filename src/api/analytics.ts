@@ -280,6 +280,10 @@ export function logTrafficSource(): void {
                 let data: AnalyticsEventData = {
                     name: "TrafficSource",
                     features: {
+                        game: config.session.gameId,
+                        platform: config.session.platform,
+                        country: config.session.country,
+                        player: config.player.id,
                         entryPoint: entryPoint,
                         data: JSON.stringify(Wortal.session.getTrafficSource()),
                     }
@@ -294,6 +298,10 @@ export function logTrafficSource(): void {
                 let data: AnalyticsEventData = {
                     name: "TrafficSource",
                     features: {
+                        game: config.session.gameId,
+                        platform: config.session.platform,
+                        country: config.session.country,
+                        player: config.player.id,
                         entryPoint: "unknown/error",
                         data: JSON.stringify(Wortal.session.getTrafficSource()),
                     }
