@@ -1,3 +1,4 @@
+import Wortal from "../index";
 import Leaderboard from "../models/leaderboard";
 import LeaderboardEntry from "../models/leaderboard-entry";
 import { ContextPayload } from "../types/context";
@@ -68,6 +69,19 @@ export function contextToViberUpdatePayload(payload: ContextPayload): ContextPay
 
 /** @hidden */
 export function contextToFBInstantSharePayload(payload: ContextPayload): ContextPayload {
+    // FB.shareAsync doesn't take LocalizableContent, so we need to pass a string.
+    // We first check for an exact locale match, then a language match, then default. (en-US -> en -> default)
+    // This may need to be revisited as its potentially problematic for some languages/dialects.
+    if (typeof payload.text === "object") {
+        const locale: string = Wortal.session.getLocale();
+        if (locale in payload.text.localizations) {
+            payload.text = payload.text.localizations[locale];
+        } else if (locale.substring(0, 2) in payload.text.localizations) {
+            payload.text = payload.text.localizations[locale.substring(0, 2)];
+        } else {
+            payload.text = payload.text.default;
+        }
+    }
     let obj: ContextPayload = {
         image: payload.image,
         text: payload.text,
