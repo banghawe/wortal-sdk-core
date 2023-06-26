@@ -14,7 +14,7 @@ import { config } from "./index";
  * Gets the leaderboard with the given name. Access the leaderboard API via the Leaderboard returned here.
  * @example
  * Wortal.leaderboard.getLeaderboardAsync('global')
- *  .then(leaderboard => console.log(leaderboard.name());
+ *  .then(leaderboard => console.log(leaderboard.name()));
  * @param name Name of the leaderboard.
  * @returns {Promise<Leaderboard>} A promise that resolves with the matching leaderboard, rejecting if one is not found.
  * @throws {ErrorMessage} See error.message for details.
@@ -28,7 +28,7 @@ import { config } from "./index";
  * </ul>
  */
 export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
             throw invalidParams("name cannot be null or empty.", "leaderboard.getLeaderboardAsync");
@@ -74,7 +74,7 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
  * </ul>
  */
 export function sendEntryAsync(name: string, score: number, details: string = ""): Promise<LeaderboardEntry> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
             throw invalidParams("name cannot be null or empty.", "leaderboard.sendEntryAsync");
@@ -103,7 +103,7 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
  * Retrieves a set of leaderboard entries, ordered by score ranking in the leaderboard.
  * @example
  * Wortal.leaderboard.getEntriesAsync('global', 10)
- *  .then(entries => console.log(entries);
+ *  .then(entries => console.log(entries));
  * @param name Name of the leaderboard.
  * @param count Number of entries to get.
  * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
@@ -117,7 +117,7 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
  * </ul>
  */
 export function getEntriesAsync(name: string, count: number, offset: number = 0): Promise<LeaderboardEntry[]> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
             throw invalidParams("name cannot be null or empty.", "leaderboard.getEntriesAsync");
@@ -148,7 +148,7 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
  * Retrieves the leaderboard's entry for the current player, or null if the player has not set one yet.
  * @example
  * Wortal.leaderboard.getPlayerEntryAsync('global')
- *  .then(entry => console.log(entry.rank());
+ *  .then(entry => console.log(entry.rank()));
  * @param name Name of the leaderboard.
  * @returns {Promise<LeaderboardEntry>} Resolves with the current leaderboard entry for the player.
  * @throws {ErrorMessage} See error.message for details.
@@ -161,7 +161,7 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
  * </ul>
  */
 export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
             throw invalidParams("name cannot be null or empty.", "leaderboard.getPlayerEntryAsync");
@@ -190,7 +190,7 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
  * Gets the total number of entries in the leaderboard.
  * @example
  * Wortal.leaderboard.getEntryCountAsync('global')
- *  .then(entries => console.log(entries);
+ *  .then(entries => console.log(entries));
  * @param name Name of the leaderboard.
  * @returns {Promise<number>} Number of entries.
  * @throws {ErrorMessage} See error.message for details.
@@ -202,7 +202,7 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
  * </ul>
  */
 export function getEntryCountAsync(name: string): Promise<number> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
             throw invalidParams("name cannot be null or empty.", "leaderboard.getEntryCountAsync");
@@ -228,7 +228,7 @@ export function getEntryCountAsync(name: string): Promise<number> {
  * ordered by local rank within the set of connected players.
  * @example
  * Wortal.leaderboard.getConnectedPlayersEntriesAsync('global')
- *  .then(entries => console.log(entries);
+ *  .then(entries => console.log(entries));
  * @param name Name of the leaderboard.
  * @param count Number of entries to get.
  * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
@@ -242,7 +242,7 @@ export function getEntryCountAsync(name: string): Promise<number> {
  * </ul>
  */
 export function getConnectedPlayersEntriesAsync(name: string, count: number, offset: number): Promise<LeaderboardEntry[]> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
             throw invalidParams("name cannot be null or empty.", "leaderboard.getConnectedPlayersEntriesAsync");

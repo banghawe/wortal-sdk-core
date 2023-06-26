@@ -1,112 +1,59 @@
+import Wortal from "../index";
 import Leaderboard from "../models/leaderboard";
 import LeaderboardEntry from "../models/leaderboard-entry";
-import { ContextPayload } from "../types/context";
+import { ContextFilter, InviteFilter } from "../types/context";
+import { InvitePayload, LinkMessagePayload, SharePayload, UpdatePayload } from "../types/payloads";
 
 /** @hidden */
-export function contextToLinkMessagePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
+export function convertToLinkMessagePayload(payload: SharePayload | UpdatePayload): LinkMessagePayload {
+    let messagePayload: LinkMessagePayload = {
         image: payload.image,
         text: payload.text,
     }
-    if (payload?.cta) obj.caption = payload.cta;
-    if (payload?.caption) obj.caption = payload.caption;
-    if (payload?.data) obj.data = payload.data;
-    return obj;
+    if (payload?.cta) messagePayload.caption = payload.cta;
+    if (payload?.data) messagePayload.data = payload.data;
+    return messagePayload;
 }
 
 /** @hidden */
-export function contextToViberChoosePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
-        // Not used in this payload.
-        image: "",
-        text: "",
+export function convertToFBInstantSharePayload(payload: SharePayload): SharePayload {
+    // FB.shareAsync doesn't take LocalizableContent, so we need to pass a string.
+    // We first check for an exact locale match, then a language match, then default. (en-US -> en -> default)
+    // This may need to be revisited as its potentially problematic for some languages/dialects.
+    if (typeof payload.text === "object") {
+        const locale: string = Wortal.session.getLocale();
+        if (locale in payload.text.localizations) {
+            payload.text = payload.text.localizations[locale];
+        } else if (locale.substring(0, 2) in payload.text.localizations) {
+            payload.text = payload.text.localizations[locale.substring(0, 2)];
+        } else {
+            payload.text = payload.text.default;
+        }
     }
-    if (payload?.filters) obj.filters = payload.filters;
-    if (payload?.maxSize) obj.maxSize = payload.maxSize;
-    if (payload?.minSize) obj.minSize = payload.minSize;
-    if (payload?.hoursSinceInvitation) obj.hoursSinceInvitation = payload.hoursSinceInvitation;
-    if (payload?.description) obj.description = payload.description;
-    return obj;
+
+    return payload;
 }
 
 /** @hidden */
-export function contextToViberSharePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
+export function convertToFBInstantUpdatePayload(payload: UpdatePayload): UpdatePayload {
+    if (payload.strategy === "IMMEDIATE_CLEAR") {
+        payload.strategy = "IMMEDIATE";
+    }
+    return payload;
+}
+
+/** @hidden */
+export function convertToViberSharePayload(payload: InvitePayload): SharePayload {
+    let sharePayload: SharePayload = {
         image: payload.image,
         text: payload.text,
     }
-    if (payload?.data) obj.data = payload.data;
-    if (payload?.filters) obj.filters = payload.filters;
-    if (payload?.hoursSinceInvitation) obj.hoursSinceInvitation = payload.hoursSinceInvitation;
-    if (payload?.minShare) obj.minShare = payload.minShare;
-    if (payload?.description) obj.description = payload.description;
-    if (payload?.ui) obj.ui = payload.ui;
-    if (payload?.cta) obj.cta = payload.cta;
-    if (payload?.caption) obj.cta = payload.caption;
-    if (payload?.intent) obj.intent = payload.intent
-    else obj.intent = 'REQUEST';
-    return obj;
-}
-
-/** @hidden */
-export function contextToViberUpdatePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
-        image: payload.image,
-        text: payload.text,
+    if (payload?.cta) sharePayload.cta = payload.cta;
+    if (payload?.data) sharePayload.data = payload.data;
+    if (payload?.filters) {
+        sharePayload.filters = _convertInviteFilterToContextFilter(payload.filters);
     }
-    if (payload?.cta) obj.cta = payload.cta;
-    if (payload?.caption) obj.cta = payload.caption;
-    if (payload?.data) obj.data = payload.data;
-    if (payload?.strategy) obj.strategy = payload.strategy;
-    if (payload?.notifications) obj.notifications = payload.notifications;
-    if (payload?.action) obj.action = payload.action;
-    else obj.action = "CUSTOM";
-    if (payload?.template) obj.template = payload.template;
-    else obj.template = "";
-    return obj;
-}
-
-/** @hidden */
-export function contextToFBInstantSharePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
-        image: payload.image,
-        text: payload.text,
-    }
-    if (payload?.data) obj.data = payload.data;
-    if (payload?.shareDestination) obj.shareDestination = payload.shareDestination;
-    if (payload?.switchContext) obj.switchContext = payload.switchContext;
-    return obj;
-}
-
-/** @hidden */
-export function contextToFBInstantUpdatePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
-        image: payload.image,
-        text: payload.text,
-    }
-    if (payload?.data) obj.data = payload.data;
-    if (payload?.cta) obj.cta = payload.cta;
-    if (payload?.caption) obj.cta = payload.caption;
-    if (payload?.strategy) obj.strategy = payload.strategy;
-    if (payload?.notifications) obj.notifications = payload.notifications;
-    if (payload?.action) obj.action = payload.action;
-    else obj.action = "CUSTOM";
-    if (payload?.template) obj.template = payload.template;
-    else obj.template = "";
-    return obj;
-}
-
-/** @hidden */
-export function contextToFBInstantChoosePayload(payload: ContextPayload): ContextPayload {
-    let obj: ContextPayload = {
-        // Not used in this payload.
-        image: "",
-        text: "",
-    }
-    if (payload?.filters) obj.filters = payload.filters;
-    if (payload?.maxSize) obj.maxSize = payload.maxSize;
-    if (payload?.minSize) obj.minSize = payload.minSize;
-    return obj;
+    return sharePayload;
 }
 
 /** @hidden */
@@ -157,4 +104,28 @@ export function facebookLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
         timestamp: entry.getTimestamp(),
         details: entry.getExtraData(),
     });
+}
+
+function _convertInviteFilterToContextFilter(filter: InviteFilter | InviteFilter[]): [ContextFilter] | undefined {
+    if (typeof filter === "string") {
+        if (_isContextFilterValid(filter)) {
+            return [filter];
+        } else {
+            return undefined;
+        }
+    } else if (Array.isArray(filter)) {
+        // Viber only accepts the first filter so just return that.
+        for (let i = 0; i < filter.length; i++) {
+            if (_isContextFilterValid(filter[i])) {
+                return [filter[i]] as [ContextFilter];
+            }
+        }
+        return undefined;
+    } else {
+        return undefined;
+    }
+}
+
+function _isContextFilterValid(value: string): value is ContextFilter {
+    return ['NEW_CONTEXT_ONLY', 'INCLUDE_EXISTING_CHALLENGES', 'NEW_PLAYERS_ONLY', 'NEW_INVITATIONS_ONLY'].includes(value);
 }

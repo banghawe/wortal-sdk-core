@@ -1,3 +1,4 @@
+import Wortal from "../index";
 import { PlayerData } from "../types/player";
 import { config } from "../api";
 
@@ -16,10 +17,19 @@ export default class Player {
 
     /** @hidden */
     init(): Player {
+        const platform = config.session.platform;
         this._current.id = this.setId();
         this._current.name = this.setName();
         this._current.photo = this.setPhoto();
         this._current.isFirstPlay = this.setIsFirstPlay();
+        if (platform === "facebook") {
+            Wortal.player.getASIDAsync().then((asid) => {
+                this._current.asid = asid;
+            }).catch((error) => {
+                console.error("[Wortal] Error getting ASID: ", error);
+            });
+        }
+        console.log("[Wortal] Player initialized: ", this._current);
         return this;
     }
 
@@ -56,6 +66,11 @@ export default class Player {
      */
     get daysSinceFirstPlay(): number {
         return this._current.daysSinceFirstPlay;
+    }
+
+    /** @hidden */
+    get asid(): string | undefined {
+        return this._current.asid;
     }
 
     protected setId(): string {
