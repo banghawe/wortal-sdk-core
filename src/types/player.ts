@@ -5,6 +5,7 @@ export interface PlayerData {
     photo: string;
     isFirstPlay: boolean;
     daysSinceFirstPlay: number;
+    asid?: string;
 }
 
 /**
