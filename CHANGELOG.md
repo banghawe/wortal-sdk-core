@@ -4,19 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.0] - 2023-06-27
 ### Added
-- Retry ads on no fill
-- Log traffic source on initialization
-- Haptic feedback
+- Core
+  - Notifications API
+  - Haptic feedback
+  - getSupportedAPIs to check if an API is supported on current platform
+- Ads
+  - Retry ads on no fill
+- Analytics
+  - Log traffic source on initialization
+  - New events: logSocialInvite, logSocialShare, logPurchase, logPurchaseSubscription
+  - Additional parameters in existing events
+  - Events now use Wortal Game ID instead of platform for tracking
+- Context
+  - inviteAsync for social invites
+  - New payload types for each API
 
 ### Fixed
-- Facebook rewarded ad unit IDs not being parsed correctly
-- Facebook shareAsync error when using LocalizableContent
-- Context docs contains reference to FB SDK
+- Ads
+  - Facebook rewarded ad unit IDs not being parsed correctly
+- Context
+  - Facebook shareAsync error when using LocalizableContent
+  - Docs contains reference to FB SDK
 
 ### Changed
-- Context.chooseAsync no longer requires a payload
+- Analytics
+  - logGameStart and logGameEnd now marked as private
+- Context
+  - chooseAsync no longer requires a payload
 
 ## [1.4.0] - 2023-04-24
 ### Added
