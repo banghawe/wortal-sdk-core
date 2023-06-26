@@ -26,3 +26,12 @@ export function notSupported(message: string, context: string): ErrorMessage {
         context: context,
     }
 }
+
+/** @hidden */
+export function operationFailed(message: string, context: string): ErrorMessage {
+    return {
+        code: 'OPERATION_FAILED',
+        message: message,
+        context: context,
+    }
+}

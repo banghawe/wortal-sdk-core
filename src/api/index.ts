@@ -3,6 +3,7 @@ import * as _analytics from './analytics';
 import * as _context from './context';
 import * as _iap from './iap';
 import * as _leaderboard from './leaderboard';
+import * as _notifications from './notifications';
 import * as _player from './player';
 import * as _session from './session';
 import { InitializationOptions } from "../types/initialization";
@@ -29,6 +30,10 @@ export const iap = _iap;
  * Leaderboard API
  */
 export const leaderboard = _leaderboard;
+/**
+ * Notifications API
+ */
+export const notifications = _notifications;
 /**
  * Player API
  */
@@ -126,12 +131,12 @@ export function onPause(callback: Function): void {
  */
 export function performHapticFeedbackAsync(): Promise<void> {
     const platform = config.session.platform;
+    if (platform !== "facebook") {
+        throw notSupported("Haptic feedback not supported on platform: " + platform, "performHapticFeedbackAsync");
+    }
+
     return Promise.resolve().then(() => {
-        if (platform === "facebook") {
-            return (window as any).wortalGame.performHapticFeedbackAsync();
-        } else {
-            throw notSupported("Haptic feedback not supported on platform: " + platform, "performHapticFeedbackAsync");
-        }
+        return (window as any).wortalGame.performHapticFeedbackAsync();
     });
 }
 
