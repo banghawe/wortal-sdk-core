@@ -4,7 +4,7 @@
 
 Add the SDK Core script in the `<head>` of your game's `index.html`:
 
-`<script src="https://cdn.html5gameportal.com/wortal-sdk/wortal-core-1.4.0.js"></script>`
+`<script src="https://cdn.html5gameportal.com/wortal-sdk/wortal-core-1.5.0.js"></script>`
 
 ## How to Use
 
@@ -81,7 +81,7 @@ Wortal.context.shareAsync({
     text: 'Share text',
     caption: 'Play',
     data: { exampleData: 'yourData' },
-}).then(result => console.log(result); // Contains shareCount with number of friends the share was sent to.
+}).then(result => console.log(result)); // Contains shareCount with number of friends the share was sent to.
 ```
 
 ### In-App Purchases
@@ -112,10 +112,36 @@ you can track player's scores and compare them to other players.
 ```typescript
 // Get the top 10 entries on the global leaderboard.
 Wortal.leaderboard.getEntriesAsync('global', 10)
-    .then(entries => console.log(entries);
+    .then(entries => console.log(entries));
 
 // Add the player's score to the leaderboard.
 Wortal.leaderboard.sendEntryAsync('global', 100);
+```
+
+### Notifications
+
+[API Reference](https://sdk.html5gameportal.com/api/notifications/)
+
+The Notifications API is used to send notifications to the player. These can be used to notify the player
+of an event in the game or to remind them to come back and play.
+
+```typescript
+// Schedule a notification to send to the player.
+Wortal.notifications.scheduleAsync({
+    title: "Your energy is full!",
+    body: "Come back and play again.",
+    mediaURL: "https://example.com/image.png",
+    label: "resources-full",
+    scheduleInterval: 300 // 5 minutes
+}).then((result) => {
+    console.log(result.id);
+});
+
+// Cancel a scheduled notification.
+Wortal.notifications.cancelAsync('notification-id-123')
+    .then((result) => {
+        console.log(result);
+    });
 ```
 
 ### Player
@@ -133,7 +159,7 @@ Wortal.player.getConnectedPlayersAsync({
     filter: 'ALL',
     size: 20,
     hoursSinceInvitation: 4,
-}).then(players => console.log(players.length);
+}).then(players => console.log(players.length));
 ```
 
 ### Session
@@ -145,5 +171,5 @@ Details about the current session can be accessed in the Session API.
 ```typescript
 // Get the entry point of where the game started from.
 Wortal.session.getEntryPointAsync()
- .then(entryPoint => console.log(entryPoint);
+ .then(entryPoint => console.log(entryPoint));
 ```
