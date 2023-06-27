@@ -34,6 +34,9 @@ export interface ChoosePayload {
     minSize?: number;
 }
 
+/**
+ * Payload for context.inviteAsync. Defines the content to be sent in the invite.
+ */
 export interface InvitePayload {
     /**
      * Data URL of base64 encoded image to be displayed. This is required for the payload to be sent.
@@ -141,7 +144,7 @@ export interface SharePayload {
      */
     ui?: 'DEFAULT' | 'MULTIPLE';
     /**
-     * Am optional array to set sharing destinations in the share dialog.
+     * An optional array to set sharing destinations in the share dialog.
      * If not specified all available sharing destinations will be displayed.
      *
      * PLATFORM NOTE: Facebook only.
