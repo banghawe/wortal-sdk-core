@@ -8,7 +8,7 @@ import * as _player from './player';
 import * as _session from './session';
 import { InitializationOptions } from "../types/initialization";
 import SDKConfig from "../utils/config";
-import { notSupported } from "../utils/error-handler";
+import { notSupported, rethrowPlatformError } from "../utils/error-handler";
 
 /**
  * Ads API
@@ -136,7 +136,10 @@ export function performHapticFeedbackAsync(): Promise<void> {
     }
 
     return Promise.resolve().then(() => {
-        return (window as any).wortalGame.performHapticFeedbackAsync();
+        return (window as any).wortalGame.performHapticFeedbackAsync()
+            .catch((error: any) => {
+                rethrowPlatformError(error, "performHapticFeedbackAsync");
+            });
     });
 }
 
