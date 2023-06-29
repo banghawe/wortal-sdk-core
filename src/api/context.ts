@@ -67,11 +67,11 @@ export function getType(): ContextType {
  */
 export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.getPlayersAsync not currently supported on platform: ${platform}`, "context.getPlayersAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.getPlayersAsync not currently supported on platform: ${platform}`, "context.getPlayersAsync");
+        }
+
         return (window as any).wortalGame.context.getPlayersAsync()
             .then((players: any) => {
                 return players.map((player: any) => {
@@ -125,17 +125,17 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
  */
 export function inviteAsync(payload: InvitePayload): Promise<number> {
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.inviteAsync not currently supported on platform: ${platform}`, "context.inviteAsync");
-    }
-    if (!isValidPayloadText(payload.text)) {
-        throw invalidParams("Text cannot be null or empty.", "context.inviteAsync");
-    }
-    if (!isValidPayloadImage(payload.image)) {
-        throw invalidParams("Image needs to be a data URL for a base64 encoded image.", "context.inviteAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.inviteAsync not currently supported on platform: ${platform}`, "context.inviteAsync");
+        }
+        if (!isValidPayloadText(payload.text)) {
+            throw invalidParams("Text cannot be null or empty.", "context.inviteAsync");
+        }
+        if (!isValidPayloadImage(payload.image)) {
+            throw invalidParams("Image needs to be a data URL for a base64 encoded image.", "context.inviteAsync");
+        }
+
         let convertedPayload: any = payload;
         if (platform === "link") {
             convertedPayload = convertToLinkMessagePayload(payload);
@@ -193,17 +193,17 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
  */
 export function shareAsync(payload: SharePayload): Promise<number> {
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.shareAsync not currently supported on platform: ${platform}`, "context.shareAsync");
-    }
-    if (!isValidPayloadText(payload.text)) {
-        throw invalidParams("Text cannot be null or empty.", "context.shareAsync");
-    }
-    if (!isValidPayloadImage(payload.image)) {
-        throw invalidParams("Image needs to be a data URL for a base64 encoded image.", "context.shareAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.shareAsync not currently supported on platform: ${platform}`, "context.shareAsync");
+        }
+        if (!isValidPayloadText(payload.text)) {
+            throw invalidParams("Text cannot be null or empty.", "context.shareAsync");
+        }
+        if (!isValidPayloadImage(payload.image)) {
+            throw invalidParams("Image needs to be a data URL for a base64 encoded image.", "context.shareAsync");
+        }
+
         let convertedPayload: any = payload;
         if (platform === "link") {
             convertedPayload = convertToLinkMessagePayload(payload);
@@ -253,14 +253,14 @@ export function shareAsync(payload: SharePayload): Promise<number> {
  */
 export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
     const platform = config.session.platform;
-    if (platform !== "facebook") {
-        throw notSupported(`context.shareLinkAsync not currently supported on platform: ${platform}`, "context.shareLinkAsync");
-    }
-    if (typeof payload.data === "undefined") {
-        throw invalidParams("Data cannot be null or empty.", "context.shareLinkAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform !== "facebook") {
+            throw notSupported(`context.shareLinkAsync not currently supported on platform: ${platform}`, "context.shareLinkAsync");
+        }
+        if (typeof payload.data === "undefined") {
+            throw invalidParams("Data cannot be null or empty.", "context.shareLinkAsync");
+        }
+
         return (window as any).wortalGame.shareLinkAsync(payload)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.shareLinkAsync");
@@ -291,17 +291,17 @@ export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
  */
 export function updateAsync(payload: UpdatePayload): Promise<void> {
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.updateAsync not currently supported on platform: ${platform}`, "context.updateAsync");
-    }
-    if (!isValidPayloadText(payload.text)) {
-        throw invalidParams("Text cannot be null or empty.", "context.updateAsync");
-    }
-    if (!isValidPayloadImage(payload.image)) {
-        throw invalidParams("Image needs to be a data URL for a base64 encoded image.", "context.updateAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.updateAsync not currently supported on platform: ${platform}`, "context.updateAsync");
+        }
+        if (!isValidPayloadText(payload.text)) {
+            throw invalidParams("Text cannot be null or empty.", "context.updateAsync");
+        }
+        if (!isValidPayloadImage(payload.image)) {
+            throw invalidParams("Image needs to be a data URL for a base64 encoded image.", "context.updateAsync");
+        }
+
         let convertedPayload: any = payload;
         if (platform === "link") {
             convertedPayload = convertToLinkMessagePayload(payload);
@@ -338,11 +338,11 @@ export function updateAsync(payload: UpdatePayload): Promise<void> {
  */
 export function chooseAsync(payload?: ChoosePayload): Promise<void> {
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.chooseAsync not currently supported on platform: ${platform}`, "context.chooseAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.chooseAsync not currently supported on platform: ${platform}`, "context.chooseAsync");
+        }
+
         if (typeof payload === "undefined" || platform === "link") {
             return (window as any).wortalGame.context.chooseAsync()
                 .catch((e: any) => {
@@ -379,14 +379,14 @@ export function chooseAsync(payload?: ChoosePayload): Promise<void> {
 export function switchAsync(contextId: string): Promise<void> {
     //TODO: add switchSilentlyIfSolo param if necessary
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.switchAsync not currently supported on platform: ${platform}`, "context.switchAsync");
-    }
-    if (!isValidString(contextId)) {
-        throw invalidParams("contextId cannot be null or empty.", "context.switchAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.switchAsync not currently supported on platform: ${platform}`, "context.switchAsync");
+        }
+        if (!isValidString(contextId)) {
+            throw invalidParams("contextId cannot be null or empty.", "context.switchAsync")
+        }
+
         return (window as any).wortalGame.context.switchAsync(contextId)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.switchAsync");
@@ -423,21 +423,21 @@ export function switchAsync(contextId: string): Promise<void> {
  */
 export function createAsync(playerId?: string | string[]): Promise<void> {
     const platform = config.session.platform;
-    if (platform === "wortal" || platform === "gd") {
-        throw notSupported(`context.createAsync not currently supported on platform: ${platform}`, "context.createAsync");
-    }
-    // Link & Viber only support creating a context with a single player, and we must pass in a player ID.
-    // Facebook supports creating a context with a single player, list of players, or no player (to open a friend picker).
-    if (platform === "link" || platform === "viber") {
-        if (Array.isArray(playerId)) {
-            playerId = playerId[0];
-        }
-    }
-    if (platform !== "facebook" && !isValidString(playerId)) {
-        throw invalidParams("playerId cannot be null or empty.", "context.createAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.createAsync not currently supported on platform: ${platform}`, "context.createAsync");
+        }
+        // Link & Viber only support creating a context with a single player, and we must pass in a player ID.
+        // Facebook supports creating a context with a single player, list of players, or no player (to open a friend picker).
+        if (platform === "link" || platform === "viber") {
+            if (Array.isArray(playerId)) {
+                playerId = playerId[0];
+            }
+        }
+        if (platform !== "facebook" && !isValidString(playerId)) {
+            throw invalidParams("playerId cannot be null or empty.", "context.createAsync");
+        }
+
         return (window as any).wortalGame.context.createAsync(playerId)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.createAsync")

@@ -131,11 +131,11 @@ export function onPause(callback: Function): void {
  */
 export function performHapticFeedbackAsync(): Promise<void> {
     const platform = config.session.platform;
-    if (platform !== "facebook") {
-        throw notSupported("Haptic feedback not supported on platform: " + platform, "performHapticFeedbackAsync");
-    }
-
     return Promise.resolve().then(() => {
+        if (platform !== "facebook") {
+            throw notSupported("Haptic feedback not supported on platform: " + platform, "performHapticFeedbackAsync");
+        }
+
         return (window as any).wortalGame.performHapticFeedbackAsync()
             .catch((error: any) => {
                 rethrowPlatformError(error, "performHapticFeedbackAsync");
