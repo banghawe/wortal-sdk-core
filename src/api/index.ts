@@ -105,7 +105,7 @@ export function setLoadingProgress(value: number): void {
 }
 
 /**
- * Sets a callback which will be invoked when the app is brought to the background,
+ * Sets a callback which will be invoked when the app is brought to the background.
  * @param callback Callback to invoke.
  */
 export function onPause(callback: Function): void {

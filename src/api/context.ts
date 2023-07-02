@@ -15,7 +15,7 @@ import { config } from "./index";
 /**
  * Gets the ID of the current context.
  * @example
- * let id = Wortal.context.getId();
+ * const id = Wortal.context.getId();
  * console.log(id);
  * @returns {string | null} String ID of the current context if one exists. Null if the player is playing solo or
  * if the game is being played on a platform that does not currently support context.
@@ -32,7 +32,7 @@ export function getId(): string | null {
 /**
  * Gets the type of the current context.
  * @example
- * let type = Wortal.context.getType();
+ * const type = Wortal.context.getType();
  * console.log(type);
  * @returns {ContextType} The type of the current context.
  */
@@ -452,7 +452,7 @@ export function createAsync(playerId?: string | string[]): Promise<void> {
  * regardless of arguments, will return the answer to the original query until a context change occurs and the query
  * result is reset.
  * @example
- * let result = Wortal.context.isSizeBetween(2, 4);
+ * const result = Wortal.context.isSizeBetween(2, 4);
  * console.log(result.answer);
  * @param min Minimum number of players in context.
  * @param max Maximum number of players in context.

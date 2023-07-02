@@ -82,9 +82,11 @@ export function showInterstitial(placement: PlacementType, description: string,
  * must be notified of the ad and give permission to show before it can be shown.
  * @example
  * // This example shows the game flow independent of the outcome of the ad.
+ * // Ex: Player gets bonus coins for watching the ad, but the game continues regardless of the outcome.
  * Wortal.ads.showRewarded('BonusCoins', pauseGame, resumeGame, skipBonus, addBonusCoins);
  *
  * // This example shows the game flow depending on the outcome of the ad.
+ * // Ex: Player dies and can revive by watching an ad, but if they skip the ad they lose the level.
  * Wortal.ads.showRewarded('ReviveAndContinue', pauseAudio, resumeAudio, endGame, continueGame);
  * @param description Description of the placement.
  * @param beforeAd Callback for before the ad is shown. Pause the game here.
