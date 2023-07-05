@@ -56,7 +56,7 @@ export function isFirstPlay(): boolean {
  *      console.log(data['lives']);
  *  });
  * @param keys Array of keys for the data to get.
- * @returns {Promise<any>} A promise that resolves with an object which contains the current key-value pairs for each
+ * @returns {Promise<any>} Promise that resolves with an object which contains the current key-value pairs for each
  * key specified in the input array, if they exist.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -100,7 +100,7 @@ export function getDataAsync(keys: string[]): Promise<any> {
  * });
  * @param data An object containing a set of key-value pairs that should be persisted to cloud storage. The object must
  * contain only serializable values - any non-serializable values will cause the entire modification to be rejected.
- * @returns {Promise<void>} A promise that resolves when the input values are set. NOTE: The promise resolving does not
+ * @returns {Promise<void>} Promise that resolves when the input values are set. NOTE: The promise resolving does not
  * necessarily mean that the input has already been persisted. Rather, it means that the data was valid and has been
  * scheduled to be saved. It also guarantees that all values that were set are now available in player.getDataAsync.
  * @throws {ErrorMessage} See error.message for details.
@@ -134,7 +134,7 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
  * @example
  * Wortal.player.flushDataAsync()
  *  .then(() => console.log("Data flushed."));
- * @returns {Promise<void>} A promise that resolves when changes have been persisted successfully, and rejects if the save fails.
+ * @returns {Promise<void>} Promise that resolves when changes have been persisted successfully, and rejects if the save fails.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -168,7 +168,7 @@ export function flushDataAsync(): Promise<void> {
  *     hoursSinceInvitation: 4,
  * }).then(players => console.log(players.length);
  * @param payload Options for the friends to get.
- * @returns {Promise<ConnectedPlayer[]>} A promise that resolves with a list of connected player objects.
+ * @returns {Promise<ConnectedPlayer[]>} Promise that resolves with a list of connected player objects.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -215,7 +215,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
  *          gameDataToValidate,
  *      )
  *  });
- * @returns {Promise<object>} A promise that resolves with an object containing the player ID and signature.
+ * @returns {Promise<object>} Promise that resolves with an object containing the player ID and signature.
  * @see Signature
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -283,7 +283,7 @@ export function getASIDAsync(): Promise<string> {
  *     info.signature,
  *     );
  *   });
- * @returns {Promise<SignedASID>} Object with player ASID and signature.
+ * @returns {Promise<SignedASID>} Promise that resolves with an object containing player ASID and signature.
  * @see SignedASID
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -316,7 +316,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
  * @example
  * Wortal.player.canSubscribeBotAsync()
  * .then(canSubscribe => console.log("Can subscribe to bot: " + canSubscribe));
- * @returns {Promise<boolean>} Whether a player can subscribe to the game bot or not. Developer can only call
+ * @returns {Promise<boolean>} Promise that resolves whether a player can subscribe to the game bot or not. Developer can only call
  * subscribeBotAsync() after checking canSubscribeBotAsync(), and the game will only be able to show the player their
  * bot subscription dialog once per week.
  * @throws {ErrorMessage} See error.message for details.
@@ -347,7 +347,7 @@ export function canSubscribeBotAsync(): Promise<boolean> {
  * @example
  * Wortal.player.subscribeBotAsync()
  * .then(() => console.log("Player subscribed to bot"));
- * @returns {Promise<void>} A promise that resolves if player successfully subscribed to the game bot, or rejects if
+ * @returns {Promise<void>} Promise that resolves if player successfully subscribed to the game bot, or rejects if
  * request failed or player chose to not subscribe.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>

@@ -27,7 +27,7 @@ export function getEntryPointData(): Record<string, unknown> {
  * @example
  * Wortal.session.getEntryPointAsync()
  *  .then(entryPoint => console.log(entryPoint);
- * @returns {Promise<string>} The name of the entry point from which the user started the game
+ * @returns {Promise<string>} Promise that resolves with the name of the entry point from which the user started the game.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
