@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+### Added
+- IAP
+  - Facebook-only properties in IAP interfaces
+
+### Fixed
+- Core
+  - Uncaught exceptions when validating API calls
+
+### Changes
+- Core
+  - Improve docs
+
 ## [1.5.0] - 2023-06-27
 
 ### Added
