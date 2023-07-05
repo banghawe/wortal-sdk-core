@@ -85,7 +85,7 @@ and send messages to each other.
 
 ```typescript
 // Invite a friend to play the game. Does not switch the player's current context.
-Wortal.context.chooseAsync({
+Wortal.context.inviteAsync({
     image: 'data:base64image',
     text: 'Invite text',
     cta: 'Play',

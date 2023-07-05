@@ -33,6 +33,9 @@ export class Leaderboard {
     }
 }
 
+/**
+ * Represents an entry in a leaderboard.
+ */
 export class LeaderboardEntry {
     private _current: LeaderboardEntryData = {
         rank: 0,

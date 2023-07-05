@@ -250,18 +250,17 @@ export interface LinkMessagePayload {
      */
     text?: string | LocalizableContent,
     /**
-     * Text of the call to action button.
+     * Text of the call-to-action button.
      * If not specified, "今すぐプレイ" will be used by default.
      */
     caption?: string | LocalizableContent,
     /**
      * Object passed to any session launched from this update message.
-     * It can be accessed from `LinkGame.getEntryPointData()`.
+     * It can be accessed from `Wortal.session.getEntryPointData()`.
      * Its size must be <=1000 chars when stringified.
      */
     data?: Record<string, unknown>,
 }
-
 
 /**
  * Enable passing localizable content to API calls.

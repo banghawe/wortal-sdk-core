@@ -10,12 +10,12 @@ import { isValidString } from "../utils/validators";
 import { config } from "./index";
 
 /**
- * Gets the leaderboard with the given name. Access the leaderboard API via the Leaderboard returned here.
+ * Fetch a specific leaderboard belonging to this game.
  * @example
  * Wortal.leaderboard.getLeaderboardAsync('global')
  *  .then(leaderboard => console.log(leaderboard.name()));
- * @param name Name of the leaderboard.
- * @returns {Promise<Leaderboard>} A promise that resolves with the matching leaderboard, rejecting if one is not found.
+ * @param name The name of the leaderboard. Each leaderboard for a game must have its own distinct name.
+ * @returns {Promise<Leaderboard>} Promise that resolves with the matching leaderboard, rejecting if one is not found.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -57,10 +57,10 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
  * context to set a score for the player.
  * @example
  * Wortal.leaderboard.sendEntryAsync('global', 100);
- * @param name Name of the leaderboard.
+ * @param name The name of the leaderboard.
  * @param score Score for the entry. Must be a 64-bit integer number.
  * @param details Optional metadata to associate with the stored score. Must be less than 2KB in size.
- * @returns {Promise<LeaderboardEntry>} Resolves with the current leaderboard entry for the player after the update.
+ * @returns {Promise<LeaderboardEntry>} Promise that resolves with the current leaderboard entry for the player after the update.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -103,10 +103,11 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
  * @example
  * Wortal.leaderboard.getEntriesAsync('global', 10)
  *  .then(entries => console.log(entries));
- * @param name Name of the leaderboard.
- * @param count Number of entries to get.
- * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
- * @returns {Promise<LeaderboardEntry[]>} Resolves with the leaderboard entries that match the query.
+ * @param name The name of the leaderboard.
+ * @param count The number of entries to attempt to fetch from the leaderboard. Defaults to 10 if not specified.
+ * Currently, up to a maximum of 100 entries may be fetched per query.
+ * @param offset The offset from the top of the leaderboard that entries will be fetched from. Default is 0.
+ * @returns {Promise<LeaderboardEntry[]>} Promise that resolves with the leaderboard entries that match the query.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -148,8 +149,8 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
  * @example
  * Wortal.leaderboard.getPlayerEntryAsync('global')
  *  .then(entry => console.log(entry.rank()));
- * @param name Name of the leaderboard.
- * @returns {Promise<LeaderboardEntry>} Resolves with the current leaderboard entry for the player.
+ * @param name The name of the leaderboard.
+ * @returns {Promise<LeaderboardEntry>} Promise that resolves with the current leaderboard entry for the player.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -190,8 +191,8 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
  * @example
  * Wortal.leaderboard.getEntryCountAsync('global')
  *  .then(entries => console.log(entries));
- * @param name Name of the leaderboard.
- * @returns {Promise<number>} Number of entries.
+ * @param name The name of the leaderboard.
+ * @returns {Promise<number>} Promise that resolves with the number of entries.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -228,10 +229,11 @@ export function getEntryCountAsync(name: string): Promise<number> {
  * @example
  * Wortal.leaderboard.getConnectedPlayersEntriesAsync('global')
  *  .then(entries => console.log(entries));
- * @param name Name of the leaderboard.
- * @param count Number of entries to get.
- * @param offset Offset from the first entry (top rank) to start the count from. Default is 0.
- * @returns {Promise<LeaderboardEntry[]>} Resolves with the leaderboard entries that match the query.
+ * @param name The name of the leaderboard.
+ * @param count The number of entries to attempt to fetch from the leaderboard. Defaults to 10 if not specified.
+ * Currently, up to a maximum of 100 entries may be fetched per query.
+ * @param offset The offset from the set of ordered connected player score entries to fetch from.
+ * @returns {Promise<LeaderboardEntry[]>} Promise that resolves with the leaderboard entries that match the query.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
