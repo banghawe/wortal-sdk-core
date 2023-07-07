@@ -37,7 +37,9 @@ export class Notification implements INotification {
                 if (response.ok) {
                     return response.json();
                 } else {
-                    reject(operationFailed(`[Wortal] Failed to schedule notification. Request failed with status code: ${response.status}. \n Message: ${JSON.stringify(response.json())}`, "notifications.scheduleAsync"));
+                    return response.json().then((data) => {
+                        reject(operationFailed(`Failed to schedule notification. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`, "notifications.scheduleAsync"));
+                    });
                 }
             }).then(response => {
                 resolve({
@@ -45,7 +47,7 @@ export class Notification implements INotification {
                     success: response.success,
                 });
             }).catch(error => {
-                reject(operationFailed(`[Wortal] Failed to schedule notification. Error: ${error}`, "notifications.scheduleAsync"));
+                reject(operationFailed(`Failed to schedule notification. Error: ${error}`, "notifications.scheduleAsync"));
             });
         });
     }

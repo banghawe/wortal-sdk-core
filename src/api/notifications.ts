@@ -80,7 +80,9 @@ export function getHistoryAsync(): Promise<ScheduledNotification[]> {
             if (response.ok) {
                 return response.json();
             } else {
-                reject(operationFailed(`[Wortal] Failed to get notifications. Request failed with status code: ${response.status}.`, "notifications.getHistoryAsync"));
+                return response.json().then((data) => {
+                    reject(operationFailed(`Failed to get notifications. Request failed with status code: ${data.message || data.detail || "No message found, sorry."}`, "notifications.getHistoryAsync"));
+                });
             }
         }).then(data => {
             const notifications = data["data"].map((notification: any) => {
@@ -133,7 +135,9 @@ export function cancelAsync(id: string): Promise<boolean> {
             if (response.ok) {
                 return response.json();
             } else {
-                reject(operationFailed(`[Wortal] Failed to cancel notification. Request failed with status code: ${response.status}. \n Message: ${JSON.stringify(response.json())}`, "notifications.cancelAsync"));
+                return response.json().then((data) => {
+                    reject(operationFailed(`Failed to cancel notification. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`, "notifications.cancelAsync"));
+                });
             }
         }).then(data => {
             resolve(data.success)
@@ -175,7 +179,9 @@ export function cancelAllAsync(label?: string): Promise<boolean> {
             if (response.ok) {
                 return response.json();
             } else {
-                reject(operationFailed(`[Wortal] Failed to cancel all notifications. Request failed with status code: ${response.status}. \n Message: ${JSON.stringify(response.json())}`, "notifications.cancelAllAsync"));
+                return response.json().then((data) => {
+                    reject(operationFailed(`Failed to cancel all notifications. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`, "notifications.cancelAllAsync"));
+                });
             }
         }).then(data => {
             resolve(data.success);
