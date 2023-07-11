@@ -81,10 +81,12 @@ export class Player {
             case "facebook":
                 return (window as any).wortalGame.player.getID();
             case "wortal":
+                return (window as any).wortalSessionId;
             case "gd":
+                return this.generateRandomID();
             case "debug":
             default:
-                return "wortal-player";
+                return "debug";
         }
     }
 
@@ -167,6 +169,24 @@ export class Player {
         let timeDelta = Date.now() - lastPlay;
         return Math.round(timeDelta / 1000 / 60 / 60 / 24);
     }
+
+    protected generateRandomID(): string {
+        const generateSegment = () => {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        };
+
+        const segments = [
+            generateSegment(),
+            generateSegment(),
+            generateSegment(),
+            generateSegment(),
+            generateSegment() + generateSegment() + generateSegment()
+        ];
+
+        return segments.join('-');
+    };
 }
 
 /** @hidden */
