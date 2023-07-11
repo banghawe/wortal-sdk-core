@@ -94,6 +94,7 @@ export class InterstitialAd extends AdInstance {
         const analyticsData: AdCallEventData = {
             format: "interstitial",
             placement: this.adData.placementType,
+            platform: config.session.platform,
             success: success,
             playerID: config.player.id,
             gameID: config.session.gameId,
@@ -183,6 +184,7 @@ export class RewardedAd extends AdInstance {
         const analyticsData: AdCallEventData = {
             format: "rewarded",
             placement: this.adData.placementType,
+            platform: config.session.platform,
             success: success,
             viewedRewarded: viewedReward,
             playerID: config.player.id,

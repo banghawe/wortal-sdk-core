@@ -2,12 +2,16 @@
 
 ## Unreleased
 ### Added
+- Analytics
+  - Events for ad calls
 - IAP
   - Facebook-only properties in IAP interfaces
 
 ### Fixed
 - Core
   - Uncaught exceptions when validating API calls
+- Notifications
+  - Error messages not returned on fetch fail
 
 ### Changes
 - Core
