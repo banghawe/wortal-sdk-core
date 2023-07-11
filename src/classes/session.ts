@@ -20,7 +20,7 @@ export class Session {
                 this._current.platform = "debug";
             }
         }
-        this._current.gameId = (window as any).wortalGameID;
+        this._current.gameId = this._setGameID();
         this._current.browser = navigator.userAgent;
         console.log("[Wortal] Session initialized: ", this._current);
     }
@@ -46,6 +46,52 @@ export class Session {
         const arr = zone.split("/");
         const city = arr[arr.length - 1];
         return country[city];
+    }
+
+    private _setGameID(): string {
+        // We sync the different IDs on the backend, we'll just parse the URL here and yeet it into Wombat as is.
+        let url: string[] = [];
+        let subdomain: string[] = [];
+        let id: string;
+
+        switch (this.platform) {
+            case "wortal":
+                // Example URL: https://gameportal.digitalwill.co.jp/games/cactus-bowling/19/
+                // ID: 19
+                url = document.URL.split("/");
+                id = url[5];
+                break;
+            case "link":
+                // Example URL: https://05cabb33-07f4-4074-8ebd-69b78815697a.g.rgsbx.net/11/index.html
+                // ID: 05cabb33-07f4-4074-8ebd-69b78815697a
+                url = document.URL.split("/");
+                subdomain = url[2].split(".");
+                id = subdomain[0];
+                break;
+            case "viber":
+                // Example URL: https://r83ysr3u613lxyh8u93piwf0h0jbxbhk.g.vbrplsbx.io/44/index.html
+                // ID: r83ysr3u613lxyh8u93piwf0h0jbxbhk
+                url = document.URL.split("/");
+                subdomain = url[2].split(".");
+                id = subdomain[0];
+                break;
+            case "gd":
+                // Example URL: https://revision.gamedistribution.com/b712105e1fff4bceb87667522d798f97
+                // ID: b712105e1fff4bceb87667522d798f97
+                url = document.URL.split("/");
+                id = url[3];
+                break;
+            case "facebook":
+                id = (window as any).wortalGameID;
+                break;
+            case "debug":
+            default:
+                id = "debug";
+                break;
+        }
+
+        console.log("[Wortal] Game ID: " + id);
+        return id;
     }
 
     // Calling getWortalPlatform() from the backend will default to returning "wortal" if no other platform
