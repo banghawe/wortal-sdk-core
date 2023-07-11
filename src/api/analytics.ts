@@ -393,6 +393,10 @@ export function _logGameEnd(): void {
         features: {
             game: config.session.gameId,
             timePlayed: config.game.gameTimer,
+            platform: config.session.platform,
+            player: config.player.id,
+            adsCalled: config.adConfig.adsCalled,
+            adsShown: config.adConfig.adsShown,
         }
     };
 
