@@ -1,13 +1,14 @@
 {
     "compilerOptions": {
+        "outDir": "dist",
+        "module": "commonJS",
+        "target": "es6",
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
-        "module": "commonJS",
-        "target": "es5",
         "allowJs": true,
         "strict": true,
-        "outDir": "dist",
         "declaration": true,
-        "types": ["node"]
+        "noEmit": false,
+        "typeRoots": ["./src/types"]
     }
 }
