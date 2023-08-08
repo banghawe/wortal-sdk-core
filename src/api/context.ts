@@ -30,7 +30,7 @@ import { config } from "./index";
 export function getId(): string | null {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
-        return (window as any).wortalGame.context.getID();
+        return config.platformSDK.context.getID();
     } else {
         return null;
     }
@@ -46,7 +46,7 @@ export function getId(): string | null {
 export function getType(): ContextType {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
-        return (window as any).wortalGame.context.getType();
+        return config.platformSDK.context.getType();
     } else {
         return "SOLO";
     }
@@ -79,7 +79,7 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
             throw notSupported(`context.getPlayersAsync not currently supported on platform: ${platform}`, "context.getPlayersAsync");
         }
 
-        return (window as any).wortalGame.context.getPlayersAsync()
+        return config.platformSDK.context.getPlayersAsync()
             .then((players: any) => {
                 return players.map((player: any) => {
                     let playerData: PlayerData = {
@@ -90,6 +90,7 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
                         isFirstPlay: platform === "facebook" ? false : !player.hasPlayed,
                         daysSinceFirstPlay: 0,
                     };
+
                     return new ConnectedPlayer(playerData);
                 });
             })
@@ -153,7 +154,7 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
         // Viber/Link don't have inviteAsync, so we use shareAsync instead. An alternative would be to use
         // chooseAsync then updateAsync in the callback, but it's simpler this way, and we're not losing any value here.
         if (platform === "facebook") {
-            return (window as any).wortalGame.inviteAsync(convertedPayload)
+            return config.platformSDK.inviteAsync(convertedPayload)
                 .then(() => {
                     return 0
                 })
@@ -161,7 +162,7 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
                     throw rethrowPlatformError(e, "context.inviteAsync");
                 });
         } else {
-            return (window as any).wortalGame.shareAsync(convertedPayload)
+            return config.platformSDK.shareAsync(convertedPayload)
                 .then((result: any) => {
                     return result.sharedCount;
                 })
@@ -218,7 +219,7 @@ export function shareAsync(payload: SharePayload): Promise<number> {
             convertedPayload = convertToFBInstantSharePayload(payload);
         }
 
-        return (window as any).wortalGame.shareAsync(convertedPayload)
+        return config.platformSDK.shareAsync(convertedPayload)
             .then((result: any) => {
                 if (typeof result === "undefined") {
                     return 0;
@@ -268,7 +269,7 @@ export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
             throw invalidParams("Data cannot be null or empty.", "context.shareLinkAsync");
         }
 
-        return (window as any).wortalGame.shareLinkAsync(payload)
+        return config.platformSDK.shareLinkAsync(payload)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.shareLinkAsync");
             });
@@ -316,7 +317,7 @@ export function updateAsync(payload: UpdatePayload): Promise<void> {
             convertedPayload = convertToFBInstantUpdatePayload(payload);
         }
 
-        return (window as any).wortalGame.updateAsync(convertedPayload)
+        return config.platformSDK.updateAsync(convertedPayload)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.updateAsync");
             });
@@ -351,12 +352,12 @@ export function chooseAsync(payload?: ChoosePayload): Promise<void> {
         }
 
         if (typeof payload === "undefined" || platform === "link") {
-            return (window as any).wortalGame.context.chooseAsync()
+            return config.platformSDK.context.chooseAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "context.chooseAsync");
                 });
         } else {
-            return (window as any).wortalGame.context.chooseAsync(payload)
+            return config.platformSDK.context.chooseAsync(payload)
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "context.chooseAsync");
                 });
@@ -394,7 +395,7 @@ export function switchAsync(contextId: string): Promise<void> {
             throw invalidParams("contextId cannot be null or empty.", "context.switchAsync")
         }
 
-        return (window as any).wortalGame.context.switchAsync(contextId)
+        return config.platformSDK.context.switchAsync(contextId)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.switchAsync");
             });
@@ -445,7 +446,7 @@ export function createAsync(playerId?: string | string[]): Promise<void> {
             throw invalidParams("playerId cannot be null or empty.", "context.createAsync");
         }
 
-        return (window as any).wortalGame.context.createAsync(playerId)
+        return config.platformSDK.context.createAsync(playerId)
             .catch((e: any) => {
                 throw rethrowPlatformError(e, "context.createAsync")
             });
@@ -468,7 +469,7 @@ export function createAsync(playerId?: string | string[]): Promise<void> {
 export function isSizeBetween(min?: number, max?: number): ContextSizeResponse | null {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
-        return (window as any).wortalGame.context.isSizeBetween(min, max);
+        return config.platformSDK.context.isSizeBetween(min, max);
     } else {
         return null;
     }

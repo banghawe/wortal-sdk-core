@@ -34,7 +34,7 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getLeaderboardAsync(name)
+            return config.platformSDK.getLeaderboardAsync(name)
                 .then((result: any) => {
                     if (platform === "link" || platform === "viber") {
                         return rakutenLeaderboardToWortal(result);
@@ -80,7 +80,7 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getLeaderboardAsync(name)
+            return config.platformSDK.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.setScoreAsync(score, details))
                 .then((entry: any) => {
                     if (platform === "link" || platform === "viber") {
@@ -124,7 +124,7 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getLeaderboardAsync(name)
+            return config.platformSDK.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.getEntriesAsync(count, offset))
                 .then((entries: any) => {
                     return entries.map((entry: any) => {
@@ -168,7 +168,7 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getLeaderboardAsync(name)
+            return config.platformSDK.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.getPlayerEntryAsync())
                 .then((entry: any) => {
                     if (platform === "link" || platform === "viber") {
@@ -209,7 +209,7 @@ export function getEntryCountAsync(name: string): Promise<number> {
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getLeaderboardAsync(name)
+            return config.platformSDK.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.getEntryCountAsync())
                 .then((count: any) => {
                     return count;
@@ -250,7 +250,7 @@ export function getConnectedPlayersEntriesAsync(name: string, count: number, off
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getLeaderboardAsync(name)
+            return config.platformSDK.getLeaderboardAsync(name)
                 .then((leaderboard: any) => leaderboard.getConnectedPlayerEntriesAsync(count, offset))
                 .then((entries: any) => {
                     return entries.map((entry: any) => {

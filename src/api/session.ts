@@ -16,7 +16,7 @@ import { config } from "./index";
 export function getEntryPointData(): Record<string, unknown> {
     let platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
-        return (window as any).wortalGame.getEntryPointData();
+        return config.platformSDK.getEntryPointData();
     } else {
         return {};
     }
@@ -38,7 +38,7 @@ export function getEntryPointAsync(): Promise<string> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getEntryPointAsync()
+            return config.platformSDK.getEntryPointAsync()
                 .then((entryPoint: string) => {
                     return entryPoint;
                 })
@@ -66,7 +66,7 @@ export function getEntryPointAsync(): Promise<string> {
 export function setSessionData(data: Record<string, unknown>): void {
     let platform = config.session.platform;
     if (platform === "viber" || platform === "facebook") {
-        (window as any).wortalGame.setSessionData(data);
+        config.platformSDK.setSessionData(data);
     } else {
         // Fail silently.
     }
@@ -93,7 +93,7 @@ export function getLocale(): string {
  */
 export function getTrafficSource(): TrafficSource {
     if (config.session.platform === "link" || config.session.platform === "viber") {
-        return (window as any).wortalGame.getTrafficSource();
+        return config.platformSDK.getTrafficSource();
     } else {
         return {};
     }

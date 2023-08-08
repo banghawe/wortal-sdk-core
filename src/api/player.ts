@@ -74,7 +74,7 @@ export function getDataAsync(keys: string[]): Promise<string> {
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.getDataAsync(keys)
+            return config.platformSDK.player.getDataAsync(keys)
                 .then((data: any) => {
                     return JSON.stringify(data);
                 })
@@ -116,7 +116,7 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.setDataAsync(data)
+            return config.platformSDK.player.setDataAsync(data)
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.setDataAsync");
                 });
@@ -148,7 +148,7 @@ export function flushDataAsync(): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.flushDataAsync()
+            return config.platformSDK.player.flushDataAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.flushDataAsync");
                 });
@@ -180,7 +180,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.getConnectedPlayersAsync(payload)
+            return config.platformSDK.player.getConnectedPlayersAsync(payload)
                 .then((players: any) => {
                     return players.map((player: any) => {
                         let playerData: PlayerData = {
@@ -229,7 +229,7 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.getSignedPlayerInfoAsync()
+            return config.platformSDK.player.getSignedPlayerInfoAsync()
                 .then((info: any) => {
                     return {
                         id: info.getPlayerID(),
@@ -262,7 +262,7 @@ export function getASIDAsync(): Promise<string> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.getASIDAsync()
+            return config.platformSDK.player.getASIDAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.getASIDAsync");
                 });
@@ -295,7 +295,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.getSignedASIDAsync()
+            return config.platformSDK.player.getSignedASIDAsync()
                 .then((info: any) => {
                     return {
                         asid: info.getASID(),
@@ -331,7 +331,7 @@ export function canSubscribeBotAsync(): Promise<boolean> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.canSubscribeBotAsync()
+            return config.platformSDK.player.canSubscribeBotAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.canSubscribeBotAsync");
                 });
@@ -361,7 +361,7 @@ export function subscribeBotAsync(): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.subscribeBotAsync()
+            return config.platformSDK.player.subscribeBotAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.subscribeBotAsync");
                 });

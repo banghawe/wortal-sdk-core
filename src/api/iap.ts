@@ -38,7 +38,7 @@ export function getCatalogAsync(): Promise<Product[]> {
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.getCatalogAsync()
+            return config.platformSDK.payments.getCatalogAsync()
                 .then((products: Product[]) => {
                     return products;
                 })
@@ -75,7 +75,7 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.getPurchasesAsync()
+            return config.platformSDK.payments.getPurchasesAsync()
                 .then((purchases: Purchase[]) => {
                     return purchases;
                 })
@@ -118,7 +118,7 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.purchaseAsync(purchase)
+            return config.platformSDK.payments.purchaseAsync(purchase)
                 .then((purchase: Purchase) => {
                     return purchase;
                 })
@@ -160,7 +160,7 @@ export function consumePurchaseAsync(token: string): Promise<void> {
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.consumePurchaseAsync(token)
+            return config.platformSDK.payments.consumePurchaseAsync(token)
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "iap.consumePurchaseAsync");
                 });
