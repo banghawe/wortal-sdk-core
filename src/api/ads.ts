@@ -2,6 +2,7 @@ import { InterstitialAd, RewardedAd } from "../classes/ads";
 import { AdInstanceData } from "../interfaces/ads";
 import { PlacementType } from "../types/ads";
 import { invalidParams } from "../utils/error-handler";
+import { debug } from "../utils/logger";
 import { config } from "./index";
 
 /**
@@ -58,7 +59,7 @@ export function showInterstitial(placement: PlacementType, description: string,
     // Don't bother calling if the ads are blocked, the Wortal backend will not respond which can lead to the
     // game being frozen, waiting for callbacks that will never come.
     if (config.adConfig.isAdBlocked) {
-        console.log("[Wortal] Ads are blocked, skipping..");
+        debug("Ads are blocked, skipping..");
         noFill();
         return;
     }
@@ -126,7 +127,7 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
     // Don't bother calling if the ads are blocked, the Wortal backend will not respond which can lead to the
     // game being frozen, waiting for callbacks that will never come.
     if (config.adConfig.isAdBlocked) {
-        console.log("[Wortal] Ads are blocked, skipping..");
+        debug("Ads are blocked, skipping..");
         // Call both of these as some situations might require resuming the game flow in adDismissed instead of afterAd.
         adDismissed();
         noFill();
