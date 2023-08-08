@@ -23,19 +23,17 @@ module.exports = {
         libraryExport: 'default'
     },
     resolve: {
-        extensions: ['.ts', '.js', '.json', '.d.ts']
+        extensions: ['.ts', '.js', '.json']
     },
     module: {
         rules: [
             {
                 test: /\.(ts|js)$/,
-                loader: 'ts-loader',
-                exclude: /node_modules|\.d\.ts$/,
-            },
-            {
-                test: /\.d\.ts$/,
-                loader: 'ignore-loader'
-            },
+                exclude: /node_modules\//,
+                use: [
+                    'ts-loader'
+                ]
+            }
         ]
     },
     optimization: {
