@@ -1,4 +1,5 @@
 import { AnalyticsEventData, IAnalyticsEvent } from "../interfaces/analytics";
+import { debug } from "../utils/logger";
 
 /** @hidden */
 export class AnalyticsEvent implements IAnalyticsEvent {
@@ -12,6 +13,7 @@ export class AnalyticsEvent implements IAnalyticsEvent {
     }
 
     send(): void {
+        debug("Sending analytics event", this.data);
         const name = this.data.name;
         const features = this.data.features;
         let request = new XMLHttpRequest();

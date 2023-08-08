@@ -1,7 +1,9 @@
 import { GameData } from "../interfaces/session";
 import { Platform, SessionData } from "../types/session";
+import { PLATFORM_DOMAINS } from "../types/wortal";
 // @ts-ignore
 import country from "../utils/intl-data.json";
+import { debug } from "../utils/logger";
 
 /** @hidden */
 export class Session {
@@ -13,16 +15,12 @@ export class Session {
     };
 
     constructor() {
+        debug("Initializing session...");
         this._current.country = this._setCountry();
-        this._current.platform = (window as any).getWortalPlatform();
-        if (this._current.platform === "wortal") {
-            if (!this._isValidWortal()) {
-                this._current.platform = "debug";
-            }
-        }
+        this._current.platform = this._setPlatform();
         this._current.gameId = this._setGameID();
         this._current.browser = navigator.userAgent;
-        console.log("[Wortal] Session initialized: ", this._current);
+        debug("Session initialized: ", this._current);
     }
 
     get gameId(): string {
@@ -39,6 +37,25 @@ export class Session {
 
     get country(): string {
         return this._current.country;
+    }
+
+    private _setPlatform(): Platform {
+        const location = window.location;
+        const host = location.host;
+
+        if (PLATFORM_DOMAINS["viber"].some(domain => host.includes(domain))) {
+            return "viber";
+        } else if (PLATFORM_DOMAINS["link"].some(domain => host.includes(domain))) {
+            return "link";
+        } else if (PLATFORM_DOMAINS["gd"].some(domain => host.includes(domain))) {
+            return "gd";
+        } else if (PLATFORM_DOMAINS["facebook"].some(domain => host.includes(domain))) {
+            return "facebook";
+        } else if (PLATFORM_DOMAINS["wortal"].some(domain => host.includes(domain))) {
+            return "wortal";
+        } else {
+            return "debug";
+        }
     }
 
     private _setCountry(): string {
@@ -90,22 +107,8 @@ export class Session {
                 break;
         }
 
-        console.log("[Wortal] Game ID: " + id);
+        debug("Game ID: " + id);
         return id;
-    }
-
-    // Calling getWortalPlatform() from the backend will default to returning "wortal" if no other platform
-    // match is found. We want to set the platform to "debug" if we're not on an actual wortal domain.
-    private _isValidWortal(): boolean {
-        const domains: string[] = ["html5gameportal.com", "html5gameportal.dev"]
-        const location = window.location;
-        const host = location.host
-        for (let i = 0; i < domains.length; i++) {
-            if (host.indexOf(domains[i]) !== -1) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 

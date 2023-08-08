@@ -3,7 +3,7 @@
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "module": "commonJS",
-        "target": "es5",
+        "target": "es6",
         "allowJs": true,
         "strict": true,
         "outDir": "dist",

@@ -16,9 +16,11 @@ export default class SDKConfig {
 
     private _isIAPEnabled: boolean = false;
     private _isDebugMode: boolean = false;
-    private _isInit: boolean = false;
+    private _isInitialized: boolean = false;
 
-    init(options?: InitializationOptions): void {
+    private _platformSDK: any;
+
+    initialize(options?: InitializationOptions): void {
         if (typeof options !== "undefined") {
             if (typeof options.debugMode !== "undefined") {
                 this._isDebugMode = options.debugMode;
@@ -26,13 +28,13 @@ export default class SDKConfig {
         }
         this._session = new Session();
         this._game = new GameState();
-        this._isInit = true;
+        this._isInitialized = true;
     }
 
-    lateInit(options?: InitializationOptions): void {
+    lateInitialize(options?: InitializationOptions): void {
         // We call these late because they sometimes depend on a platform SDK to be initialized already so that we
         // can use the platform's API.
-        this._player = new Player().init();
+        this._player = new Player().initialize();
         this._adConfig = new AdConfig();
     }
 
@@ -60,8 +62,16 @@ export default class SDKConfig {
         this._isIAPEnabled = true;
     }
 
-    get isInit(): boolean {
-        return this._isInit;
+    get platformSDK(): any {
+        return this._platformSDK;
+    }
+
+    set platformSDK(sdk: any) {
+        this._platformSDK = sdk;
+    }
+
+    get isInitialized(): boolean {
+        return this._isInitialized;
     }
 
     get isDebugMode(): boolean {

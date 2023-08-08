@@ -1,4 +1,5 @@
 import { LeaderboardData, LeaderboardEntryData } from "../interfaces/leaderboard";
+import { debug } from "../utils/logger";
 import { LeaderboardPlayer } from "./player";
 
 /**
@@ -13,6 +14,7 @@ export class Leaderboard {
 
     /** @hidden */
     constructor(id: number, name: string, contextId: string = "") {
+        debug(`Creating leaderboard: ${name} / ${id} / ${contextId}`);
         this._current.id = id;
         this._current.name = name;
         this._current.contextId = contextId;
@@ -47,6 +49,7 @@ export class LeaderboardEntry {
 
     /** @hidden */
     constructor(entry: LeaderboardEntryData) {
+        debug("Creating leaderboard entry", entry);
         this._current.player = entry.player;
         this._current.rank = entry.rank;
         this._current.score = entry.score;
