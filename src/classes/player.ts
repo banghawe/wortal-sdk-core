@@ -2,6 +2,7 @@ import { config } from "../api";
 import Wortal from "../index";
 import { PlayerData } from "../interfaces/player";
 import { LeaderboardPlayerData } from "../types/leaderboard";
+import { debug } from "../utils/logger";
 
 /**
  * Represents a player in the game. To access info about the current player, use the Wortal.player API.
@@ -17,20 +18,25 @@ export class Player {
     };
 
     /** @hidden */
-    init(): Player {
+    initialize(): Player {
+        debug("Initializing player...");
         const platform = config.session.platform;
+
         this._current.id = this.setId();
         this._current.name = this.setName();
         this._current.photo = this.setPhoto();
         this._current.isFirstPlay = this.setIsFirstPlay();
+
         if (platform === "facebook") {
+            debug("Fetching ASID...");
             Wortal.player.getASIDAsync().then((asid) => {
                 this._current.asid = asid;
             }).catch((error) => {
                 console.error("[Wortal] Error getting ASID: ", error);
             });
         }
-        console.log("[Wortal] Player initialized: ", this._current);
+
+        debug("Player initialized: ", this._current);
         return this;
     }
 
@@ -192,6 +198,7 @@ export class Player {
 /** @hidden */
 export class ConnectedPlayer extends Player {
     constructor(player: PlayerData) {
+        debug("Creating ConnectedPlayer...", player);
         super();
         this._current.id = player.id;
         this._current.name = player.name;
@@ -204,6 +211,7 @@ export class ConnectedPlayer extends Player {
 /** @hidden */
 export class LeaderboardPlayer extends Player {
     constructor(player: LeaderboardPlayerData) {
+        debug("Creating LeaderboardPlayer...", player);
         super();
         this._current.id = player.id;
         this._current.name = player.name;

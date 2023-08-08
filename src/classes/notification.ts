@@ -6,7 +6,9 @@ import {
     NotificationScheduleResult
 } from "../interfaces/notifications";
 import { NotificationStatus } from "../types/notifications";
+import { APIEndpoints } from "../types/wortal";
 import { operationFailed } from "../utils/error-handler";
+import { debug } from "../utils/logger";
 
 /** @hidden */
 export class Notification implements INotification {
@@ -20,9 +22,11 @@ export class Notification implements INotification {
             ...payload.label && {label: payload.label},
             ...payload.scheduleInterval ? {scheduleInterval: payload.scheduleInterval} : {scheduleInterval: 86400}
         };
+       debug("Notification created with payload:", this.schedulePayload);
     }
 
     send(): Promise<NotificationScheduleResult> {
+        debug("Sending notification...");
         const url: string | undefined = this.getScheduleURL_Facebook();
         if (typeof url === "undefined") {
             return Promise.reject(operationFailed("Failed to schedule notification. ASID is not defined.", "notifications.scheduleAsync"));
@@ -38,6 +42,7 @@ export class Notification implements INotification {
                 },
                 body: body,
             }).then(response => {
+                debug("Notification response:", response);
                 if (response.ok) {
                     return response.json();
                 } else {
@@ -46,6 +51,7 @@ export class Notification implements INotification {
                     });
                 }
             }).then(response => {
+                debug("Notification response JSON:", response);
                 resolve({
                     id: response.notification_id,
                     success: response.success,
@@ -74,7 +80,7 @@ export class Notification implements INotification {
         if (typeof config.player.asid !== "string") {
             return undefined;
         }
-        return `https://html5gameportal.com/api/v1/notification/${config.session.gameId}/fb/${config.player.asid}`;
+        return `${APIEndpoints.NOTIFICATIONS}${config.session.gameId}/fb/${config.player.asid}`;
     }
 }
 
@@ -86,6 +92,7 @@ export class ScheduledNotification {
 
     /** @hidden */
     constructor(data: NotificationData) {
+        debug("ScheduledNotification created with data:", data);
         this.notificationData = data;
     }
 

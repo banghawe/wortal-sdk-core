@@ -1,6 +1,7 @@
 import { Notification, ScheduledNotification } from "../classes/notification";
 import { NotificationPayload, NotificationScheduleResult } from "../interfaces/notifications";
 import { invalidParams, notSupported, operationFailed } from "../utils/error-handler";
+import { debug } from "../utils/logger";
 import { isValidString } from "../utils/validators";
 import { config } from "./index";
 
@@ -77,6 +78,7 @@ export function getHistoryAsync(): Promise<ScheduledNotification[]> {
                 "Content-Type": "application/json",
             },
         }).then(response => {
+            debug(`getHistoryAsync response: ${response.status}`);
             if (response.ok) {
                 return response.json();
             } else {
@@ -85,6 +87,7 @@ export function getHistoryAsync(): Promise<ScheduledNotification[]> {
                 });
             }
         }).then(data => {
+            debug(`getHistoryAsync data: ${JSON.stringify(data)}`);
             const notifications = data["data"].map((notification: any) => {
                 return new ScheduledNotification({
                     id: notification["notification_id"],
@@ -132,6 +135,7 @@ export function cancelAsync(id: string): Promise<boolean> {
             },
             body: JSON.stringify({notification_id: id}),
         }).then(response => {
+            debug(`cancelAsync response: ${response.status}`);
             if (response.ok) {
                 return response.json();
             } else {
@@ -140,6 +144,7 @@ export function cancelAsync(id: string): Promise<boolean> {
                 });
             }
         }).then(data => {
+            debug(`cancelAsync data: ${JSON.stringify(data)}`);
             resolve(data.success)
         }).catch(error => {
             reject(operationFailed(`[Wortal] Failed to cancel notifications. Error: ${error}`, "notifications.cancelAsync"));
@@ -176,6 +181,7 @@ export function cancelAllAsync(label?: string): Promise<boolean> {
             },
             body: typeof label !== "undefined" ? JSON.stringify({label: label}) : undefined,
         }).then(response => {
+            debug(`cancelAllAsync response: ${response.status}`);
             if (response.ok) {
                 return response.json();
             } else {
@@ -184,6 +190,7 @@ export function cancelAllAsync(label?: string): Promise<boolean> {
                 });
             }
         }).then(data => {
+            debug(`cancelAllAsync data: ${JSON.stringify(data)}`);
             resolve(data.success);
         }).catch(error => {
             reject(operationFailed(`[Wortal] Failed to cancel all notifications. Error: ${error}`, "notifications.cancelAllAsync"));

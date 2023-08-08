@@ -3,6 +3,7 @@ import { Platform, SessionData } from "../types/session";
 import { PLATFORM_DOMAINS } from "../types/wortal";
 // @ts-ignore
 import country from "../utils/intl-data.json";
+import { debug } from "../utils/logger";
 
 /** @hidden */
 export class Session {
@@ -14,11 +15,12 @@ export class Session {
     };
 
     constructor() {
+        debug("Initializing session...");
         this._current.country = this._setCountry();
         this._current.platform = this._setPlatform();
         this._current.gameId = this._setGameID();
         this._current.browser = navigator.userAgent;
-        console.log("[Wortal] Session initialized: ", this._current);
+        debug("Session initialized: ", this._current);
     }
 
     get gameId(): string {
@@ -105,7 +107,7 @@ export class Session {
                 break;
         }
 
-        console.log("[Wortal] Game ID: " + id);
+        debug("Game ID: " + id);
         return id;
     }
 }

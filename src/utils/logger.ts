@@ -1,10 +1,16 @@
-import { config } from "../api";
+const logPrefix: string = "[Wortal] ";
 
 /** @hidden */
-export function debug(message: string) {
-    const prefix: string = "[Wortal] ";
+export function debug(message: string, args?: any): void {
+    console.debug(logPrefix + message, args !== undefined ? args : "");
+}
 
-    if (config.isDebugMode) {
-        console.log(prefix + message);
-    }
+/** @hidden */
+export function info(message: string) {
+    console.log(logPrefix + message);
+}
+
+/** @hidden */
+export function warn(message: string) {
+    console.warn(logPrefix + message);
 }
