@@ -35,3 +35,12 @@ export function operationFailed(message: string, context: string): ErrorMessage 
         context: context,
     }
 }
+
+/** @hidden */
+export function initializationError(message: string, context: string): ErrorMessage {
+    return {
+        code: 'INITIALIZATION_ERROR',
+        message: message,
+        context: context,
+    }
+}

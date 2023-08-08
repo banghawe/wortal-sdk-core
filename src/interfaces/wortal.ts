@@ -16,6 +16,7 @@
  * - `UNKNOWN` An unknown or unspecified issue occurred. This is the default error code returned when the client does not specify a code.
  * - `USER_INPUT` The user made a choice that resulted in a rejection. For example, if the game calls up the Context Switch dialog and the player closes it, this error code will be included in the promise rejection.
  * - `OPERATION_FAILED` The operation failed, this is typically thrown during a failed web request and the message may include additional details about the failure.
+ * - `INITIALIZATION_ERROR` The SDK failed to initialize, this can occur if the Wortal SDK encountered an error during initialization or if the platform SDK failed to initialize.
  */
 export interface ErrorMessage {
     /** Code for the error. */
