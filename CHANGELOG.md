@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.6.0] - 2023-08-10
 ### Added
 - Analytics
   - Events for ad calls
@@ -10,12 +10,17 @@
 ### Fixed
 - Core
   - Uncaught exceptions when validating API calls
+  - Possible type mismatch in onPause argument
+- Ads
+  - Ad calls on Facebook no longer hang if ad unit IDs are missing
 - Notifications
   - Error messages not returned on fetch fail
 
 ### Changes
 - Core
-  - Improve docs
+  - Updated Viber SDK to 1.14.0
+  - Merged wortal.js into SDK for scalability
+  - Improve docs and SDK logging
 
 ## [1.5.0] - 2023-06-27
 
