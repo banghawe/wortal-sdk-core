@@ -1,6 +1,5 @@
-import ConnectedPlayer from "../models/connected-player";
-import { ConnectedPlayerPayload, PlayerData } from "../types/player";
-import { SignedASID } from "../types/signed-asid";
+import { ConnectedPlayer } from "../classes/player";
+import { ConnectedPlayerPayload, PlayerData, SignedASID } from "../interfaces/player";
 import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
 import { config } from "./index";
 
@@ -48,16 +47,17 @@ export function isFirstPlay(): boolean {
 }
 
 /**
- * Retrieve data from the designated cloud storage of the current player. Please note that JSON objects stored as
- * string values would be returned back as JSON objects.
+ * Retrieve data from the designated cloud storage of the current player.
+ *
+ * PLATFORM NOTE: JSON objects stored as string values will be returned back as JSON objects on Facebook.
  * @example
  * Wortal.player.getDataAsync(['items', 'lives'])
  *  .then(data => {
- *      console.log(data['items]);
+ *      console.log(data['items']);
  *      console.log(data['lives']);
  *  });
  * @param keys Array of keys for the data to get.
- * @returns {Promise<any>} A promise that resolves with an object which contains the current key-value pairs for each
+ * @returns {Promise<any>} Promise that resolves with an object which contains the current key-value pairs for each
  * key specified in the input array, if they exist.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -71,11 +71,11 @@ export function getDataAsync(keys: string[]): Promise<any> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!Array.isArray(keys) || !keys.length) {
-            throw invalidParams("keys cannot be null or empty.", "player.getDataAsync");
+            throw invalidParams("keys cannot be null or empty. Please provide a valid string array for the keys parameter.", "player.getDataAsync");
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.getDataAsync(keys)
+            return config.platformSDK.player.getDataAsync(keys)
                 .then((data: any) => {
                     return data;
                 })
@@ -83,7 +83,7 @@ export function getDataAsync(keys: string[]): Promise<any> {
                     throw rethrowPlatformError(e, "player.getDataAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.getDataAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.getDataAsync");
         }
     });
 }
@@ -101,7 +101,7 @@ export function getDataAsync(keys: string[]): Promise<any> {
  * });
  * @param data An object containing a set of key-value pairs that should be persisted to cloud storage. The object must
  * contain only serializable values - any non-serializable values will cause the entire modification to be rejected.
- * @returns {Promise<void>} A promise that resolves when the input values are set. NOTE: The promise resolving does not
+ * @returns {Promise<void>} Promise that resolves when the input values are set. NOTE: The promise resolving does not
  * necessarily mean that the input has already been persisted. Rather, it means that the data was valid and has been
  * scheduled to be saved. It also guarantees that all values that were set are now available in player.getDataAsync.
  * @throws {ErrorMessage} See error.message for details.
@@ -117,12 +117,12 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.setDataAsync(data)
+            return config.platformSDK.player.setDataAsync(data)
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.setDataAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.setDataAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.setDataAsync");
         }
     });
 }
@@ -131,11 +131,12 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
  * Flushes any unsaved data to the platform's storage. This function is expensive, and should primarily be used for
  * critical changes where persistence needs to be immediate and known by the game. Non-critical changes should rely on
  * the platform to persist them in the background.
+ *
  * NOTE: Calls to player.setDataAsync will be rejected while this function's result is pending.
  * @example
  * Wortal.player.flushDataAsync()
  *  .then(() => console.log("Data flushed."));
- * @returns {Promise<void>} A promise that resolves when changes have been persisted successfully, and rejects if the save fails.
+ * @returns {Promise<void>} Promise that resolves when changes have been persisted successfully, and rejects if the save fails.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -149,12 +150,12 @@ export function flushDataAsync(): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.flushDataAsync()
+            return config.platformSDK.player.flushDataAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.flushDataAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.flushDataAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.flushDataAsync");
         }
     });
 }
@@ -169,7 +170,7 @@ export function flushDataAsync(): Promise<void> {
  *     hoursSinceInvitation: 4,
  * }).then(players => console.log(players.length);
  * @param payload Options for the friends to get.
- * @returns {Promise<ConnectedPlayer[]>} A promise that resolves with a list of connected player objects.
+ * @returns {Promise<ConnectedPlayer[]>} Promise that resolves with a list of connected player objects.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -181,7 +182,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.getConnectedPlayersAsync(payload)
+            return config.platformSDK.player.getConnectedPlayersAsync(payload)
                 .then((players: any) => {
                     return players.map((player: any) => {
                         let playerData: PlayerData = {
@@ -199,7 +200,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
                     throw rethrowPlatformError(e, "player.getConnectedPlayersAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.getConnectedPlayersAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.getConnectedPlayersAsync");
         }
     });
 }
@@ -216,7 +217,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
  *          gameDataToValidate,
  *      )
  *  });
- * @returns {Promise<object>} A promise that resolves with an object containing the player ID and signature.
+ * @returns {Promise<object>} Promise that resolves with an object containing the player ID and signature.
  * @see Signature
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -230,7 +231,7 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.player.getSignedPlayerInfoAsync()
+            return config.platformSDK.player.getSignedPlayerInfoAsync()
                 .then((info: any) => {
                     return {
                         id: info.getPlayerID(),
@@ -241,7 +242,7 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
                     throw rethrowPlatformError(e, "player.getSignedPlayerInfoAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.getSignedPlayerInfoAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.getSignedPlayerInfoAsync");
         }
     });
 }
@@ -263,12 +264,12 @@ export function getASIDAsync(): Promise<string> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.getASIDAsync()
+            return config.platformSDK.player.getASIDAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.getASIDAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.getASIDAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.getASIDAsync");
         }
     });
 }
@@ -284,7 +285,7 @@ export function getASIDAsync(): Promise<string> {
  *     info.signature,
  *     );
  *   });
- * @returns {Promise<SignedASID>} Object with player ASID and signature.
+ * @returns {Promise<SignedASID>} Promise that resolves with an object containing player ASID and signature.
  * @see SignedASID
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -296,7 +297,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.getSignedASIDAsync()
+            return config.platformSDK.player.getSignedASIDAsync()
                 .then((info: any) => {
                     return {
                         asid: info.getASID(),
@@ -307,7 +308,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
                     throw rethrowPlatformError(e, "player.getSignedASIDAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.getSignedASIDAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.getSignedASIDAsync");
         }
     });
 }
@@ -317,7 +318,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
  * @example
  * Wortal.player.canSubscribeBotAsync()
  * .then(canSubscribe => console.log("Can subscribe to bot: " + canSubscribe));
- * @returns {Promise<boolean>} Whether a player can subscribe to the game bot or not. Developer can only call
+ * @returns {Promise<boolean>} Promise that resolves whether a player can subscribe to the game bot or not. Developer can only call
  * subscribeBotAsync() after checking canSubscribeBotAsync(), and the game will only be able to show the player their
  * bot subscription dialog once per week.
  * @throws {ErrorMessage} See error.message for details.
@@ -332,12 +333,12 @@ export function canSubscribeBotAsync(): Promise<boolean> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.canSubscribeBotAsync()
+            return config.platformSDK.player.canSubscribeBotAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.canSubscribeBotAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.canSubscribeBotAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.canSubscribeBotAsync");
         }
     });
 }
@@ -348,7 +349,7 @@ export function canSubscribeBotAsync(): Promise<boolean> {
  * @example
  * Wortal.player.subscribeBotAsync()
  * .then(() => console.log("Player subscribed to bot"));
- * @returns {Promise<void>} A promise that resolves if player successfully subscribed to the game bot, or rejects if
+ * @returns {Promise<void>} Promise that resolves if player successfully subscribed to the game bot, or rejects if
  * request failed or player chose to not subscribe.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -362,12 +363,12 @@ export function subscribeBotAsync(): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
-            return (window as any).wortalGame.player.subscribeBotAsync()
+            return config.platformSDK.player.subscribeBotAsync()
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "player.subscribeBotAsync");
                 });
         } else {
-            throw notSupported("Player API not currently supported on platform: " + platform, "player.subscribeBotAsync");
+            throw notSupported(`Player API not currently supported on platform: ${platform}`, "player.subscribeBotAsync");
         }
     });
 }

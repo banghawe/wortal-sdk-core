@@ -1,25 +1,26 @@
-import AdConfig from "../models/ad-config";
-import Player from "../models/player";
-import Session from "../models/session";
-import GameState from "../models/game-data";
-import { InitializationOptions } from "../types/initialization";
-import { Platform } from "../types/platform";
+import { AdConfig } from "../classes/ads";
+import { Player } from "../classes/player";
+import { GameState, Session } from "../classes/session";
+import { InitializationOptions } from "../interfaces/session";
+import { Platform } from "../types/session";
 
 /** @hidden */
 export default class SDKConfig {
-    // We can't instantiate these in the constructor because that gets called before the Wortal backend script
-    // is downloaded. These rely on some functions in that script to initialize, so we delay until Wortal.init
-    // to initialize these.
+    private readonly _game: GameState;
+    private readonly _session: Session;
+
+    // We construct these in lateInitialize because they sometimes depend on a platform SDK to be initialized already
+    // so that we can use the platform's API.
     private _adConfig!: AdConfig;
-    private _game!: GameState;
     private _player!: Player;
-    private _session!: Session;
 
     private _isIAPEnabled: boolean = false;
     private _isDebugMode: boolean = false;
-    private _isInit: boolean = false;
+    private _isInitialized: boolean = false;
 
-    init(options?: InitializationOptions): void {
+    private _platformSDK: any;
+
+    constructor(options?: InitializationOptions) {
         if (typeof options !== "undefined") {
             if (typeof options.debugMode !== "undefined") {
                 this._isDebugMode = options.debugMode;
@@ -27,14 +28,12 @@ export default class SDKConfig {
         }
         this._session = new Session();
         this._game = new GameState();
-        this._isInit = true;
     }
 
-    lateInit(options?: InitializationOptions): void {
-        // We call these late because they sometimes depend on a platform SDK to be initialized already so that we
-        // can use the platform's API.
-        this._player = new Player().init();
+    lateInitialize(): void {
+        this._player = new Player().initialize();
         this._adConfig = new AdConfig();
+        this._isInitialized = true;
     }
 
     get adConfig(): AdConfig {
@@ -61,14 +60,25 @@ export default class SDKConfig {
         this._isIAPEnabled = true;
     }
 
-    get isInit(): boolean {
-        return this._isInit;
+    get platformSDK(): any {
+        return this._platformSDK;
+    }
+
+    set platformSDK(sdk: any) {
+        this._platformSDK = sdk;
+    }
+
+    get isInitialized(): boolean {
+        return this._isInitialized;
     }
 
     get isDebugMode(): boolean {
         return this._isDebugMode;
     }
 
+    // This needs to be updated every time a new API is added to the SDK or a platform adds support for an existing API.
+    // Failure to do so can result in a game not using the feature when it's available as the developer may not
+    // make the API call if they don't think it's supported.
     _supportedAPIs: Record<Platform, string[]> = {
         wortal: [
             "ads.showInterstitial",

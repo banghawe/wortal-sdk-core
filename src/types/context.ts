@@ -1,12 +1,10 @@
-import { LocalizableContent } from "./localizable-content";
-
 /**
- * Defines the filtering behavior
+ * A filter that may be applied to a chooseAsync operation.
  *
- * - `NEW_CONTEXT_ONLY` only enlists contexts that the current player is in, but never participated in (e.g. a new context created by a friend).
- * - `INCLUDE_EXISTING_CHALLENGES` enlists contexts that the current player has participated before.
- * - `NEW_PLAYERS_ONLY` only enlists friends who haven't played this game before.
- * - `NEW_INVITATIONS_ONLY` only enlists friends who haven't been sent an in-game message before. This filter can be fine-tuned with `hoursSinceInvitation` parameter.
+ * - `NEW_CONTEXT_ONLY` - Prefer to only surface contexts the game has not been played in before.
+ * - `INCLUDE_EXISTING_CHALLENGES` - Include the "Existing Challenges" section, which surfaces actively played-in contexts that the player is a part of.
+ * - `NEW_PLAYERS_ONLY` - In sections containing individuals, prefer people who have not played the game.
+ * - `NEW_INVITATIONS_ONLY` only enlists friends who haven't been sent an in-game message before. This filter can be fine-tuned with `hoursSinceInvitation` parameter. (Viber only)
  */
 export type ContextFilter = 'NEW_CONTEXT_ONLY'
     | 'INCLUDE_EXISTING_CHALLENGES'
@@ -31,119 +29,67 @@ export type InviteFilter = 'NEW_CONTEXT_ONLY'
  *
  * - `SOLO` - Default context, where the player is the only participant.
  * - `THREAD` - A chat thread.
- * - `POST` - A Facebook post - FB only
- * - `GROUP` - A Facebook group - FB only.
+ * - `POST` - A Facebook post (Facebook only)
+ * - `GROUP` - A Facebook group (Facebook only)
  */
 export type ContextType = 'SOLO' | 'THREAD' | 'GROUP' | 'POST';
 
 /**
  * A parameter that may be applied to a shareAsync operation. This set up sharing destination in the share dialog.
+ *
  * - 'NEWSFEED' - Enable share to newsfeed option
  * - 'GROUP' - Enable share to official game group option. This is only available for games with official game group. To set up official game group, add a page in the game app setting in https://www.developers.facebook.com, and then create a group for the page in https://facebook.com.
  * - 'COPY_LINK' - Enable copy the game link in clipboard
  * - 'MESSENGER' - Enable share game to messenger option
+ *
+ * PLATFORM NOTE: Facebook only.
  */
 export type ShareDestination = 'NEWSFEED' | 'GROUP' | 'COPY_LINK' | 'MESSENGER';
 
 /**
- * Response from context.isSizeBetween API. Contains the answer and the min and max size.
+ * Represents the type of section to include. All section types may include both new and existing contexts and players.
+ *
+ * - GROUPS - This contains group contexts, such as contexts from group threads.
+ * - USERS - This contains individual users, such as friends or 1:1 threads.
+ *
+ * PLATFORM NOTE: Facebook only.
  */
-export interface ContextSizeResponse {
-    answer: boolean,
-    maxSize: number,
-    minSize: number,
-}
+export type InviteSectionType = 'GROUPS' | 'USERS';
 
 /**
- * @deprecated Starting in v1.5.0 this is no longer supported. Use the specific payloads for each API instead.
+ * Message format to be used. There's no visible difference among the available options.
  */
-export interface ContextPayload {
-    /**
-     * URL of base64 encoded image to be displayed. This is required for the payload to be sent.
-     */
-    image: string;
-    /**
-     * Message body. This is required for the payload to be sent.
-     */
-    text: string | LocalizableContent;
-    /**
-     * Text of the call-to-action button.
-     */
-    caption?: string | LocalizableContent;
-    /**
-     * Text of the call-to-action button.
-     */
-    cta?: string | LocalizableContent;
-    /**
-     * Object passed to any session launched from this context message.
-     * Its size must be <=1000 chars when stringified.
-     * It can be accessed from `Wortal.context.getEntryPointData()`.
-     */
-    data?: Record<string, unknown>;
-    /**
-     * An array of filters to be applied to the friend list. Only the first filter is currently used.
-     */
-    filters?: [ContextFilter];
-    /**
-     * Context maximum size.
-     */
-    maxSize?: number;
-    /**
-     * Context minimum size.
-     */
-    minSize?: number;
-    /**
-     * Specify how long a friend should be filtered out after the current player sends them a message.
-     * This parameter only applies when `NEW_INVITATIONS_ONLY` filter is used.
-     * When not specified, it will filter out any friend who has been sent a message.
-     */
-    hoursSinceInvitation?: number;
-    /**
-     * Optional customizable text field in the share UI.
-     * This can be used to describe the incentive a user can get from sharing.
-     */
-    description?: string | LocalizableContent;
-    /**
-     * Message format to be used. There's no visible difference among the available options.
-     */
-    intent?: 'INVITE' | 'REQUEST' | 'CHALLENGE' | 'SHARE';
-    /**
-     * Optional property to switch share UI mode.
-     *
-     * - DEFAULT: Serial contact card with share and skip button.
-     * - MULTIPLE: Selectable contact list.
-     */
-    ui?: 'DEFAULT' | 'MULTIPLE';
-    /**
-     * Defines the minimum number of players to be selected to start sharing.
-     */
-    minShare?: number;
-    /**
-     * Defines how the update message should be delivered.
-     *
-     * - 'IMMEDIATE': will be sent immediately.
-     * - 'LAST': when the game session ends, the latest payload will be sent.
-     * - 'IMMEDIATE_CLEAR': will be sent immediately, and also discard any pending `LAST` payloads in the same session.
-     */
-    strategy?: 'IMMEDIATE' | 'LAST' | 'IMMEDIATE_CLEAR';
-    /**
-     * Specifies if the message should trigger push notification.
-     */
-    notifications?: 'NO_PUSH' | 'PUSH';
-    /**
-     * Specifies where the share should appear.
-     */
-    shareDestination?: 'NEWSFEED' | 'GROUP' | 'COPY_LINK' | 'MESSENGER';
-    /**
-     * Should the player switch context or not.
-     */
-    switchContext?: boolean;
-    /**
-     * Not used
-     */
-    action?: 'CUSTOM';
-    /**
-     * Not used
-     */
-    template?: string;
-}
+export type Intent = 'INVITE' | 'REQUEST' | 'CHALLENGE' | 'SHARE';
+
+/**
+ * Optional property to switch share UI mode.
+ *
+ * - DEFAULT: Serial contact card with share and skip button.
+ * - MULTIPLE: Selectable contact list.
+ */
+export type UI = 'DEFAULT' | 'MULTIPLE';
+
+/**
+ * Specifies notification setting for the custom update. This can be 'NO_PUSH' or 'PUSH', and defaults to 'NO_PUSH'.
+ * Use push notification only for updates that are high-signal and immediately actionable for the recipients.
+ * Also note that push notification is not always guaranteed, depending on user setting and platform policies.
+ */
+export type Notifications = 'NO_PUSH' | 'PUSH';
+
+/**
+ * Specifies how the update should be delivered. This can be one of the following:
+ *
+ * - 'IMMEDIATE' - The update should be posted immediately.
+ * - 'LAST' - The update should be posted when the game session ends. The most recent update sent using the 'LAST' strategy will be the one sent.
+ * - 'IMMEDIATE_CLEAR': will be sent immediately, and also discard any pending LAST payloads in the same session.
+ *
+ * If no strategy is specified, we default to 'IMMEDIATE'.
+ */
+export type Strategy = 'IMMEDIATE' | 'LAST' | 'IMMEDIATE_CLEAR';
+
+/**
+ * Message format to be used.
+ */
+export type Action = 'CUSTOM';
+
+

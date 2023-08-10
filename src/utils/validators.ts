@@ -1,3 +1,6 @@
+import { PlacementType } from "../types/ads";
+import { ShareTo } from "../types/wortal";
+
 /** @hidden */
 export function isValidString(obj: any): boolean {
     return (typeof obj === "string" && obj !== "");
@@ -10,6 +13,11 @@ export function isValidNumber(obj: any): boolean {
     } else {
         return !isNaN(obj);
     }
+}
+
+/** @hidden */
+export function isValidPlacementType(value: any): value is PlacementType {
+    return ['preroll', 'start', 'pause', 'next', 'browse', 'reward'].includes(value);
 }
 
 /** @hidden */
@@ -37,4 +45,9 @@ export function isValidPayloadImage(obj: any): boolean {
 /** @hidden */
 export function isValidPurchaseConfig(obj: any): boolean {
     return (typeof obj.productID === "string" && obj.productID !== "");
+}
+
+/** @hidden */
+export function isValidShareDestination(value: any): value is ShareTo {
+    return ['facebook', 'twitter'].includes(value);
 }

@@ -1,4 +1,4 @@
-import { ErrorMessage } from "../types/error-message";
+import { ErrorMessage } from "../interfaces/wortal";
 
 /** @hidden */
 export function rethrowPlatformError(original: any, context: string): ErrorMessage {
@@ -31,6 +31,15 @@ export function notSupported(message: string, context: string): ErrorMessage {
 export function operationFailed(message: string, context: string): ErrorMessage {
     return {
         code: 'OPERATION_FAILED',
+        message: message,
+        context: context,
+    }
+}
+
+/** @hidden */
+export function initializationError(message: string, context: string): ErrorMessage {
+    return {
+        code: 'INITIALIZATION_ERROR',
         message: message,
         context: context,
     }

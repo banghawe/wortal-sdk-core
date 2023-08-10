@@ -1,149 +1,100 @@
 # Wortal SDK Core
 
-## Installation
+This SDK is used to integrate games with the Wortal and syndicate them to multiple platforms. The goal is a write once,
+run anywhere solution for HTML5 games. This is the core SDK that can be integrated directly into games or used as a
+base for engine-specific SDKs.
 
-Add the SDK Core script in the `<head>` of your game's `index.html`:
+### Building
+`npm run build`
 
-`<script src="https://cdn.html5gameportal.com/wortal-sdk/wortal-core-1.4.0.js"></script>`
+TODO: Add CI/CD
 
-## How to Use
+### Deploying
+Upload to the Wortal bucket: `html5gameportal.com/wortal-sdk/`
 
-### Ads
+Each deployment should have the version number in the filename. For example, `wortal-core-1.6.2.js`. In addition,
+the `minor` version should be updated to point to the latest patch. For example, `wortal-core-1.6.js` should point to
+`wortal-core-1.6.2.js` in this scenario. This allows us to push out patches without requiring game developers to
+update their games.
 
-[API Reference](https://sdk.html5gameportal.com/api/ads/)
+We do not use a `latest` version as this can cause game breaking issues if a breaking change is introduced in the SDK.
 
-Interstitial ads can be shown at various points in the game such as a level end, restart or a timed
-interval in games with longer levels.
+When a game includes the SDK, it should use the gooogle storage URL instead of our CDN. For example:
+https://storage.googleapis.com/html5gameportal.com/wortal-sdk/wortal-core-1.6.0.js. This is because `googleapis.com` is
+already whitelisted on Facebook and other platforms. If we use our CDN, we will need to whitelist it on each platform
+which may not always be possible.
 
-```typescript
-// Player reached the next level.
-Wortal.ads.showInterstitial('next', 'NextLevel', pauseGame, resumeGame);
+### Testing
+SDK changes are manually tested with demo projects and the Wortal SDK Test entity.
 
-// Player paused the game.
-Wortal.ads.showInterstitial('pause', 'PausedGame', pauseGame, resumeGame);
+TODO: Add testing suite
 
-// Player opened the IAP shop.
-Wortal.ads.showInterstitial('browse', 'BrowseShop', pauseAudio, resumeAudio);
-```
+### API Docs
+`npm run document`
 
-Rewarded ads can be shown too. These are longer, optional ads that the player can earn a reward for watching. The player
-must be notified of the ad and give permission to show before it can be shown.
+Public documentation is hosted [here](https://sdk.html5gameportal.com/).
 
-```typescript
-// This examples shows the game flow independent of the outcome of the ad.
-Wortal.ads.showRewarded('BonusCoins', pauseGame, resumeGame, skipBonus, addBonusCoins);
+Repo for docs is [here](https://github.com/Digital-Will-Inc/wortal-dev-docs).
 
-// This example shows the game flow depending on the outcome of the ad.
-Wortal.ads.showRewarded('ReviveAndContinue', pauseAudio, resumeAudio, endGame, continueGame);
-```
+The resulting documentation still requires some modification before it can be published. This is currently done manually.
 
-**NOTE**: Players should only be rewarded in the `adViewed` callback.
+### Stack
+- TypeScript
+- Webpack
 
-### Analytics
+### Task list
+For SDK-related tasks please see this [ClickUp list](https://app.clickup.com/7540098/v/l/6-211197028-1).
 
-[API Reference](https://sdk.html5gameportal.com/api/analytics/)
+## Plugins
+All engine plugins have their own open-source repos. As each plugin has its own build and deploy process along with
+documentation, please refer to their individual repos for more information. As the repos are public, any internal
+information regarding them and their development should be kept in this repo.
 
-The Analytics API can be used to track game events that can help better understand how players are interacting with
-the game. This data will be available for viewing in the Wortal dashboard.
+- [Cocos 2.x](https://github.com/Digital-Will-Inc/wortal-sdk-cocos-2x)
+- [Cocos 3.x](https://github.com/Digital-Will-Inc/wortal-sdk-cocos-3x)
+- [Unity](https://github.com/Digital-Will-Inc/wortal-sdk-unity)
+- [PlayCanvas](https://github.com/Digital-Will-Inc/wortal-sdk-playcanvas)
+- [GameMaker Studio 2](https://github.com/Digital-Will-Inc/wortal-sdk-game-maker)
+- [Construct 3](https://github.com/Digital-Will-Inc/wortal-sdk-construct)
+- [Defold](https://github.com/Digital-Will-Inc/wortal-sdk-defold)
 
-```typescript
-// Logs the start of the level.
-Wortal.analytics.logLevelStart('Level 3');
+Plugin versions **do not** correspond to core SDK versions. Please refer to the individual plugin repos for version
+and change information.
 
-// Logs the end of the level. Will track the time spent playing the level if the name matches
-// the name of the last logLevelStart() call.
-Wortal.analytics.logLevelEnd('Level 3', '100', true);
+When new APIs or features are added, all plugins need to be updated to include these changes. If the changes made are
+internal to the SDK and do not affect the public API, the plugins do not need to be updated as long as they point to the
+correct minor version of the SDK that includes these changes.
 
-// Logs a choice the player made in the game. This can be useful for balancing the game
-// and seeing what content your players interact with the most.
-Wortal.analytics.logGameChoice('Character', 'Blue');
-```
+### Updating plugins:
+- **Cocos 2.x, Cocos 3.x and PlayCanvas** are all JS based and can be easily updated by providing a wrapper API for the new
+    SDK APIs. These plugins can be updated in a relatively short time.
+- **Unity** is C# based and needs interop code to be written for each new API. This can take a significant amount of time
+    depending on the complexity of the API.
+- **GameMaker Studio 2** uses a proprietary language called GML, but the plugin is written in JS. This means that the
+    plugin can be updated in a relatively short time, but the GML code in the game needs to be updated to use the new
+    APIs. This can take a significant amount of time depending on the complexity of the API.
+- **Construct 3** uses a visual scripting system, but the plugin is written in JS. Construct runs the plugin in a worker
+    thread, so there is some interop code that needs to be written to interface with the DOM. In addition, it requires
+    some localization code to be written in multiple place. Updating this plugin takes a significant amount of time.
+- **Defold** uses Lua so the plugin requires C++ interop code in addition to a JS lib that is used to communicate with
+    the C++ code. Updating this plugin takes a significant amount of time.
 
-### Context
+### Deploying plugins:
+- **Cocos 2.x and Cocos 3.x** get packaged as a `.zip` and uploaded to the Cocos Store.
+- **Unity** gets packaged as a `.unitypackage` and served from the `Releases` tab on GitHub.
+- **PlayCanvas** gets served from either the PlayCanvas project which is public or the `Releases` tab on GitHub.
+- **GameMaker Studio 2** gets packaged as a `.yymp` and uploaded to the YoYo Marketplace. This is a process
+   that involves uploading the file to the marketplace via the editor then publishing the new version via their website.
+- **Construct 3** gets packaged as a `.c3addon` (which is a renamed `.zip`) and uploaded to their store.
+- **Defold** gets served directly from the GitHub link.
 
-[API Reference](https://sdk.html5gameportal.com/api/context/)
+### Links
+- [Cocos Store Dashboard](https://store-my.cocos.com/seller/resources)
+  - Publisher account: `Digital_Will`
+- [GameMaker Marketplace](https://marketplace.gamemaker.io/publishers/tools/assets/11217/edit)
+  - Publisher account: `will+opera@digitalwill.co.jp`
+- [Construct Addons](https://www.construct.net/en/make-games/addons/897/wortal/edit)
+  - Publisher account: `dw_will`
+- [PlayCanvas Project](https://playcanvas.com/project/984829/overview/wortal-sdk)
+  - Publisher account: `digital_will`
 
-The Context API is used to connect players and allow them to interact in the game session, share their content
-and send messages to each other.
-
-```typescript
-// Invite a friend to play the game.
-Wortal.context.chooseAsync({
-    image: 'data:base64image',
-    text: 'Invite text',
-    caption: 'Play',
-    data: { exampleData: 'yourData' },
-})
-
-// Share your game activity with friends.
-Wortal.context.shareAsync({
-    image: 'data:base64image',
-    text: 'Share text',
-    caption: 'Play',
-    data: { exampleData: 'yourData' },
-}).then(result => console.log(result); // Contains shareCount with number of friends the share was sent to.
-```
-
-### In-App Purchases
-
-[API Reference](https://sdk.html5gameportal.com/api/iap/)
-
-The In-App Purchases (IAP) API is used to provide an interface for in-game transactions on the platforms.
-This process will differ based on what platform the game is being played on, but the API remains the same.
-
-```typescript
-// Get the catalog of products the player can purchase.
-Wortal.iap.getCatalogAsync()
-    .then(products => console.log(products));
-
-// Purchase a product.
-Wortal.iap.makePurchaseAsync({
-    productID: 'my_product_123',
-}).then(purchase => console.log(purchase));
-```
-
-### Leaderboards
-
-[API Reference](https://sdk.html5gameportal.com/api/leaderboard/)
-
-The Leaderboard API gives the game access to the platform's leaderboard functionality. This is where
-you can track player's scores and compare them to other players.
-
-```typescript
-// Get the top 10 entries on the global leaderboard.
-Wortal.leaderboard.getEntriesAsync('global', 10)
-    .then(entries => console.log(entries);
-
-// Add the player's score to the leaderboard.
-Wortal.leaderboard.sendEntryAsync('global', 100);
-```
-
-### Player
-
-[API Reference](https://sdk.html5gameportal.com/api/player/)
-
-You can find details about the current player via the Player API.
-
-```typescript
-// Get the player's name.
-Wortal.player.getName();
-
-// Get a list of the player's friends who have also played this game.
-Wortal.player.getConnectedPlayersAsync({
-    filter: 'ALL',
-    size: 20,
-    hoursSinceInvitation: 4,
-}).then(players => console.log(players.length);
-```
-
-### Session
-
-[API Reference](https://sdk.html5gameportal.com/api/session/)
-
-Details about the current session can be accessed in the Session API.
-
-```typescript
-// Get the entry point of where the game started from.
-Wortal.session.getEntryPointAsync()
- .then(entryPoint => console.log(entryPoint);
-```

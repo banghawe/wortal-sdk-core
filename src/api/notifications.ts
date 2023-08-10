@@ -1,13 +1,10 @@
-import { NotificationPayload } from "../types/notification-payload";
-import { NotificationScheduleResult } from "../types/notification-schedule-result";
-import ScheduledNotification from "../models/scheduled-notification";
-import Notification from "../models/notification";
+import { Notification, ScheduledNotification } from "../classes/notification";
+import { NotificationPayload, NotificationScheduleResult } from "../interfaces/notifications";
+import { APIEndpoints } from "../types/wortal";
 import { invalidParams, notSupported, operationFailed } from "../utils/error-handler";
+import { debug } from "../utils/logger";
 import { isValidString } from "../utils/validators";
 import { config } from "./index";
-
-/** @hidden */
-const URL_PREFIX: string = "https://html5gameportal.com/api/v1/notification";
 
 /**
  * Schedule a notification to be delivered to the player at a later time.
@@ -22,25 +19,28 @@ const URL_PREFIX: string = "https://html5gameportal.com/api/v1/notification";
  *   console.log(result.id);
  * });
  * @param payload Object defining the notification to be scheduled.
+ * @returns {Promise<NotificationScheduleResult>} Promise that contains the result of the scheduled notification.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
  * <li>INVALID_PARAM</li>
+ * <li>OPERATION_FAILED</li>
  * </ul>
  */
 export function scheduleAsync(payload: NotificationPayload): Promise<NotificationScheduleResult> {
     const platform = config.session.platform;
-    if (platform !== "facebook") {
-        throw notSupported("Notifications not supported on platform: " + platform, "notifications.scheduleAsync");
-    }
-    if (!isValidString(payload.title)) {
-        throw invalidParams("Title cannot be null or empty.", "notifications.scheduleAsync");
-    }
-    if (!isValidString(payload.body)) {
-        throw invalidParams("Body cannot be null or empty.", "notifications.scheduleAsync");
-    }
 
     return Promise.resolve().then(() => {
+        if (platform !== "facebook") {
+            return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`, "notifications.scheduleAsync"));
+        }
+        if (!isValidString(payload.title)) {
+            return Promise.reject(invalidParams("title cannot be null or empty. Please provide a valid string for the payload.title property.", "notifications.scheduleAsync"));
+        }
+        if (!isValidString(payload.body)) {
+            return Promise.reject(invalidParams("body cannot be null or empty. Please provide a valid string for the payload.body property.", "notifications.scheduleAsync"));
+        }
+
         const notification = new Notification(payload);
         return notification.send();
     });
@@ -63,38 +63,41 @@ export function scheduleAsync(payload: NotificationPayload): Promise<Notificatio
  */
 export function getHistoryAsync(): Promise<ScheduledNotification[]> {
     const platform = config.session.platform;
+    const url: string = _getHistoryURL_Facebook();
+
     if (platform !== "facebook") {
-        throw notSupported("Notifications not supported on platform: " + platform, "notifications.getHistoryAsync");
+        return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`, "notifications.getHistoryAsync"));
     }
 
-    const url: string = _getHistoryURL_Facebook();
-    return new Promise((resolve) => {
-        const request = new XMLHttpRequest();
-        request.open("GET", url);
-        request.setRequestHeader("Content-Type", "application/json");
-
-        request.onload = () => {
-            if (request.status === 200) {
-                const response = JSON.parse(request.responseText);
-                const notifications = response["data"].map((notification: any) => {
-                    return new ScheduledNotification({
-                        id: notification["notification_id"],
-                        status: notification["status"],
-                        createdTime: notification["schedule_date"],
-                        ...(notification["label"] && { label: notification["label"] })
-                    });
-                });
-                resolve(notifications);
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }).then(response => {
+            debug(`getHistoryAsync response: ${response.status}`);
+            if (response.ok) {
+                return response.json();
             } else {
-                throw operationFailed(`[Wortal] Failed to get notifications. Request failed with status code: ${request.status}. \n Message: ${JSON.stringify(request.responseText)}`,"notifications.getHistoryAsync");
+                return response.json().then((data) => {
+                    reject(operationFailed(`Failed to get notifications. Request failed with status code: ${data.message || data.detail || "No message found, sorry."}`, "notifications.getHistoryAsync"));
+                });
             }
-        }
-
-        request.onerror = () => {
-            throw operationFailed("[Wortal] Failed to get notification. This may be caused by a server issue or a malformed request.", "notifications.getHistoryAsync");
-        };
-
-        request.send();
+        }).then(data => {
+            debug(`getHistoryAsync data: ${JSON.stringify(data)}`);
+            const notifications = data["data"].map((notification: any) => {
+                return new ScheduledNotification({
+                    id: notification["notification_id"],
+                    status: notification["status"],
+                    createdTime: notification["schedule_date"],
+                    ...(notification["label"] && {label: notification["label"]})
+                });
+            });
+            resolve(notifications);
+        }).catch(error => {
+            reject(operationFailed(`Failed to get notifications. Error: ${error}`, "notifications.getHistoryAsync"));
+        });
     });
 }
 
@@ -113,33 +116,37 @@ export function getHistoryAsync(): Promise<ScheduledNotification[]> {
  */
 export function cancelAsync(id: string): Promise<boolean> {
     const platform = config.session.platform;
+    const url = _getCancelURL_Facebook();
+
     if (platform !== "facebook") {
-        throw notSupported("Notifications not supported on platform: " + platform, "notifications.cancel");
+        return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`, "notifications.cancelAsync"));
     }
     if (!isValidString(id)) {
-        throw invalidParams("ID cannot be null or empty.", "cancelNotification");
+        return Promise.reject(invalidParams("id cannot be null or empty. Please provide a valid string for the id parameter.", "notifications.cancelAsync"));
     }
 
-    const url = _getCancelURL_Facebook();
-    return new Promise((resolve) => {
-        const request = new XMLHttpRequest();
-        request.open("POST", url);
-        request.setRequestHeader("Content-Type", "application/json");
-
-        request.onload = () => {
-            if (request.status === 200) {
-                const response = JSON.parse(request.responseText);
-                resolve(response["success"]);
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({notification_id: id}),
+        }).then(response => {
+            debug(`cancelAsync response: ${response.status}`);
+            if (response.ok) {
+                return response.json();
             } else {
-                throw operationFailed(`[Wortal] Failed to cancel notification. Request failed with status code: ${request.status}. \n Message: ${JSON.stringify(request.responseText)}`,"notifications.cancelAsync");
+                return response.json().then((data) => {
+                    reject(operationFailed(`Failed to cancel notification. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`, "notifications.cancelAsync"));
+                });
             }
-        }
-
-        request.onerror = () => {
-            throw operationFailed("[Wortal] Failed to cancel notification. This may be caused by a server issue or a malformed request.", "notifications.cancelAsync");
-        };
-
-        request.send(JSON.stringify({ notification_id: id }));
+        }).then(data => {
+            debug(`cancelAsync data: ${JSON.stringify(data)}`);
+            resolve(data.success)
+        }).catch(error => {
+            reject(operationFailed(`Failed to cancel notifications. Error: ${error}`, "notifications.cancelAsync"));
+        });
     });
 }
 
@@ -158,41 +165,45 @@ export function cancelAsync(id: string): Promise<boolean> {
  */
 export function cancelAllAsync(label?: string): Promise<boolean> {
     const platform = config.session.platform;
+    const url = _getCancelAllURL_Facebook();
+
     if (platform !== "facebook") {
-        throw notSupported("Notifications not supported on platform: " + platform, "notifications.cancelAll");
+        return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`, "notifications.cancelAllAsync"));
     }
 
-    const url = _getCancelAllURL_Facebook();
-    return new Promise((resolve) => {
-        const request = new XMLHttpRequest();
-        request.open("POST", url);
-        request.setRequestHeader("Content-Type", "application/json");
-
-        request.onload = () => {
-            if (request.status === 200) {
-                const response = JSON.parse(request.responseText);
-                resolve(response["success"]);
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: typeof label !== "undefined" ? JSON.stringify({label: label}) : undefined,
+        }).then(response => {
+            debug(`cancelAllAsync response: ${response.status}`);
+            if (response.ok) {
+                return response.json();
             } else {
-                throw operationFailed(`[Wortal] Failed to cancel all notifications. Request failed with status code: ${request.status}. \n Message: ${JSON.stringify(request.responseText)}`,"notifications.cancelAllAsync");
+                return response.json().then((data) => {
+                    reject(operationFailed(`Failed to cancel all notifications. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`, "notifications.cancelAllAsync"));
+                });
             }
-        }
-
-        request.onerror = () => {
-            throw operationFailed("[Wortal] Failed to cancel all notifications. This may be caused by a server issue or a malformed request.", "notifications.cancelAllAsync");
-        };
-
-        request.send(typeof label !== "undefined" ? JSON.stringify({ label: label }) : undefined);
+        }).then(data => {
+            debug(`cancelAllAsync data: ${JSON.stringify(data)}`);
+            resolve(data.success);
+        }).catch(error => {
+            reject(operationFailed(`Failed to cancel all notifications. Error: ${error}`, "notifications.cancelAllAsync"));
+        });
     });
 }
 
 function _getHistoryURL_Facebook(): string {
-    return `${URL_PREFIX}/${config.session.gameId}/fb/${config.player.asid}`;
+    return `${APIEndpoints.NOTIFICATIONS}${config.session.gameId}/fb/${config.player.asid}`;
 }
 
 function _getCancelURL_Facebook(): string {
-    return `${URL_PREFIX}/${config.session.gameId}/fb/${config.player.asid}/cancel_notification`;
+    return `${APIEndpoints.NOTIFICATIONS}${config.session.gameId}/fb/${config.player.asid}/cancel_notification`;
 }
 
 function _getCancelAllURL_Facebook(): string {
-    return `${URL_PREFIX}/${config.session.gameId}/fb/${config.player.asid}/cancel_all_notifications`;
+    return `${APIEndpoints.NOTIFICATIONS}${config.session.gameId}/fb/${config.player.asid}/cancel_all_notifications`;
 }

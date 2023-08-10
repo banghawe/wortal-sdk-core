@@ -1,19 +1,9 @@
-import { AnalyticsEventData, AnalyticsEventType } from "../types/analytics-event";
+import { AnalyticsEventData, IAnalyticsEvent } from "../interfaces/analytics";
+import { debug } from "../utils/logger";
 
 /** @hidden */
-interface AnalyticsData {
-    name: AnalyticsEventType;
-    features: object;
-}
-
-/** @hidden */
-interface IAnalyticsEvent {
-    send: Function;
-}
-
-/** @hidden */
-export default class AnalyticsEvent implements IAnalyticsEvent {
-    data: AnalyticsData;
+export class AnalyticsEvent implements IAnalyticsEvent {
+    data: AnalyticsEventData;
 
     constructor(event: AnalyticsEventData) {
         this.data = {
@@ -23,6 +13,7 @@ export default class AnalyticsEvent implements IAnalyticsEvent {
     }
 
     send(): void {
+        debug("Sending analytics event", this.data);
         const name = this.data.name;
         const features = this.data.features;
         let request = new XMLHttpRequest();

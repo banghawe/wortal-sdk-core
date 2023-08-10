@@ -1,5 +1,5 @@
-import { Platform } from "../types/platform";
-import { TrafficSource } from "../types/traffic-source";
+import { TrafficSource } from "../interfaces/session";
+import { Platform } from "../types/session";
 import { notSupported, rethrowPlatformError } from "../utils/error-handler";
 import { config } from "./index";
 
@@ -9,14 +9,14 @@ import { config } from "./index";
  * The contents of the object are developer-defined, and can occur from entry points on different platforms.
  * This will return null for older mobile clients, as well as when there is no data associated with the particular entry point.
  * @example
- * let data = Wortal.session.getEntryPointData();
+ * const data = Wortal.session.getEntryPointData();
  * console.log(data.property);
  * @returns {Record<string, unknown>} Data about the entry point or an empty object if none exists.
  */
 export function getEntryPointData(): Record<string, unknown> {
     let platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
-        return (window as any).wortalGame.getEntryPointData();
+        return config.platformSDK.getEntryPointData();
     } else {
         return {};
     }
@@ -27,7 +27,7 @@ export function getEntryPointData(): Record<string, unknown> {
  * @example
  * Wortal.session.getEntryPointAsync()
  *  .then(entryPoint => console.log(entryPoint);
- * @returns {Promise<string>} The name of the entry point from which the user started the game
+ * @returns {Promise<string>} Promise that resolves with the name of the entry point from which the user started the game.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -38,7 +38,7 @@ export function getEntryPointAsync(): Promise<string> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.getEntryPointAsync()
+            return config.platformSDK.getEntryPointAsync()
                 .then((entryPoint: string) => {
                     return entryPoint;
                 })
@@ -46,7 +46,7 @@ export function getEntryPointAsync(): Promise<string> {
                     throw rethrowPlatformError(e, "player.getEntryPointAsync");
                 });
         } else {
-            throw notSupported("Session API not currently supported on platform: " + platform, "session.getEntryPointAsync");
+            throw notSupported(`Session API not currently supported on platform: ${platform}`, "session.getEntryPointAsync");
         }
     });
 }
@@ -66,7 +66,7 @@ export function getEntryPointAsync(): Promise<string> {
 export function setSessionData(data: Record<string, unknown>): void {
     let platform = config.session.platform;
     if (platform === "viber" || platform === "facebook") {
-        (window as any).wortalGame.setSessionData(data);
+        config.platformSDK.setSessionData(data);
     } else {
         // Fail silently.
     }
@@ -75,7 +75,7 @@ export function setSessionData(data: Record<string, unknown>): void {
 /**
  * Gets the locale the player is using. This is useful for localizing your game.
  * @example
- * let lang = Wortal.session.getLocale();
+ * const lang = Wortal.session.getLocale();
  * @returns {string} Locale in [BCP47](http://www.ietf.org/rfc/bcp/bcp47.txt) format.
  */
 export function getLocale(): string {
@@ -86,14 +86,14 @@ export function getLocale(): string {
  * Gets the traffic source info for the game. This is useful for tracking where players are coming from.
  * For example, if you want to track where players are coming from for a specific campaign.
  * @example
- * let source = Wortal.session.getTrafficSource();
+ * const source = Wortal.session.getTrafficSource();
  * console.log(source['r_entrypoint']);
  * console.log(source['utm_source']);
  * @returns {TrafficSource} URL parameters attached to the game.
  */
 export function getTrafficSource(): TrafficSource {
     if (config.session.platform === "link" || config.session.platform === "viber") {
-        return (window as any).wortalGame.getTrafficSource();
+        return config.platformSDK.getTrafficSource();
     } else {
         return {};
     }
@@ -103,7 +103,7 @@ export function getTrafficSource(): TrafficSource {
  * Gets the platform the game is running on. This is useful for platform specific code.
  * For example, if you want to show a different social share asset on Facebook than on Link.
  * @example
- * let platform = Wortal.session.getPlatform();
+ * const platform = Wortal.session.getPlatform();
  * console.log(platform);
  * @returns {Platform} Platform the game is running on.
  */

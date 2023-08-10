@@ -1,12 +1,14 @@
-import Wortal from "../index";
-import { PlayerData } from "../types/player";
 import { config } from "../api";
+import Wortal from "../index";
+import { PlayerData } from "../interfaces/player";
+import { LeaderboardPlayerData } from "../types/leaderboard";
+import { debug, exception } from "../utils/logger";
 
 /**
  * Represents a player in the game. To access info about the current player, use the Wortal.player API.
  * This is used to access info about other players such as friends or leaderboard entries.
  */
-export default class Player {
+export class Player {
     protected _current: PlayerData = {
         id: "",
         name: "",
@@ -16,20 +18,25 @@ export default class Player {
     };
 
     /** @hidden */
-    init(): Player {
+    initialize(): Player {
+        debug("Initializing player...");
         const platform = config.session.platform;
+
         this._current.id = this.setId();
         this._current.name = this.setName();
         this._current.photo = this.setPhoto();
         this._current.isFirstPlay = this.setIsFirstPlay();
+
         if (platform === "facebook") {
+            debug("Fetching ASID...");
             Wortal.player.getASIDAsync().then((asid) => {
                 this._current.asid = asid;
             }).catch((error) => {
-                console.error("[Wortal] Error getting ASID: ", error);
+                exception("Error fetching ASID: ", error);
             });
         }
-        console.log("[Wortal] Player initialized: ", this._current);
+
+        debug("Player initialized: ", this._current);
         return this;
     }
 
@@ -78,12 +85,14 @@ export default class Player {
             case "viber":
             case "link":
             case "facebook":
-                return (window as any).wortalGame.player.getID();
+                return config.platformSDK.player.getID();
             case "wortal":
+                return (window as any).wortalSessionId;
             case "gd":
+                return this.generateRandomID();
             case "debug":
             default:
-                return "wortal-player";
+                return "debug";
         }
     }
 
@@ -92,7 +101,7 @@ export default class Player {
             case "viber":
             case "link":
             case "facebook":
-                return (window as any).wortalGame.player.getName();
+                return config.platformSDK.player.getName();
             case "wortal":
             case "gd":
             case "debug":
@@ -106,7 +115,7 @@ export default class Player {
             case "viber":
             case "link":
             case "facebook":
-                return (window as any).wortalGame.player.getPhoto();
+                return config.platformSDK.player.getPhoto();
             case "wortal":
             case "gd":
             case "debug":
@@ -119,7 +128,7 @@ export default class Player {
         switch (config.session.platform) {
             case "viber":
             case "link":
-                return (window as any).wortalGame.player.hasPlayed();
+                return config.platformSDK.player.hasPlayed();
             case "wortal":
                 return this.isWortalFirstPlay();
             case "facebook":
@@ -165,5 +174,49 @@ export default class Player {
         const lastPlay = Date.UTC(year, month, day);
         let timeDelta = Date.now() - lastPlay;
         return Math.round(timeDelta / 1000 / 60 / 60 / 24);
+    }
+
+    protected generateRandomID(): string {
+        const generateSegment = () => {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        };
+
+        const segments = [
+            generateSegment(),
+            generateSegment(),
+            generateSegment(),
+            generateSegment(),
+            generateSegment() + generateSegment() + generateSegment()
+        ];
+
+        return segments.join('-');
+    };
+}
+
+/** @hidden */
+export class ConnectedPlayer extends Player {
+    constructor(player: PlayerData) {
+        debug("Creating ConnectedPlayer...", player);
+        super();
+        this._current.id = player.id;
+        this._current.name = player.name;
+        this._current.photo = player.photo;
+        this._current.isFirstPlay = player.isFirstPlay;
+        this._current.daysSinceFirstPlay = player.daysSinceFirstPlay;
+    }
+}
+
+/** @hidden */
+export class LeaderboardPlayer extends Player {
+    constructor(player: LeaderboardPlayerData) {
+        debug("Creating LeaderboardPlayer...", player);
+        super();
+        this._current.id = player.id;
+        this._current.name = player.name;
+        this._current.photo = player.photo;
+        this._current.isFirstPlay = player.isFirstPlay;
+        this._current.daysSinceFirstPlay = player.daysSinceFirstPlay;
     }
 }

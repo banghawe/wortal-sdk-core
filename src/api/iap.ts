@@ -1,10 +1,13 @@
-import { Product, Purchase, PurchaseConfig } from "../types/iap";
+import { Product, Purchase, PurchaseConfig } from "../interfaces/iap";
 import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
 import { isValidPurchaseConfig, isValidString } from "../utils/validators";
 import { config } from "./index";
 
 /**
  * Checks whether IAP is enabled in this session.
+ * @example
+ * const canShowShop = Wortal.iap.isEnabled();
+ * shopButton.visible = canShowShop;
  * @returns {boolean} True if IAP is available to the user. False if IAP is not supported on the current platform,
  * the player's device, or the IAP service failed to load properly.
  */
@@ -17,8 +20,8 @@ export function isEnabled(): boolean {
  * @example
  * Wortal.iap.getCatalogAsync()
  *  .then(products => console.log(products));
- * @returns {Promise<Product[]>} Array of products available to the player. Returns an empty list if purchases are
- * not supported in the player's region.
+ * @returns {Promise<Product[]>} Promise that resolves with an array of products available to the player.
+ * Returns an empty array if purchases are not supported in the player's region.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -31,11 +34,11 @@ export function getCatalogAsync(): Promise<Product[]> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
-            throw notSupported("IAP is currently disabled.", "iap.getCatalogAsync");
+            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.getCatalogAsync");
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.getCatalogAsync()
+            return config.platformSDK.payments.getCatalogAsync()
                 .then((products: Product[]) => {
                     return products;
                 })
@@ -43,18 +46,19 @@ export function getCatalogAsync(): Promise<Product[]> {
                     throw rethrowPlatformError(e, "iap.getCatalogAsync");
                 });
         } else {
-            throw notSupported("IAP API not currently supported on platform: " + platform, "iap.getCatalogAsync");
+            throw notSupported(`IAP API not currently supported on platform: ${platform}`, "iap.getCatalogAsync");
         }
     });
 }
 
 /**
- * Gets the purchases the player has made that have not yet been consumed. Purchase signature should be
- * validated on the game developer's server or transaction database before provisioning the purchase to the player.
+ * Fetches all the player's unconsumed purchases. The game should fetch the current player's purchases as soon as the
+ * client indicates that it is ready to perform payments-related operations, i.e. at game start. The game can then
+ * process and consume any purchases that are waiting to be consumed.
  * @example
  * Wortal.iap.getPurchasesAsync()
  *  .then(purchases => console.log(purchases));
- * @returns {Promise<Purchase[]>} Array of purchases.
+ * @returns {Promise<Purchase[]>} Promise that resolves with an array of purchases that the player has made for the game.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -67,11 +71,11 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
-            throw notSupported("IAP is currently disabled.", "iap.getPurchasesAsync");
+            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.getPurchasesAsync");
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.getPurchasesAsync()
+            return config.platformSDK.payments.getPurchasesAsync()
                 .then((purchases: Purchase[]) => {
                     return purchases;
                 })
@@ -79,19 +83,19 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
                     throw rethrowPlatformError(e, "iap.getPurchasesAsync");
                 });
         } else {
-            throw notSupported("IAP API not currently supported on platform: " + platform, "iap.getPurchasesAsync");
+            throw notSupported(`IAP API not currently supported on platform: ${platform}`, "iap.getPurchasesAsync");
         }
     });
 }
 
 /**
- * Attempts to make a purchase of the given product. Will launch the native IAP screen and return the result.
+ * Begins the purchase flow for a specific product.
  * @example
  * Wortal.iap.makePurchaseAsync({
  *     productID: 'my_product_123',
  * }).then(purchase => console.log(purchase));
- * @param purchase Object defining the product ID and purchase information.
- * @returns {Promise<Purchase>} A Promise that resolves when the product is successfully purchased by the player. Otherwise, it rejects.
+ * @param {PurchaseConfig} purchase The purchase's configuration details.
+ * @returns {Promise<Purchase>} Promise that resolves when the product is successfully purchased by the player. Otherwise, it rejects.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -107,14 +111,14 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
-            throw notSupported("IAP is currently disabled.", "iap.makePurchaseAsync");
+            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.makePurchaseAsync");
         }
         if (!isValidPurchaseConfig(purchase)) {
-            throw invalidParams("productID cannot be null or empty.", "iap.makePurchaseAsync");
+            throw invalidParams("productID cannot be null or empty. Please provide a valid string for the productID parameter.", "iap.makePurchaseAsync");
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.purchaseAsync(purchase)
+            return config.platformSDK.payments.purchaseAsync(purchase)
                 .then((purchase: Purchase) => {
                     return purchase;
                 })
@@ -122,7 +126,7 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
                     throw rethrowPlatformError(e, "iap.makePurchaseAsync");
                 });
         } else {
-            throw notSupported("IAP API not currently supported on platform: " + platform, "iap.makePurchaseAsync");
+            throw notSupported(`IAP API not currently supported on platform: ${platform}`, "iap.makePurchaseAsync");
         }
     });
 }
@@ -135,7 +139,7 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
  * @example
  * Wortal.iap.consumePurchaseAsync('abc123');
  * @param token The purchase token of the purchase that should be consumed.
- * @returns {Promise<void>} A Promise that resolves when the purchase is successfully consumed. Otherwise, it rejects.
+ * @returns {Promise<void>} Promise that resolves when the purchase is successfully consumed. Otherwise, it rejects.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -149,19 +153,19 @@ export function consumePurchaseAsync(token: string): Promise<void> {
     let platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
-            throw notSupported("IAP is currently disabled.", "iap.consumePurchaseAsync");
+            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.consumePurchaseAsync");
         }
         if (!isValidString(token)) {
-            throw invalidParams("token cannot be null or empty.", "iap.consumePurchaseAsync");
+            throw invalidParams("token cannot be null or empty. Please provide a valid string for the token parameter.", "iap.consumePurchaseAsync");
         }
 
         if (platform === "viber" || platform === "facebook") {
-            return (window as any).wortalGame.payments.consumePurchaseAsync(token)
+            return config.platformSDK.payments.consumePurchaseAsync(token)
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "iap.consumePurchaseAsync");
                 });
         } else {
-            throw notSupported("IAP API not currently supported on platform: " + platform, "iap.consumePurchaseAsync");
+            throw notSupported(`IAP API not currently supported on platform: ${platform}`, "iap.consumePurchaseAsync");
         }
     });
 }
