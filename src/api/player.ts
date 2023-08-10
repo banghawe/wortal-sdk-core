@@ -161,14 +161,16 @@ export function flushDataAsync(): Promise<void> {
 }
 
 /**
- * Fetches an array of ConnectedPlayer objects containing information about active players (people who played the game
- * in the last 90 days) that are connected to the current player.
+ * Fetches an array of ConnectedPlayer objects containing information about active players that are connected to the current player.
+ *
+ * PLATFORM NOTE: Facebook does not support the payload parameter or any filters, it will always return the list of
+ * connected players who have played the game in the last 90 days.
  * @example
  * Wortal.player.getConnectedPlayersAsync({
  *     filter: 'ALL',
  *     size: 20,
  *     hoursSinceInvitation: 4,
- * }).then(players => console.log(players.length);
+ * }).then(players => console.log(players.length));
  * @param payload Options for the friends to get.
  * @returns {Promise<ConnectedPlayer[]>} Promise that resolves with a list of connected player objects.
  * @throws {ErrorMessage} See error.message for details.
