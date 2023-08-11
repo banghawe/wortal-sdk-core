@@ -1,4 +1,4 @@
-import { AdSensePreloaded, AdSenseSound, PlacementType } from "../types/ads";
+import { PlacementType } from "../types/ads";
 
 /** @hidden */
 export interface AdData {
@@ -45,24 +45,6 @@ export interface AdConfigData {
     rewardedId: string;
     adsCalled: number;
     adsShown: number;
-}
-
-/** @hidden */
-export interface AdBreakConfig {
-    type: PlacementType,
-    name: string,
-    beforeAd: Function,
-    afterAd: Function,
-    beforeReward?: Function,
-    adDismissed?: Function,
-    adViewed?: Function,
-    adBreakDone?: Function,
-}
-
-/** @hidden */
-export interface AdSenseConfig {
-    preloadAdBreaks: AdSensePreloaded,
-    sound?: AdSenseSound,
 }
 
 /** @hidden */

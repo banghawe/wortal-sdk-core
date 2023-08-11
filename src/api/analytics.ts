@@ -1,6 +1,7 @@
 import { AnalyticsEvent } from "../classes/analytics";
 import { AnalyticsEventData } from "../interfaces/analytics";
 import { invalidParams } from "../utils/error-handler";
+import { exception } from "../utils/logger";
 import { isValidNumber, isValidString } from "../utils/validators";
 import { config } from "./index";
 import Wortal from "../index";
@@ -424,10 +425,9 @@ export function _logTrafficSource(): void {
                 const event = new AnalyticsEvent(data);
                 event.send();
             })
-            .catch((err) => {
+            .catch((error) => {
                 // Even if we get an error we should still try and send the traffic source.
-                // We don't need to rethrow the error because the SDK plugins should not be calling this API.
-                console.log(err);
+                exception(error);
                 let data: AnalyticsEventData = {
                     name: "TrafficSource",
                     features: {

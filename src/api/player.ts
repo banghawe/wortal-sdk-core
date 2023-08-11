@@ -164,7 +164,8 @@ export function flushDataAsync(): Promise<void> {
  * Fetches an array of ConnectedPlayer objects containing information about active players that are connected to the current player.
  *
  * PLATFORM NOTE: Facebook does not support the payload parameter or any filters, it will always return the list of
- * connected players who have played the game in the last 90 days.
+ * connected players who have played the game in the last 90 days. Facebook also requires the user_data permission to
+ * be granted to the game in order to use this API.
  * @example
  * Wortal.player.getConnectedPlayersAsync({
  *     filter: 'ALL',
@@ -195,6 +196,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
                             isFirstPlay: platform === "facebook" ? false : !player.hasPlayed,
                             daysSinceFirstPlay: 0,
                         };
+
                         return new ConnectedPlayer(playerData);
                     });
                 })

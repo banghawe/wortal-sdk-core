@@ -58,6 +58,8 @@ export class InterstitialAd extends AdInstance {
     }
 
     show(): void {
+        // This is a case where the placement type is not valid, so we don't show the ad.
+        // We already logged the event in the constructor.
         if (!this.adData.isValid) {
             return;
         }
@@ -67,7 +69,7 @@ export class InterstitialAd extends AdInstance {
         const showAdFn = () => {
             config.adConfig.adCalled();
             _showAd(
-                this.adData.placementType!, // We already check for validity in the constructor.
+                this.adData.placementType!, // We already validated in the constructor.
                 this.adData.adUnitId,
                 this.adData.description,
                 {
@@ -104,7 +106,7 @@ export class InterstitialAd extends AdInstance {
     };
 
     logEvent(success: boolean) {
-        // wortal.js already logs the ad events for us.
+        // We log different events for Wortal platform which are handled within the ad show function itself.
         if (config.session.platform === "wortal" || config.session.platform === "debug") {
             return;
         }
@@ -184,7 +186,7 @@ export class RewardedAd extends AdInstance {
     };
 
     logEvent(success: boolean, viewedReward?: boolean) {
-        // wortal.js already logs the ad events for us.
+        // We log different events for Wortal platform which are handled within the ad show function itself.
         if (config.session.platform === "wortal" || config.session.platform === "debug") {
             return;
         }
@@ -236,6 +238,8 @@ export class AdConfig {
             this._gdCallbacks = {};
             debug("AdConfig initialized: ", this._current);
         } else if (platform === "wortal") {
+            debug("AdConfig initialized: ", this._current);
+        } else {
             debug("AdConfig initialized: ", this._current);
         }
     }
@@ -444,7 +448,7 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
 
     if (placement === "preroll") {
         debug("Attempting to show preroll..");
-        // Set a timeout to control ads not showing.
+        // Set a timeout to handle ads not showing.
         setTimeout(() => {
             debug("Ad did not show. Skipping..");
             if (typeof callbacks.noFill !== "function") {
@@ -457,7 +461,7 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
         (window as any).adBreak(params);
     } else {
         debug("Attempting to show", placement);
-        // Set a timeout to control ads not showing.
+        // Set a timeout to handle ads not showing.
         setTimeout(function () {
             if (adShown) {
                 const event = new AnalyticsEvent({
@@ -539,18 +543,22 @@ function _showInterstitial_Rakuten_Facebook(placementId: string, callbacks: AdCa
             callbacks.beforeAd && callbacks.beforeAd();
             preloadedInterstitial = interstitial;
             return preloadedInterstitial.loadAsync();
-        }).then(() => {
-        preloadedInterstitial.showAsync().then(() => {
-            debug("Interstitial ad finished successfully.");
-            callbacks.afterAd && callbacks.afterAd();
-        }).catch((error: any) => {
+        })
+        .then(() => {
+            preloadedInterstitial.showAsync()
+                .then(() => {
+                    debug("Interstitial ad finished successfully.");
+                    callbacks.afterAd && callbacks.afterAd();
+                })
+                .catch((error: any) => {
+                    debug("Interstitial ad failed to show.");
+                    _onAdErrorOrNoFill(error, callbacks);
+                });
+        })
+        .catch((error: any) => {
             debug("Interstitial ad failed to show.");
             _onAdErrorOrNoFill(error, callbacks);
         });
-    }).catch((error: any) => {
-        debug("Interstitial ad failed to show.");
-        _onAdErrorOrNoFill(error, callbacks);
-    });
 }
 
 /** @hidden */
@@ -574,21 +582,25 @@ function _showRewarded_Rakuten_Facebook(placementId: string, callbacks: AdCallba
             callbacks.beforeAd && callbacks.beforeAd();
             preloadedRewardedVideo = rewarded;
             return preloadedRewardedVideo.loadAsync();
-        }).then(() => {
-        preloadedRewardedVideo.showAsync().then(() => {
-            debug("Rewarded video watched successfully");
-            callbacks.adViewed && callbacks.adViewed();
-            callbacks.afterAd && callbacks.afterAd();
-        }).catch((error: any) => {
+        })
+        .then(() => {
+            preloadedRewardedVideo.showAsync()
+                .then(() => {
+                    debug("Rewarded video watched successfully");
+                    callbacks.adViewed && callbacks.adViewed();
+                    callbacks.afterAd && callbacks.afterAd();
+                })
+                .catch((error: any) => {
+                    debug("Rewarded video failed to show.");
+                    callbacks.adDismissed && callbacks.adDismissed();
+                    callbacks.afterAd && callbacks.afterAd();
+                    rethrowPlatformError(error, "showRewarded");
+                });
+        })
+        .catch((error: any) => {
             debug("Rewarded video failed to show.");
-            callbacks.adDismissed && callbacks.adDismissed();
-            callbacks.afterAd && callbacks.afterAd();
-            rethrowPlatformError(error, "showRewarded");
+            _onAdErrorOrNoFill(error, callbacks);
         });
-    }).catch((error: any) => {
-        debug("Rewarded video failed to show.");
-        _onAdErrorOrNoFill(error, callbacks);
-    });
 }
 
 /** @hidden */
@@ -610,20 +622,24 @@ function _showRewarded_GD(callbacks: AdCallbacks): void {
     }
 
     if (typeof config.platformSDK !== "undefined" && config.platformSDK.preloadAd !== "undefined") {
-        config.platformSDK.preloadAd("rewarded").then((_: any) => {
-            config.platformSDK.showAd("rewarded").then((_: any) => {
-                callbacks.afterAd && callbacks.afterAd();
-            }).catch((error: any) => {
+        config.platformSDK.preloadAd("rewarded")
+            .then((_: any) => {
+                config.platformSDK.showAd("rewarded")
+                    .then((_: any) => {
+                        callbacks.afterAd && callbacks.afterAd();
+                    })
+                    .catch((error: any) => {
+                        debug("Rewarded video failed to show.");
+                        _onAdErrorOrNoFill(error, callbacks);
+                    });
+            })
+            .catch((error: any) => {
                 debug("Rewarded video failed to show.");
                 _onAdErrorOrNoFill(error, callbacks);
             });
-        }).catch((error: any) => {
-            debug("Rewarded video failed to show.");
-            _onAdErrorOrNoFill(error, callbacks);
-        });
     } else {
         debug("Rewarded video failed to show.");
-        _onAdErrorOrNoFill("[Wortal] No ad instance was found.", callbacks);
+        _onAdErrorOrNoFill("No ad instance was found.", callbacks);
     }
 }
 

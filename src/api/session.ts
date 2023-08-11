@@ -67,8 +67,6 @@ export function setSessionData(data: Record<string, unknown>): void {
     let platform = config.session.platform;
     if (platform === "viber" || platform === "facebook") {
         config.platformSDK.setSessionData(data);
-    } else {
-        // Fail silently.
     }
 }
 
