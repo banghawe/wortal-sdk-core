@@ -8,6 +8,5 @@
     "includeVersion": true,
     "excludePrivate": true,
     "excludeProtected": true,
-    "disableSources": true,
-    "hideBreadcrumbs": true
+    "disableSources": true
 }
