@@ -22,7 +22,7 @@ import {
 } from "../utils/wortal-utils";
 
 // This is the version of the SDK. It is set by the build process.
-declare var __VERSION__: string;
+declare const __VERSION__: string;
 
 // References to the platform SDKs. They are declared here so that we can map these to config.platformSDK
 // once they are initialized.
@@ -196,7 +196,7 @@ export function setLoadingProgress(value: number): void {
  * Sets a callback which will be invoked when the app is brought to the background.
  * @param callback Callback to invoke.
  */
-export function onPause(callback: Function): void {
+export function onPause(callback: () => void): void {
     if (typeof callback !== "function") {
         throw invalidParams("callback needs to be a function.", "onPause");
     }
@@ -326,6 +326,7 @@ function _initializePlatform(): Promise<boolean> {
         case "gd":
             return _initializePlatform_GD();
         case "debug":
+            return Promise.resolve(true);
         //TODO: Add debug platform initialization
         default:
             return Promise.resolve(true);
@@ -509,7 +510,8 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
         };
 
         // Check for an existing GD SDK script tag. If it exists, we can just use that. Otherwise, we need to create it.
-        let gdSDK, firstScript = document.getElementsByTagName("script")[0];
+        let gdSDK = document.getElementsByTagName("script")[0];
+        const firstScript = document.getElementsByTagName("script")[0];
         if (document.getElementById(id)) {
             if (typeof gdsdk === "undefined") {
                 reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));

@@ -65,5 +65,5 @@ export interface NotificationScheduleResult {
 
 /** @hidden */
 export interface INotification {
-    send: Function;
+    send: () => Promise<NotificationScheduleResult>;
 }

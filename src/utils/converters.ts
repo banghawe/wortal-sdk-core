@@ -6,7 +6,7 @@ import Wortal from "../index";
 
 /** @hidden */
 export function convertToLinkMessagePayload(payload: SharePayload | UpdatePayload): LinkMessagePayload {
-    let messagePayload: LinkMessagePayload = {
+    const messagePayload: LinkMessagePayload = {
         image: payload.image,
         text: payload.text,
     }
@@ -44,7 +44,7 @@ export function convertToFBInstantUpdatePayload(payload: UpdatePayload): UpdateP
 
 /** @hidden */
 export function convertToViberSharePayload(payload: InvitePayload): SharePayload {
-    let sharePayload: SharePayload = {
+    const sharePayload: SharePayload = {
         image: payload.image,
         text: payload.text,
     }

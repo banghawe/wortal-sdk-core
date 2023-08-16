@@ -2,6 +2,7 @@ import { GameData } from "../interfaces/session";
 import { Platform, SessionData } from "../types/session";
 import { PLATFORM_DOMAINS } from "../types/wortal";
 import { debug } from "../utils/logger";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import country from "../utils/intl-data.json";
 

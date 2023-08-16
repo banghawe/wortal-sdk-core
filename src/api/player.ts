@@ -68,7 +68,7 @@ export function isFirstPlay(): boolean {
  * </ul>
  */
 export function getDataAsync(keys: string[]): Promise<any> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!Array.isArray(keys) || !keys.length) {
             throw invalidParams("keys cannot be null or empty. Please provide a valid string array for the keys parameter.", "player.getDataAsync");
@@ -114,7 +114,7 @@ export function getDataAsync(keys: string[]): Promise<any> {
  * </ul>
  */
 export function setDataAsync(data: Record<string, unknown>): Promise<void> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.setDataAsync(data)
@@ -147,7 +147,7 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
  * </ul>
  */
 export function flushDataAsync(): Promise<void> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.flushDataAsync()
@@ -182,13 +182,13 @@ export function flushDataAsync(): Promise<void> {
  * </ul>
  */
 export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Promise<ConnectedPlayer[]> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.getConnectedPlayersAsync(payload)
                 .then((players: any) => {
                     return players.map((player: any) => {
-                        let playerData: PlayerData = {
+                        const playerData: PlayerData = {
                             id: player.getID(),
                             name: player.getName(),
                             photo: player.getPhoto(),
@@ -232,7 +232,7 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
  * </ul>
  */
 export function getSignedPlayerInfoAsync(): Promise<object> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.getSignedPlayerInfoAsync()
@@ -265,7 +265,7 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
  * </ul>
  */
 export function getASIDAsync(): Promise<string> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
             return config.platformSDK.player.getASIDAsync()
@@ -298,7 +298,7 @@ export function getASIDAsync(): Promise<string> {
  * </ul>
  */
 export function getSignedASIDAsync(): Promise<SignedASID> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
             return config.platformSDK.player.getSignedASIDAsync()
@@ -334,7 +334,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
  * </ul>
  */
 export function canSubscribeBotAsync(): Promise<boolean> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
             return config.platformSDK.player.canSubscribeBotAsync()
@@ -364,7 +364,7 @@ export function canSubscribeBotAsync(): Promise<boolean> {
  * </ul>
  */
 export function subscribeBotAsync(): Promise<void> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "facebook") {
             return config.platformSDK.player.subscribeBotAsync()

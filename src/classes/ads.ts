@@ -37,11 +37,10 @@ class AdInstance implements IAdInstance {
         this.retryAttempts = retryAttempts;
     }
 
-    show(): void {
-    };
+    show(): void {}
 
-    logEvent(success: boolean, viewedReward?: boolean) {
-    };
+    /* eslint-disable-next-line */
+    logEvent(success: boolean, viewedReward?: boolean): void {}
 }
 
 /** @hidden */
@@ -103,7 +102,7 @@ export class InterstitialAd extends AdInstance {
         };
 
         showAdFn();
-    };
+    }
 
     logEvent(success: boolean) {
         // We log different events for Wortal platform which are handled within the ad show function itself.
@@ -128,7 +127,7 @@ export class InterstitialAd extends AdInstance {
 
         const event = new AnalyticsEvent(eventData);
         event.send();
-    };
+    }
 }
 
 /** @hidden */
@@ -175,7 +174,7 @@ export class RewardedAd extends AdInstance {
                         }
                     },
                     // This needs to be called on Wortal platform to trigger the ad to be shown after it is filled.
-                    beforeReward: function (showAdFn: Function) {
+                    beforeReward: function (showAdFn: () => void): void {
                         showAdFn();
                     },
                     adBreakDone: () => debug("adBreakDone")
@@ -183,7 +182,7 @@ export class RewardedAd extends AdInstance {
         }
 
         showAdFn();
-    };
+    }
 
     logEvent(success: boolean, viewedReward?: boolean) {
         // We log different events for Wortal platform which are handled within the ad show function itself.
@@ -410,7 +409,7 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
     const hostId = getParameterByName("hostid");
     const sessionId = getParameterByName('sessid');
 
-    let params: any = {
+    const params: any = {
         type: placement,
         name: description,
     }
@@ -623,9 +622,9 @@ function _showRewarded_GD(callbacks: AdCallbacks): void {
 
     if (typeof config.platformSDK !== "undefined" && config.platformSDK.preloadAd !== "undefined") {
         config.platformSDK.preloadAd("rewarded")
-            .then((_: any) => {
+            .then(() => {
                 config.platformSDK.showAd("rewarded")
-                    .then((_: any) => {
+                    .then(() => {
                         callbacks.afterAd && callbacks.afterAd();
                     })
                     .catch((error: any) => {

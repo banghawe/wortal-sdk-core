@@ -83,7 +83,7 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
         return config.platformSDK.context.getPlayersAsync()
             .then((players: any) => {
                 return players.map((player: any) => {
-                    let playerData: PlayerData = {
+                    const playerData: PlayerData = {
                         id: player.getID(),
                         name: player.getName(),
                         photo: player.getPhoto(),

@@ -63,7 +63,7 @@ export class Notification implements INotification {
     }
 
     buildSchedulePayload_Facebook(): string {
-        let body = {
+        const body = {
             message: {
                 title: this.schedulePayload.title,
                 body: this.schedulePayload.body,

@@ -155,7 +155,7 @@ export function getOrientation(): Orientation {
  * });
  * @param callback Callback to be invoked when the orientation of the device changes.
  */
-export function onOrientationChange(callback: Function): void {
+export function onOrientationChange(callback: (orientation: Orientation) => void): void {
     if (typeof callback !== "function") {
         throw invalidParams("[Wortal] Callback is not a function.", "onOrientationChange()");
     }

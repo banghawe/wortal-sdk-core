@@ -61,7 +61,7 @@ export interface ShareTournamentPayload {
     /**
      * A blob of data to attach to the update. Must be less than or equal to 1000 characters when stringified.
      */
-    data?: Object;
+    data?: object;
 }
 
 /** @hidden */

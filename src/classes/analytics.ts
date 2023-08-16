@@ -16,7 +16,7 @@ export class AnalyticsEvent implements IAnalyticsEvent {
         debug("Sending analytics event", this.data);
         const name = this.data.name;
         const features = this.data.features;
-        let request = new XMLHttpRequest();
+        const request = new XMLHttpRequest();
         request.open("POST", "https://wombat.digitalwill.co.jp/wortal/events");
         request.setRequestHeader("Content-Type", "application/json");
         request.send(JSON.stringify({ name, features }));

@@ -44,7 +44,7 @@ export function isAdBlocked(): boolean {
  * </ul>
  */
 export function showInterstitial(placement: PlacementType, description: string,
-                                 beforeAd: Function, afterAd: Function, noFill?: Function): void {
+                                 beforeAd: () => void, afterAd: () => void, noFill?: () => void): void {
     const platform = config.session.platform;
 
     // Validate the callbacks. While these aren't strictly required as in some cases ads are shown on a menu or
@@ -89,7 +89,7 @@ export function showInterstitial(placement: PlacementType, description: string,
         return;
     }
 
-    let data: AdInstanceData = {
+    const data: AdInstanceData = {
         placementType: placement,
         adUnitId: config.adConfig.interstitialId,
         description: description,
@@ -125,8 +125,8 @@ export function showInterstitial(placement: PlacementType, description: string,
  * <li>INVALID_PARAM</li>
  * </ul>
  */
-export function showRewarded(description: string, beforeAd: Function, afterAd: Function,
-                             adDismissed: Function, adViewed: Function, noFill?: Function): void {
+export function showRewarded(description: string, beforeAd: () => void, afterAd: () => void,
+                             adDismissed: () => void, adViewed: () => void, noFill?: () => void): void {
     const platform = config.session.platform;
 
     // Validate the callbacks. Only adViewed is required as the player must be rewarded for watching the ad. We
@@ -167,7 +167,7 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
         return;
     }
 
-    let data: AdInstanceData = {
+    const data: AdInstanceData = {
         placementType: 'reward',
         adUnitId: config.adConfig.rewardedId,
         description: description,
