@@ -11,7 +11,7 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, 'dist'),
-        filename: 'wortal-core.js',
+        filename: `wortal-core.js`,
         chunkFilename: IS_PRODUCTION ? '[name].[chunkhash].js' : '[name].chunk.js',
         publicPath: '',
         library: {

@@ -1,9 +1,10 @@
 import { GameData } from "../interfaces/session";
 import { Platform, SessionData } from "../types/session";
 import { PLATFORM_DOMAINS } from "../types/wortal";
+import { debug } from "../utils/logger";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import country from "../utils/intl-data.json";
-import { debug } from "../utils/logger";
 
 /** @hidden */
 export class Session {
@@ -59,6 +60,8 @@ export class Session {
     }
 
     private _setCountry(): string {
+        // This isn't very reliable as the time zone can be easily changed, but we want a way to get the country
+        // without using any personal information or geolocation.
         const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const arr = zone.split("/");
         const city = arr[arr.length - 1];
@@ -66,7 +69,7 @@ export class Session {
     }
 
     private _setGameID(): string {
-        // We sync the different IDs on the backend, we'll just parse the URL here and yeet it into Wombat as is.
+        // We sync the different IDs on the backend, we'll just parse the ID for the current platform and send it to Wombat.
         let url: string[] = [];
         let subdomain: string[] = [];
         let id: string;
@@ -99,6 +102,7 @@ export class Session {
                 id = url[3];
                 break;
             case "facebook":
+                // This is assigned in wortal-data.js that gets added to the bundle when uploading to Facebook.
                 id = (window as any).wortalGameID;
                 break;
             case "debug":

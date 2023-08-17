@@ -7,6 +7,20 @@ import { isValidString } from "../utils/validators";
 import { config } from "./index";
 
 /**
+ * Returns whether ads are blocked for the current session. This can be used to determine if an alternative flow should
+ * be used instead of showing ads, or prompt the player to disable the ad blocker.
+ * @example
+ * if (Wortal.ads.isAdBlocked()) {
+ *    // Show a message to the player to disable their ad blocker.
+ *    // Or use an alternative flow that doesn't require ads - social invites for rewards as an example.
+ * }
+ * @returns {boolean} True if ads are blocked for the current session. False if ads are not blocked.
+ */
+export function isAdBlocked(): boolean {
+    return config.adConfig.isAdBlocked;
+}
+
+/**
  * Shows an interstitial ad. These can be shown at various points in the game such as a level end, restart or a timed
  * interval in games with longer levels.
  * @example
@@ -30,16 +44,19 @@ import { config } from "./index";
  * </ul>
  */
 export function showInterstitial(placement: PlacementType, description: string,
-                                 beforeAd: Function, afterAd: Function, noFill?: Function): void {
+                                 beforeAd: () => void, afterAd: () => void, noFill?: () => void): void {
     const platform = config.session.platform;
 
-    // Validate the callbacks. Invalid params will cause the adBreak API to throw an error.
+    // Validate the callbacks. While these aren't strictly required as in some cases ads are shown on a menu or
+    // otherwise non-gameplay screen, we still log a warning to make sure the developer is aware.
     if (beforeAd === undefined || typeof beforeAd !== "function") {
         beforeAd = () => warn("beforeAd function missing or invalid. This is used to pause the game and mute audio when an ad begins.");
     }
     if (afterAd === undefined || typeof afterAd !== "function") {
         afterAd = () => warn("afterAd function missing or invalid. This is used to resume the game and unmute audio when an ad has finished.");
     }
+    // If no ad is filled the afterAd callback isn't reached. If the developer doesn't provide a noFill callback
+    // we use the afterAd callback instead to ensure the game doesn't hang indefinitely.
     if (noFill === undefined || typeof noFill !== "function") {
         noFill = afterAd;
     }
@@ -51,6 +68,7 @@ export function showInterstitial(placement: PlacementType, description: string,
     if (placement === "preroll" && (platform === "link" || platform === "viber" || platform === "facebook")) {
         throw invalidParams(`Current platform does not support preroll ads. Platform: ${platform}`, "ads.showInterstitial");
     }
+    // Don't allow preroll ads to be shown more than once or after the game has started.
     if (placement === "preroll" && (
         config.adConfig.hasPrerollShown ||
         config.game.gameTimer > 10)) {
@@ -64,17 +82,14 @@ export function showInterstitial(placement: PlacementType, description: string,
         return;
     }
 
-    // Don't bother calling if the ads are blocked, the Wortal backend will not respond which can lead to the
-    // game being frozen, waiting for callbacks that will never come.
+    // Don't bother calling for an ad if the ads are blocked. As of v1.6 this only applies to Wortal platform.
     if (config.adConfig.isAdBlocked) {
         debug("Ads are blocked, skipping..");
         noFill();
         return;
     }
 
-    // We need to make sure we call show() after building the ad instance. We do this because in the future we
-    // want to be able to preload ads and allow the game to check whether an ad is filled and ready to show.
-    let data: AdInstanceData = {
+    const data: AdInstanceData = {
         placementType: placement,
         adUnitId: config.adConfig.interstitialId,
         description: description,
@@ -110,11 +125,12 @@ export function showInterstitial(placement: PlacementType, description: string,
  * <li>INVALID_PARAM</li>
  * </ul>
  */
-export function showRewarded(description: string, beforeAd: Function, afterAd: Function,
-                             adDismissed: Function, adViewed: Function, noFill?: Function): void {
+export function showRewarded(description: string, beforeAd: () => void, afterAd: () => void,
+                             adDismissed: () => void, adViewed: () => void, noFill?: () => void): void {
     const platform = config.session.platform;
 
-    // Validate the callbacks. Invalid params will cause the adBreak API to throw an error.
+    // Validate the callbacks. Only adViewed is required as the player must be rewarded for watching the ad. We
+    // still log a warning to make sure the developer is aware if they did not provide the other callbacks.
     if (beforeAd === undefined || typeof beforeAd !== "function") {
         beforeAd = () => warn("beforeAd function missing or invalid. This is used to pause the game and mute audio when an ad begins.");
     }
@@ -124,11 +140,12 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
     if (adDismissed === undefined || typeof adDismissed !== "function") {
         adDismissed = () => warn("adDismissed function missing or invalid. This is used to handle the case where the player did not successfully watch the ad.");
     }
+    // We cannot call for a rewarded ad without actually rewarding the player for successfully watching the ad.
     if (adViewed === undefined || typeof adViewed !== "function") {
-        // We cannot call for a rewarded ad without actually rewarding the player if successful, which
-        // would be the case here.
         throw invalidParams("adViewed function missing or invalid. This is required to reward the player when they have successfully watched the ad.", "ads.showRewarded");
     }
+    // If no ad is filled the afterAd callback isn't reached. If the developer doesn't provide a noFill callback
+    // we use the afterAd callback instead to ensure the game doesn't hang indefinitely.
     if (noFill === undefined || typeof noFill !== "function") {
         noFill = afterAd;
     }
@@ -140,19 +157,17 @@ export function showRewarded(description: string, beforeAd: Function, afterAd: F
         return;
     }
 
-    // Don't bother calling if the ads are blocked, the Wortal backend will not respond which can lead to the
-    // game being frozen, waiting for callbacks that will never come.
+    // Don't bother calling if the ads are blocked.
     if (config.adConfig.isAdBlocked) {
         debug("Ads are blocked, skipping..");
-        // Call both of these as some situations might require resuming the game flow in adDismissed instead of afterAd.
+        // Call both of these as some situations might require resuming the game flow in adDismissed instead of afterAd,
+        // such as a player dying and whether they revive or not is dependent on the ad watch outcome.
         adDismissed();
         noFill();
         return;
     }
 
-    // We need to make sure we call show() after building the ad instance. We do this because in the future we
-    // want to be able to preload ads and allow the game to check whether an ad is filled and ready to show.
-    let data: AdInstanceData = {
+    const data: AdInstanceData = {
         placementType: 'reward',
         adUnitId: config.adConfig.rewardedId,
         description: description,

@@ -1,4 +1,4 @@
-import { AdSensePreloaded, AdSenseSound, PlacementType } from "../types/ads";
+import { PlacementType } from "../types/ads";
 
 /** @hidden */
 export interface AdData {
@@ -10,19 +10,19 @@ export interface AdData {
 
 /** @hidden */
 export interface AdCallbacks {
-    beforeAd: Function;
-    afterAd: Function;
-    adDismissed?: Function;
-    adViewed?: Function;
-    noFill: Function;
-    beforeReward?: Function;
-    adBreakDone?: Function;
+    beforeAd: () => void;
+    afterAd: () => void;
+    adDismissed?: () => void;
+    adViewed?: () => void;
+    noFill: () => void;
+    beforeReward?: (showAdFn: () => void) => void;
+    adBreakDone?: (placementInfo?: unknown) => void;
 }
 
 /** @hidden */
 export interface IAdInstance {
-    show: Function;
-    logEvent: Function;
+    show: () => void;
+    logEvent: (success: boolean, viewedReward?: boolean) => void;
 }
 
 /** @hidden */
@@ -30,11 +30,11 @@ export interface AdInstanceData {
     placementType: PlacementType;
     adUnitId: string;
     description: string;
-    beforeAd: Function;
-    afterAd: Function;
-    adDismissed?: Function;
-    adViewed?: Function;
-    noFill: Function;
+    beforeAd: () => void;
+    afterAd: () => void;
+    adDismissed?: () => void;
+    adViewed?: () => void;
+    noFill: () => void;
 }
 
 /** @hidden */
@@ -45,24 +45,6 @@ export interface AdConfigData {
     rewardedId: string;
     adsCalled: number;
     adsShown: number;
-}
-
-/** @hidden */
-export interface AdBreakConfig {
-    type: PlacementType,
-    name: string,
-    beforeAd: Function,
-    afterAd: Function,
-    beforeReward?: Function,
-    adDismissed?: Function,
-    adViewed?: Function,
-    adBreakDone?: Function,
-}
-
-/** @hidden */
-export interface AdSenseConfig {
-    preloadAdBreaks: AdSensePreloaded,
-    sound?: AdSenseSound,
 }
 
 /** @hidden */
@@ -78,5 +60,5 @@ export interface FacebookAdUnit {
 
 /** @hidden */
 export interface GDCallbacks {
-    [key: string]: Function;
+    [key: string]: () => void;
 }

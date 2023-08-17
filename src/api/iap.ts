@@ -31,7 +31,7 @@ export function isEnabled(): boolean {
  * </ul>
  */
 export function getCatalogAsync(): Promise<Product[]> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
             throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.getCatalogAsync");
@@ -68,7 +68,7 @@ export function getCatalogAsync(): Promise<Product[]> {
  * </ul>
  */
 export function getPurchasesAsync(): Promise<Purchase[]> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
             throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.getPurchasesAsync");
@@ -108,7 +108,7 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
  * </ul>
  */
 export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
             throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.makePurchaseAsync");
@@ -150,7 +150,7 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
  * </ul>
  */
 export function consumePurchaseAsync(token: string): Promise<void> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!config.isIAPEnabled) {
             throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.", "iap.consumePurchaseAsync");

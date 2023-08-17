@@ -15,9 +15,3 @@ export type PlacementType = 'preroll' | 'start' | 'pause' | 'next' | 'browse' | 
 
 /** @hidden */
 export type AdType = 'interstitial' | 'rewarded'
-
-/** @hidden */
-export type AdSensePreloaded = 'on' | 'auto';
-
-/** @hidden */
-export type AdSenseSound = 'on' | 'off';

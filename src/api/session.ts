@@ -1,6 +1,8 @@
 import { TrafficSource } from "../interfaces/session";
-import { Platform } from "../types/session";
-import { notSupported, rethrowPlatformError } from "../utils/error-handler";
+import { Device, Orientation, Platform } from "../types/session";
+import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
+import { isValidString } from "../utils/validators";
+import { detectDevice } from "../utils/wortal-utils";
 import { config } from "./index";
 
 /**
@@ -14,7 +16,7 @@ import { config } from "./index";
  * @returns {Record<string, unknown>} Data about the entry point or an empty object if none exists.
  */
 export function getEntryPointData(): Record<string, unknown> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.getEntryPointData();
     } else {
@@ -35,7 +37,7 @@ export function getEntryPointData(): Record<string, unknown> {
  * </ul>
  */
 export function getEntryPointAsync(): Promise<string> {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.getEntryPointAsync()
@@ -64,11 +66,9 @@ export function getEntryPointAsync(): Promise<string> {
  * @param data An arbitrary data object, which must be less than or equal to 1000 characters when stringified.
  */
 export function setSessionData(data: Record<string, unknown>): void {
-    let platform = config.session.platform;
+    const platform = config.session.platform;
     if (platform === "viber" || platform === "facebook") {
         config.platformSDK.setSessionData(data);
-    } else {
-        // Fail silently.
     }
 }
 
@@ -92,7 +92,8 @@ export function getLocale(): string {
  * @returns {TrafficSource} URL parameters attached to the game.
  */
 export function getTrafficSource(): TrafficSource {
-    if (config.session.platform === "link" || config.session.platform === "viber") {
+    const platform = config.session.platform;
+    if (platform === "link" || platform === "viber") {
         return config.platformSDK.getTrafficSource();
     } else {
         return {};
@@ -109,4 +110,99 @@ export function getTrafficSource(): TrafficSource {
  */
 export function getPlatform(): Platform {
     return config.session.platform;
+}
+
+/**
+ * Gets the device the player is using. This is useful for device specific code.
+ * @example
+ * const device = Wortal.session.getDevice();
+ * console.log(device);
+ * @returns {Device} Device the player is using.
+ */
+export function getDevice(): Device {
+    const platform = config.session.platform;
+    if (platform === "link" || platform === "viber" || platform === "facebook") {
+        return config.platformSDK.getPlatform();
+    } else {
+        return detectDevice();
+    }
+}
+
+/**
+ * Gets the orientation of the device the player is using. This is useful for determining how to display the game.
+ * @example
+ * const orientation = Wortal.session.getOrientation();
+ * if (orientation === 'portrait') {
+ *    // Render portrait mode.
+ * }
+ * @returns {Orientation} Orientation of the device the player is using.
+ */
+export function getOrientation(): Orientation {
+    const portrait = window.matchMedia("(orientation: portrait)").matches;
+    if (portrait) {
+        return "portrait";
+    } else {
+        return "landscape";
+    }
+}
+
+/**
+ * Assigns a callback to be invoked when the orientation of the device changes.
+ * @example
+ * Wortal.session.onOrientationChange(orientation => {
+ *    if (orientation === 'portrait') {
+ *      // Render portrait mode
+ *    }
+ * });
+ * @param callback Callback to be invoked when the orientation of the device changes.
+ */
+export function onOrientationChange(callback: (orientation: Orientation) => void): void {
+    if (typeof callback !== "function") {
+        throw invalidParams("[Wortal] Callback is not a function.", "onOrientationChange()");
+    }
+
+    window.matchMedia("(orientation: portrait)").addEventListener("change", e => {
+        const portrait = e.matches;
+        if (portrait) {
+            callback("portrait");
+        } else {
+            callback("landscape");
+        }
+    });
+}
+
+/**
+ * Request to switch to another game. The API will reject if the switch fails - else, the client will load the new game.
+ * @example
+ * Wortal.session.switchGameAsync(
+ *   '12345678',
+ *   { referrer: 'game_switch', reward_coins: 30 });
+ * @param gameID ID of the game to switch to. The application must be a Wortal game.
+ * @param data An optional data payload. This will be set as the entrypoint data for the game being switched to. Must be less than or equal to 1000 characters when stringified.
+ * @returns {Promise<void>} Promise that resolves when the game has switched. If the game fails to switch, the promise will reject.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INVALID_PARAMS</li>
+ * <li>USER_INPUT</li>
+ * <li>PENDING_REQUEST</li>
+ * <li>CLIENT_REQUIRES_UPDATE</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function switchGameAsync(gameID: string, data?: object): Promise<void> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (!isValidString(gameID)) {
+            throw invalidParams("gameID is not a valid string.", "session.switchGameAsync");
+        }
+
+        if (platform === "viber" || platform === "facebook") {
+            return config.platformSDK.switchGameAsync(gameID, data)
+                .catch((e: any) => {
+                    throw rethrowPlatformError(e, "player.switchGameAsync");
+                });
+        } else {
+            throw notSupported(`Session API not currently supported on platform: ${platform}`, "session.switchGameAsync");
+        }
+    });
 }

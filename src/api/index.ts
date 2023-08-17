@@ -1,4 +1,3 @@
-import { debug, exception, info } from "../utils/logger";
 import * as _ads from './ads';
 import * as _analytics from './analytics';
 import * as _context from './context';
@@ -7,10 +6,12 @@ import * as _leaderboard from './leaderboard';
 import * as _notifications from './notifications';
 import * as _player from './player';
 import * as _session from './session';
+import * as _tournament from './tournament';
 import { InitializationOptions } from "../interfaces/session";
 import SDKConfig from "../utils/config";
+import { debug, exception, info } from "../utils/logger";
 import { initializationError, invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
-import { isValidString } from "../utils/validators";
+import { isValidNumber, isValidString } from "../utils/validators";
 import {
     addGameEndEventListener,
     addLoadingListener,
@@ -20,51 +21,31 @@ import {
     tryEnableIAP
 } from "../utils/wortal-utils";
 
-///
-/// Global declarations
-///
+// This is the version of the SDK. It is set by the build process.
+declare const __VERSION__: string;
 
-/**
- * Current version of the Wortal SDK.
- * @hidden
- */
-declare var __VERSION__: string;
+// References to the platform SDKs. They are declared here so that we can map these to config.platformSDK
+// once they are initialized.
 
-/**
- * Reference to the LinkGame SDK.
- * @hidden
- */
 declare const LinkGame: any;
-/**
- * Reference to the ViberPlay SDK.
- * @hidden
- */
 declare const ViberPlay: any;
-/**
- * Reference to the FBInstant SDK.
- * @hidden
- */
 declare const FBInstant: any;
-/**
- * Reference to the Game Distribution SDK.
- * @hidden
- */
 declare const gdsdk: any;
 
-/** @hidden */
-const GOOGLE_SDK: string = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-/** @hidden */
-const LINK_SDK: string = "https://lg.rgames.jp/libs/link-game-sdk/1.3.0/bundle.js";
-/** @hidden */
-const VIBER_SDK: string = "https://vbrpl.io/libs/viber-play-sdk/1.14.0/bundle.js";
-/** @hidden */
-const FB_SDK: string = "https://connect.facebook.net/en_US/fbinstant.7.1.js";
-/** @hidden */
-const GD_SDK: string = "https://html5.api.gamedistribution.com/main.min.js";
+// URLs for the platform SDKs. They are declared here so that we can use them to load the SDKs when we
+// initialize the platforms.
 
-///
-/// PUBLIC API
-///
+const GOOGLE_SDK_SRC: string = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+const LINK_SDK_SRC: string = "https://lg.rgames.jp/libs/link-game-sdk/1.3.0/bundle.js";
+const VIBER_SDK_SRC: string = "https://vbrpl.io/libs/viber-play-sdk/1.14.0/bundle.js";
+const FB_SDK_SRC: string = "https://connect.facebook.net/en_US/fbinstant.7.1.js";
+const GD_SDK_SRC: string = "https://html5.api.gamedistribution.com/main.min.js";
+
+/**
+ * Contains the configuration for the SDK. This includes the current session, game state, platform SDK, etc.
+ * @hidden
+ */
+export const config = new SDKConfig();
 
 /** Ads API */
 export const ads = _ads;
@@ -82,13 +63,107 @@ export const notifications = _notifications;
 export const player = _player;
 /** Session API */
 export const session = _session;
-/** @hidden */
-export const config = new SDKConfig();
+/** Tournament API */
+export const tournament = _tournament;
 
 /**
  * Returns true if the SDK Core has been initialized.
  */
 export let isInitialized: boolean = false;
+
+/**
+ * Initializes the SDK. This should be called before any other SDK functions. It is recommended to call this
+ * as soon as the script has been loaded to shorten the initialization time.
+ *
+ * NOTE: This is only available if the manual initialization option is set to true. Otherwise, the SDK will initialize automatically.
+ *
+ * PLATFORM NOTE: Only supported on Viber, Link and Facebook.
+ * @example
+ * Wortal.initializeAsync().then(() => {
+ *    // SDK is ready to use, wait for game to finish loading.
+ *    Wortal.setLoadingProgress(100);
+ *    Wortal.startGameAsync();
+ * });
+ * @returns {Promise<void>} Promise that resolves when the SDK initialized successfully.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INITIALIZATION_ERROR</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export async function initializeAsync(): Promise<void> {
+    if (config.isAutoInit) {
+        return Promise.reject(initializationError("SDK is configured to auto initialize. Only call this when manual initialization is enabled.", "initializeAsync"));
+    }
+
+    if (config.isInitialized) {
+        return Promise.reject(initializationError("SDK already initialized.", "initializeAsync"));
+    }
+
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (platform !== "viber" && platform !== "link" && platform !== "facebook") {
+            throw notSupported(`initializeAsync not supported on platform: ${platform}`, "initializeAsync");
+        }
+
+        debug(`Initializing SDK for ${config.session.platform} platform.`);
+        return config.platformSDK.initializeAsync().then(() => {
+            config.lateInitialize();
+        }).catch((error: any) => {
+            throw initializationError(`Failed to initialize SDK: ${error.message}`, "initializeAsync");
+        });
+    });
+}
+
+/**
+ * This indicates that the game has finished initial loading and is ready to start. Context information will be
+ * up-to-date when the returned promise resolves. The loading screen will be removed after this is called along with
+ * the following conditions:
+ * <ul>
+ * <li>initializeAsync has been called and resolved</li>
+ * <li>setLoadingProgress has been called with a value of 100</li>
+ * </ul>
+ *
+ * NOTE: This is only available if the manual initialization option is set to true. Otherwise, the game will start automatically.
+ *
+ * PLATFORM NOTE: Only supported on Viber, Link and Facebook.
+ * @example
+ * Wortal.startGameAsync().then(() => {
+ *    // Game is rendered to player.
+ * });
+ * @returns {Promise<void>} Promise that resolves when the game has started successfully.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>INITIALIZATION_ERROR</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export async function startGameAsync(): Promise<void> {
+    if (config.isAutoInit) {
+        return Promise.reject(initializationError("SDK is configured to auto initialize. Only call this when manual initialization is enabled.", "startGameAsync"));
+    }
+
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (platform !== "viber" && platform !== "link" && platform !== "facebook") {
+            throw notSupported(`startGameAsync not supported on platform: ${platform}`, "startGameAsync");
+        }
+
+        return config.platformSDK.startGameAsync().then(() => {
+            tryEnableIAP();
+            analytics._logTrafficSource();
+            analytics._logGameStart();
+
+            isInitialized = true;
+            window.dispatchEvent(new Event("wortal-sdk-initialized"));
+
+            debug(`SDK initialized for ${config.session.platform} platform.`);
+            info("SDK initialization complete.");
+        }).catch((error: any) => {
+            throw initializationError(`Failed to initialize SDK: ${error.message}`, "startGameAsync");
+        });
+    });
+}
 
 /**
  * Sets the loading progress value for the game. This is required for the game to start. Failure to call this with 100
@@ -105,8 +180,13 @@ export let isInitialized: boolean = false;
  */
 export function setLoadingProgress(value: number): void {
     const platform = config.session.platform;
+    if (!isValidNumber(value) || value < 0 || value > 100) {
+        throw invalidParams("value must be a number between 0 and 100.", "setLoadingProgress");
+    }
+
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         if (config.platformSDK) {
+            debug(`Setting loading progress to: ${value}`);
             config.platformSDK.setLoadingProgress(value);
         }
     }
@@ -116,15 +196,16 @@ export function setLoadingProgress(value: number): void {
  * Sets a callback which will be invoked when the app is brought to the background.
  * @param callback Callback to invoke.
  */
-export function onPause(callback: Function): void {
+export function onPause(callback: () => void): void {
     if (typeof callback !== "function") {
-        throw invalidParams("Callback needs to be a function.", "onPause");
+        throw invalidParams("callback needs to be a function.", "onPause");
     }
 
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         if (config.platformSDK) {
             config.platformSDK.onPause(() => {
+                debug("onPause callback invoked.");
                 callback();
             });
         }
@@ -145,7 +226,7 @@ export function performHapticFeedbackAsync(): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform !== "facebook") {
-            throw notSupported("Haptic feedback not supported on platform: " + platform, "performHapticFeedbackAsync");
+            throw notSupported(`Haptic feedback not supported on platform: ${platform}`, "performHapticFeedbackAsync");
         }
 
         return config.platformSDK.performHapticFeedbackAsync()
@@ -168,10 +249,6 @@ export function getSupportedAPIs(): string[] {
     return config._supportedAPIs[config.session.platform];
 }
 
-///
-/// INTERNAL FUNCTIONS
-///
-
 /**
  * Initializes the SDK. This should be called as soon as the script has been loaded and any configuration options
  * have been set. This will first initialize the SDK config which determines which platform the game is running on.
@@ -186,9 +263,9 @@ export function getSupportedAPIs(): string[] {
  * @hidden
  * @private
  * */
-export async function _initializeInternal(options?: InitializationOptions): Promise<void> {
+export async function _initializeInternal(options: InitializationOptions): Promise<void> {
     if (config.isInitialized) {
-        return Promise.reject(initializationError("[Wortal] SDK already initialized.", "_initializeInternal"));
+        return Promise.reject(initializationError("SDK already initialized.", "_initializeInternal"));
     }
 
     info("Initializing SDK " + __VERSION__);
@@ -198,16 +275,24 @@ export async function _initializeInternal(options?: InitializationOptions): Prom
     const platform = config.session.platform;
     _initializePlatform().then(showAds => {
         debug("Platform: " + platform);
+        if (options.autoInitialize === false) {
+            config.isAutoInit = false;
+            debug("Manual initialization requested. Platform initialization finished, awaiting manual initialization..");
+            return Promise.resolve();
+        }
+
         if (showAds) {
             return _initializeSDK().then(() => {
                 analytics._logGameStart();
                 isInitialized = true;
+                window.dispatchEvent(new Event("wortal-sdk-initialized"));
                 info("SDK initialization complete.");
             });
         } else {
             return _initializeSDK_AdBlocked().then(() => {
                 analytics._logGameStart();
                 isInitialized = true;
+                window.dispatchEvent(new Event("wortal-sdk-initialized"));
                 info("SDK initialization complete.");
             });
         }
@@ -241,6 +326,7 @@ function _initializePlatform(): Promise<boolean> {
         case "gd":
             return _initializePlatform_GD();
         case "debug":
+            return Promise.resolve(true);
         //TODO: Add debug platform initialization
         default:
             return Promise.resolve(true);
@@ -267,7 +353,7 @@ function _initializePlatform_Wortal(): Promise<boolean> {
         (window as any).wortalSessionId = getParameterByName('sessid') ?? "";
 
         if (!isValidString(clientIdParam)) {
-            reject(initializationError("[Wortal] Configuration \"clientid\" missing.", "_initializePlatform_Wortal()"));
+            reject(initializationError("Configuration \"clientid\" missing.", "_initializePlatform_Wortal()"));
         }
 
         if (debugParam === "true") {
@@ -280,7 +366,7 @@ function _initializePlatform_Wortal(): Promise<boolean> {
             hostChannelIdParam ? googleAdsSDK.setAttribute("data-ad-host-channel", hostChannelIdParam) : null;
         }
 
-        googleAdsSDK.setAttribute("src", GOOGLE_SDK);
+        googleAdsSDK.setAttribute("src", GOOGLE_SDK_SRC);
         googleAdsSDK.setAttribute("type", "text/javascript");
 
         metaElement.setAttribute("name", "google-adsense-platform-account");
@@ -318,11 +404,11 @@ function _initializePlatform_Link(): Promise<boolean> {
     debug("Initializing Link platform SDK.");
     return new Promise((resolve, reject) => {
         const linkSDK = document.createElement("script");
-        linkSDK.src = LINK_SDK;
+        linkSDK.src = LINK_SDK_SRC;
 
         linkSDK.onload = () => {
             if (typeof LinkGame === "undefined") {
-                reject(initializationError("[Wortal] Failed to load Link SDK.", "_initializePlatform_Link()"));
+                reject(initializationError("Failed to load Link SDK.", "_initializePlatform_Link()"));
             }
 
             debug("Link platform SDK initialized.");
@@ -331,7 +417,7 @@ function _initializePlatform_Link(): Promise<boolean> {
         }
 
         linkSDK.onerror = () => {
-            reject(initializationError("[Wortal] Failed to load Link SDK.", "_initializePlatform_Link()"));
+            reject(initializationError("Failed to load Link SDK.", "_initializePlatform_Link()"));
         }
 
         document.head.appendChild(linkSDK);
@@ -348,11 +434,11 @@ function _initializePlatform_Viber(): Promise<boolean> {
     debug("Initializing Viber platform SDK.");
     return new Promise((resolve, reject) => {
         const viberSDK = document.createElement("script");
-        viberSDK.src = VIBER_SDK;
+        viberSDK.src = VIBER_SDK_SRC;
 
         viberSDK.onload = () => {
             if (typeof ViberPlay === "undefined") {
-                reject(initializationError("[Wortal] Failed to load Viber SDK.", "_initializePlatform_Viber()"));
+                reject(initializationError("Failed to load Viber SDK.", "_initializePlatform_Viber()"));
             }
 
             debug("Viber platform SDK initialized.");
@@ -361,7 +447,7 @@ function _initializePlatform_Viber(): Promise<boolean> {
         }
 
         viberSDK.onerror = () => {
-            reject(initializationError("[Wortal] Failed to load Viber SDK.", "_initializePlatform_Viber()"));
+            reject(initializationError("Failed to load Viber SDK.", "_initializePlatform_Viber()"));
         }
 
         document.head.appendChild(viberSDK);
@@ -378,11 +464,11 @@ function _initializePlatform_Facebook(): Promise<boolean> {
     debug("Initializing Facebook platform SDK.");
     return new Promise((resolve, reject) => {
         const facebookSDK = document.createElement("script");
-        facebookSDK.src = FB_SDK;
+        facebookSDK.src = FB_SDK_SRC;
 
         facebookSDK.onload = () => {
             if (typeof FBInstant === "undefined") {
-                reject(initializationError("[Wortal] Failed to load Facebook SDK.", "_initializePlatform_Facebook()"));
+                reject(initializationError("Failed to load Facebook SDK.", "_initializePlatform_Facebook()"));
             }
 
             debug("Facebook platform SDK initialized.");
@@ -391,7 +477,7 @@ function _initializePlatform_Facebook(): Promise<boolean> {
         }
 
         facebookSDK.onerror = () => {
-            reject(initializationError("[Wortal] Failed to load Facebook SDK.", "_initializePlatform_Facebook()"));
+            reject(initializationError("Failed to load Facebook SDK.", "_initializePlatform_Facebook()"));
         }
 
         document.head.appendChild(facebookSDK);
@@ -408,8 +494,13 @@ function _initializePlatform_Facebook(): Promise<boolean> {
  */
 function _initializePlatform_GD(options?: any): Promise<boolean> {
     debug("Initializing Game Distribution platform SDK.");
+    // GD SDK docs assign this ID to their SDK script, so we'll do the same as it might be important.
+    // See: https://gamedistribution.com/sdk/html5
     const id = "gamedistribution-jssdk";
+
     return new Promise((resolve, reject) => {
+        // GD SDK requires an options object to be set in the window. The onEvent property is where we can listen for
+        // their SDK events. We use this to map their events to our own callbacks.
         (window as any).GD_OPTIONS = {
             gameId: config.session.gameId,
             onEvent: (event: any) => {
@@ -418,10 +509,12 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
             ...options,
         };
 
-        let gdSDK, firstScript = document.getElementsByTagName("script")[0];
+        // Check for an existing GD SDK script tag. If it exists, we can just use that. Otherwise, we need to create it.
+        let gdSDK = document.getElementsByTagName("script")[0];
+        const firstScript = document.getElementsByTagName("script")[0];
         if (document.getElementById(id)) {
             if (typeof gdsdk === "undefined") {
-                reject(initializationError("[Wortal] Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
+                reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
             }
 
             debug("Game Distribution platform SDK initialized.");
@@ -429,13 +522,13 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
             resolve(true);
         } else {
             gdSDK = document.createElement("script");
-            gdSDK.src = GD_SDK;
+            gdSDK.src = GD_SDK_SRC;
             gdSDK.id = id;
             firstScript.parentNode?.insertBefore(gdSDK, firstScript);
 
             gdSDK.onload = function () {
                 if (typeof gdsdk === "undefined") {
-                    reject(initializationError("[Wortal] Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
+                    reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
                 }
 
                 debug("Game Distribution platform SDK initialized.");
@@ -444,7 +537,7 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
             }
 
             gdSDK.onerror = () => {
-                reject(initializationError("[Wortal] Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
+                reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
             }
         }
     });
@@ -486,10 +579,10 @@ function _initializeSDK_RakutenFacebook(): Promise<void> {
             analytics._logTrafficSource();
             debug(`SDK initialized for ${config.session.platform} platform.`);
         }).catch((error: any) => {
-            throw initializationError(`[Wortal] Failed to initialize SDK: ${error.message}`, "_initializeSDK_RakutenFacebook()");
+            throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_RakutenFacebook()");
         });
     }).catch((error: any) => {
-        throw initializationError(`[Wortal] Failed to initialize SDK: ${error.message}`, "_initializeSDK_RakutenFacebook()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_RakutenFacebook()");
     });
 }
 
@@ -502,7 +595,7 @@ function _initializeSDK_RakutenFacebook(): Promise<void> {
 function _initializeSDK_WortalGD(): Promise<void> {
     debug(`Initializing SDK for ${config.session.platform} platform.`);
     return Promise.resolve().then(() => {
-        config.lateInitialize()
+        config.lateInitialize();
         config.adConfig.adCalled();
         debug("Showing pre-roll ad.");
         ads.showInterstitial("preroll", "Preroll",
@@ -516,7 +609,7 @@ function _initializeSDK_WortalGD(): Promise<void> {
                 debug(`SDK initialized for ${config.session.platform} platform.`);
             });
     }).catch((error) => {
-        throw initializationError(`[Wortal] Failed to initialize SDK: ${error.message}`, "_initializeSDK_WortalGD()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_WortalGD()");
     });
 }
 
@@ -532,7 +625,7 @@ function _initializeSDK_Debug(): Promise<void> {
         removeLoadingCover();
         debug("SDK initialized for debugging.");
     }).catch((error) => {
-        throw initializationError(`[Wortal] Failed to initialize SDK: ${error.message}`, "_initializeSDK_Debug()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_Debug()");
     });
 }
 
@@ -551,6 +644,6 @@ function _initializeSDK_AdBlocked(): Promise<void> {
         tryEnableIAP();
         debug("SDK initialized for ad blocker.");
     }).catch((error) => {
-        throw initializationError(`[Wortal] Failed to initialize SDK: ${error.message}`, "_initializeSDK_AdBlocked()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_AdBlocked()");
     });
 }

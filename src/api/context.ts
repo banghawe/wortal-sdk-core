@@ -48,6 +48,7 @@ export function getType(): ContextType {
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.context.getType();
     } else {
+        // Platform doesn't support context play so we'll just return solo.
         return "SOLO";
     }
 }
@@ -82,7 +83,7 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
         return config.platformSDK.context.getPlayersAsync()
             .then((players: any) => {
                 return players.map((player: any) => {
-                    let playerData: PlayerData = {
+                    const playerData: PlayerData = {
                         id: player.getID(),
                         name: player.getName(),
                         photo: player.getPhoto(),
@@ -156,7 +157,7 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
         if (platform === "facebook") {
             return config.platformSDK.inviteAsync(convertedPayload)
                 .then(() => {
-                    return 0
+                    return 0;
                 })
                 .catch((e: any) => {
                     throw rethrowPlatformError(e, "context.inviteAsync");
@@ -385,7 +386,7 @@ export function chooseAsync(payload?: ChoosePayload): Promise<void> {
  * </ul>
  */
 export function switchAsync(contextId: string): Promise<void> {
-    //TODO: add switchSilentlyIfSolo param if necessary
+    //TODO: add switchSilentlyIfSolo parameter
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform === "wortal" || platform === "gd") {

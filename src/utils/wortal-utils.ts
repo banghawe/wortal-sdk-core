@@ -1,5 +1,6 @@
 import { config } from "../api";
 import Wortal from "../index";
+import { Device } from "../types/session";
 import { ShareTo } from "../types/wortal";
 import { invalidParams } from "./error-handler";
 import { debug, exception } from "./logger";
@@ -17,6 +18,7 @@ import { isValidShareDestination } from "./validators";
  * @hidden
  */
 export function getParameterByName(name: string): string | null {
+    /* eslint-disable-next-line */
     name = name.replace(/[\[\]]/g, '\\$&');
     const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
     const results = regex.exec(window.location.href);
@@ -76,7 +78,7 @@ export function addLoadingListener(): void {
  * @hidden
  */
 export function addLoadingCover(): void {
-    let cover = document.createElement("div");
+    const cover = document.createElement("div");
     cover.id = "loading-cover";
     cover.style.cssText = "background: #000000; width: 100%; height: 100%; position: fixed; z-index: 100;";
     document.body.prepend(cover);
@@ -112,7 +114,7 @@ export function addGameEndEventListener(): void {
  * @param {Function} callback Callback function to be called when the event is triggered.
  * @hidden
  */
-export function addGDCallback(eventName: string, callback: Function) {
+export function addGDCallback(eventName: string, callback: () => void): void {
     if (typeof callback !== "function") {
         throw invalidParams("[Wortal] Callback is not a function.", "addGDEvents()");
     }
@@ -140,6 +142,23 @@ export function gdEventTrigger(value: string): void {
     }
 }
 
+/**
+ * Detects the device the player is using. This is based on navigator.userAgent and is not guaranteed to be accurate.
+ * @hidden
+ */
+export function detectDevice(): Device {
+    //TODO: replace this with Navigator.userAgentData when its widely supported
+    if (/android/i.test(navigator.userAgent)) {
+        return "ANDROID";
+    } else if (/iphone/i.test(navigator.userAgent)) {
+        return "IOS";
+    } else if (/ipad/i.test(navigator.userAgent)) {
+        return "IOS";
+    } else {
+        return "DESKTOP";
+    }
+}
+
 //
 // PLATFORM FUNCTIONS
 //
@@ -150,7 +169,7 @@ export function gdEventTrigger(value: string): void {
  * displaying the game.
  * @hidden
  */
-(window as any).shareGame = function(destination: ShareTo, message: string): void {
+(window as any).shareGame = function (destination: ShareTo, message: string): void {
     if (!isValidShareDestination(destination)) {
         throw invalidParams("[Wortal] Invalid share destination.", "shareGame()");
     }

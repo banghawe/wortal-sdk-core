@@ -1,7 +1,6 @@
 import { AdConfig } from "../classes/ads";
 import { Player } from "../classes/player";
 import { GameState, Session } from "../classes/session";
-import { InitializationOptions } from "../interfaces/session";
 import { Platform } from "../types/session";
 
 /** @hidden */
@@ -17,15 +16,11 @@ export default class SDKConfig {
     private _isIAPEnabled: boolean = false;
     private _isDebugMode: boolean = false;
     private _isInitialized: boolean = false;
+    private _isAutoInit: boolean = true;
 
     private _platformSDK: any;
 
-    constructor(options?: InitializationOptions) {
-        if (typeof options !== "undefined") {
-            if (typeof options.debugMode !== "undefined") {
-                this._isDebugMode = options.debugMode;
-            }
-        }
+    constructor() {
         this._session = new Session();
         this._game = new GameState();
     }
@@ -72,6 +67,14 @@ export default class SDKConfig {
         return this._isInitialized;
     }
 
+    get isAutoInit(): boolean {
+        return this._isAutoInit;
+    }
+
+    set isAutoInit(value: boolean) {
+        this._isAutoInit = value;
+    }
+
     get isDebugMode(): boolean {
         return this._isDebugMode;
     }
@@ -81,12 +84,17 @@ export default class SDKConfig {
     // make the API call if they don't think it's supported.
     _supportedAPIs: Record<Platform, string[]> = {
         wortal: [
+            "ads.isAdBlocked",
             "ads.showInterstitial",
             "ads.showRewarded",
             "session.getLocale",
             "session.getPlatform",
+            "session.getDevice",
+            "session.getOrientation",
+            "session.onOrientationChange",
         ],
         link: [
+            "ads.isAdBlocked",
             "ads.showInterstitial",
             "ads.showRewarded",
             "context.chooseAsync",
@@ -118,8 +126,12 @@ export default class SDKConfig {
             "session.getLocale",
             "session.getPlatform",
             "session.getTrafficSource",
+            "session.getDevice",
+            "session.getOrientation",
+            "session.onOrientationChange",
         ],
         viber: [
+            "ads.isAdBlocked",
             "ads.showInterstitial",
             "ads.showRewarded",
             "context.chooseAsync",
@@ -156,14 +168,23 @@ export default class SDKConfig {
             "session.getPlatform",
             "session.getTrafficSource",
             "session.setSessionData",
+            "session.getDevice",
+            "session.getOrientation",
+            "session.onOrientationChange",
+            "session.switchGameAsync",
         ],
         gd: [
+            "ads.isAdBlocked",
             "ads.showInterstitial",
             "ads.showRewarded",
             "session.getLocale",
             "session.getPlatform",
+            "session.getDevice",
+            "session.getOrientation",
+            "session.onOrientationChange",
         ],
         facebook: [
+            "ads.isAdBlocked",
             "ads.showInterstitial",
             "ads.showRewarded",
             "context.chooseAsync",
@@ -203,6 +224,16 @@ export default class SDKConfig {
             "session.getLocale",
             "session.getPlatform",
             "session.setSessionData",
+            "session.getDevice",
+            "session.getOrientation",
+            "session.onOrientationChange",
+            "session.switchGameAsync",
+            "tournament.getCurrentAsync",
+            "tournament.getAllAsync",
+            "tournament.postScoreAsync",
+            "tournament.createAsync",
+            "tournament.shareAsync",
+            "tournament.joinAsync",
         ],
         debug: [],
     };

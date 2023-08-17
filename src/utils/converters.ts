@@ -1,11 +1,12 @@
 import { Leaderboard, LeaderboardEntry } from "../classes/leaderboard";
+import { Tournament } from "../classes/tournament";
 import { InvitePayload, LinkMessagePayload, SharePayload, UpdatePayload } from "../interfaces/context";
 import { ContextFilter, InviteFilter } from "../types/context";
 import Wortal from "../index";
 
 /** @hidden */
 export function convertToLinkMessagePayload(payload: SharePayload | UpdatePayload): LinkMessagePayload {
-    let messagePayload: LinkMessagePayload = {
+    const messagePayload: LinkMessagePayload = {
         image: payload.image,
         text: payload.text,
     }
@@ -43,7 +44,7 @@ export function convertToFBInstantUpdatePayload(payload: UpdatePayload): UpdateP
 
 /** @hidden */
 export function convertToViberSharePayload(payload: InvitePayload): SharePayload {
-    let sharePayload: SharePayload = {
+    const sharePayload: SharePayload = {
         image: payload.image,
         text: payload.text,
     }
@@ -103,6 +104,13 @@ export function facebookLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
         timestamp: entry.getTimestamp(),
         details: entry.getExtraData(),
     });
+}
+
+/** @hidden */
+export function facebookTournamentToWortal(tournament: any): Tournament {
+    return new Tournament(
+        tournament.getID(), tournament.getContextID(), tournament.getEndTime(), tournament.getTitle(), tournament.getPayload()
+    );
 }
 
 function _convertInviteFilterToContextFilter(filter: InviteFilter | InviteFilter[]): [ContextFilter] | undefined {

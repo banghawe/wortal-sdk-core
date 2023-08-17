@@ -10,7 +10,7 @@ export interface AnalyticsEventData {
 
 /** @hidden */
 export interface IAnalyticsEvent {
-    send: Function;
+    send: () => void;
 }
 
 /** @hidden */

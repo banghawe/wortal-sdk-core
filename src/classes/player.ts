@@ -172,7 +172,7 @@ export class Player {
         const month: number = +date.substring(5, 7) - 1; // Month range is 0 - 11.
         const day: number = +date.substring(8, 10);
         const lastPlay = Date.UTC(year, month, day);
-        let timeDelta = Date.now() - lastPlay;
+        const timeDelta = Date.now() - lastPlay;
         return Math.round(timeDelta / 1000 / 60 / 60 / 24);
     }
 
@@ -192,7 +192,7 @@ export class Player {
         ];
 
         return segments.join('-');
-    };
+    }
 }
 
 /** @hidden */

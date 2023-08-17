@@ -1,6 +1,7 @@
 import { AnalyticsEvent } from "../classes/analytics";
 import { AnalyticsEventData } from "../interfaces/analytics";
 import { invalidParams } from "../utils/error-handler";
+import { exception } from "../utils/logger";
 import { isValidNumber, isValidString } from "../utils/validators";
 import { config } from "./index";
 import Wortal from "../index";
@@ -29,7 +30,7 @@ export function logLevelStart(level: string | number): void {
     config.game.resetLevelTimer();
     config.game.startLevelTimer();
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'LevelStart',
         features: {
             game: config.session.gameId,
@@ -74,7 +75,7 @@ export function logLevelEnd(level: string | number, score: string | number, wasC
         config.game.resetLevelTimer();
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'LevelEnd',
         features: {
             game: config.session.gameId,
@@ -104,7 +105,7 @@ export function logTutorialStart(tutorial: string): void {
     config.game.resetLevelTimer();
     config.game.startLevelTimer();
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'TutorialStart',
         features: {
             game: config.session.gameId,
@@ -136,7 +137,7 @@ export function logTutorialEnd(tutorial: string, wasCompleted: boolean): void {
         config.game.resetLevelTimer();
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'TutorialEnd',
         features: {
             game: config.session.gameId,
@@ -168,7 +169,7 @@ export function logLevelUp(level: string | number): void {
         throw invalidParams("level cannot be null or empty. Please provide a valid string or number for the level parameter.", "analytics.logLevelUp");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'LevelUp',
         features: {
             game: config.session.gameId,
@@ -198,7 +199,7 @@ export function logScore(score: string | number): void {
         throw invalidParams("score cannot be null or empty. Please provide a valid string or number for the score parameter.", "analytics.logScore");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'PostScore',
         features: {
             game: config.session.gameId,
@@ -232,7 +233,7 @@ export function logGameChoice(decision: string, choice: string): void {
         throw invalidParams("choice cannot be null or empty. Please provide a valid string for the choice parameter.", "analytics.logGameChoice");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'GameChoice',
         features: {
             game: config.session.gameId,
@@ -259,7 +260,7 @@ export function logSocialInvite(placement: string): void {
         throw invalidParams("placement cannot be null or empty. Please provide a valid string for the placement parameter.", "analytics.logSocialInvite");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'SocialInvite',
         features: {
             game: config.session.gameId,
@@ -285,7 +286,7 @@ export function logSocialShare(placement: string): void {
         throw invalidParams("placement cannot be null or empty.. Please provide a valid string for the placement parameter.", "analytics.logSocialShare");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'SocialShare',
         features: {
             game: config.session.gameId,
@@ -316,7 +317,7 @@ export function logPurchase(productID: string, details?: string): void {
         throw invalidParams("productID cannot be null or empty. . Please provide a valid string for the productID parameter.", "analytics.logPurchase");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'Purchase',
         features: {
             game: config.session.gameId,
@@ -348,7 +349,7 @@ export function logPurchaseSubscription(productID: string, details?: string): vo
         throw invalidParams("productID cannot be null or empty. Please provide a valid string for the productID parameter.", "analytics.logPurchaseSubscription");
     }
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'PurchaseSubscription',
         features: {
             game: config.session.gameId,
@@ -368,7 +369,7 @@ export function logPurchaseSubscription(productID: string, details?: string): vo
 export function _logGameStart(): void {
     config.game.startGameTimer();
 
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'GameStart',
         features: {
             game: config.session.gameId,
@@ -388,7 +389,7 @@ export function _logGameStart(): void {
 
 /** @hidden */
 export function _logGameEnd(): void {
-    let data: AnalyticsEventData = {
+    const data: AnalyticsEventData = {
         name: 'GameEnd',
         features: {
             game: config.session.gameId,
@@ -409,7 +410,7 @@ export function _logTrafficSource(): void {
     if (config.session.platform == "viber" || config.session.platform == "link") {
         Wortal.session.getEntryPointAsync()
             .then((entryPoint) => {
-                let data: AnalyticsEventData = {
+                const data: AnalyticsEventData = {
                     name: "TrafficSource",
                     features: {
                         game: config.session.gameId,
@@ -424,11 +425,10 @@ export function _logTrafficSource(): void {
                 const event = new AnalyticsEvent(data);
                 event.send();
             })
-            .catch((err) => {
+            .catch((error) => {
                 // Even if we get an error we should still try and send the traffic source.
-                // We don't need to rethrow the error because the SDK plugins should not be calling this API.
-                console.log(err);
-                let data: AnalyticsEventData = {
+                exception(error);
+                const data: AnalyticsEventData = {
                     name: "TrafficSource",
                     features: {
                         game: config.session.gameId,
