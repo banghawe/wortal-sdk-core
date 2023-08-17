@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.6.1] - 2023-08-17
+### Added
+- Core
+  - Tournament API
+  - Demo project
+  - Event for when SDK is initialized
+  - Manual SDK initialization option
+  - NPM package distribution
+  - switchGameAsync API
+- Ads
+  - isAdBlocked API
+- Session
+  - getDevice, getOrientation, onOrientationChange APIs
+
+### Changed
+- Core
+  - Improved integration docs
+
 ## [1.6.0] - 2023-08-10
 ### Added
 - Analytics
