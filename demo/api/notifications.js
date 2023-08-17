@@ -1,7 +1,11 @@
 let id = "";
 
 function notificationsScheduleAsync() {
-    Wortal.notifications.scheduleAsync("Test", "Test", 1)
+    const payload = {
+        title: "Test",
+        body: "Test",
+    };
+    Wortal.notifications.scheduleAsync(payload)
         .then(result => appendText(JSON.stringify(result)))
         .catch(error => appendText(error));
 }
