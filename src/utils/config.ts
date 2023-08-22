@@ -171,7 +171,6 @@ export default class SDKConfig {
             "session.getDevice",
             "session.getOrientation",
             "session.onOrientationChange",
-            "session.switchGameAsync",
         ],
         gd: [
             "ads.isAdBlocked",
