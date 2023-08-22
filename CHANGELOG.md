@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.3] - 2023-08-22
+### Fixed
+- Core
+  - Possible initialization fail when using manual initialization on Wortal/GD platforms
+
 ## [1.6.2] - 2023-08-22
 ### Fixed
 - Ads
