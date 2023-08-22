@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.2] - 2023-08-22
+### Fixed
+- Ads
+  - Game Distribution callbacks attached to wrong events
+
+### Changed
+- Session
+  - switchGameAsync is no longer available on Viber
+
 ## [1.6.1] - 2023-08-17
 ### Added
 - Core
