@@ -48,6 +48,13 @@ export interface AdConfigData {
 }
 
 /** @hidden */
+export interface AdSenseConfig {
+    clientID: string;
+    hostID: string;
+    channelID: string;
+}
+
+/** @hidden */
 export interface FacebookAdUnitsResponse {
     ads: FacebookAdUnit[];
 }
