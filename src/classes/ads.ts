@@ -1,9 +1,10 @@
 import { config } from "../api";
+import Wortal from "../index";
 import {
     AdCallbacks,
     AdConfigData,
     AdData,
-    AdInstanceData,
+    AdInstanceData, AdSenseConfig,
     FacebookAdUnitsResponse,
     GDCallbacks,
     IAdInstance
@@ -14,7 +15,7 @@ import { APIEndpoints, GD_EVENTS } from "../types/wortal";
 import { operationFailed, rethrowPlatformError } from "../utils/error-handler";
 import { debug, exception, warn } from "../utils/logger";
 import { isValidPlacementType } from "../utils/validators";
-import { addGDCallback, getParameterByName } from "../utils/wortal-utils";
+import { addGDCallback } from "../utils/wortal-utils";
 import { AnalyticsEvent } from "./analytics";
 
 /** @hidden */
@@ -79,6 +80,13 @@ export class InterstitialAd extends AdInstance {
                         this.callbacks.afterAd();
                     },
                     noFill: () => {
+                        const platform = config.session.platform;
+                        if (platform === "viber") {
+                            debug("Ad not filled, showing backfill..");
+                            _showBackFill(this.adData.placementType!, this.adData.description, this.callbacks);
+                            return;
+                        }
+
                         if (attempt < this.retryAttempts && this.adData.placementType !== "preroll") {
                             attempt++;
                             debug("Ad not filled, retrying.. \n Retry attempt: " + attempt);
@@ -93,10 +101,9 @@ export class InterstitialAd extends AdInstance {
                     // Preroll ads on Wortal platform only take the adBreakDone callback.
                     adBreakDone: this.adData.placementType === "preroll" ?
                         () => {
-                            config.adConfig.adShown();
-                            this.logEvent(true);
                             this.callbacks.afterAd();
-                        } : () => debug("adBreakDone")
+                        } :
+                        () => debug("adBreakDone")
                 }
             );
         };
@@ -162,6 +169,13 @@ export class RewardedAd extends AdInstance {
                         this.callbacks.adViewed?.();
                     },
                     noFill: () => {
+                        const platform = config.session.platform;
+                        if (platform === "viber") {
+                            debug("Ad not filled, showing backfill..");
+                            _showBackFill(this.adData.placementType!, this.adData.description, this.callbacks);
+                            return;
+                        }
+
                         if (attempt < this.retryAttempts) {
                             attempt++;
                             debug("Ad not filled, retrying.. \n Retry attempt: " + attempt);
@@ -222,6 +236,12 @@ export class AdConfig {
         adsShown: 0,
     };
 
+    private _adSense: AdSenseConfig = {
+        channelID: "",
+        clientID: "",
+        hostID: ""
+    };
+
     // GD uses events to communicate the ad instance state rather than callbacks, so we need to store the callbacks
     // and call them when the events are triggered.
     private readonly _gdCallbacks: GDCallbacks | undefined;
@@ -229,18 +249,24 @@ export class AdConfig {
     constructor() {
         debug("Initializing AdConfig..");
         const platform = config.session.platform;
+        if (platform === "gd") {
+            this._gdCallbacks = {};
+        }
+    }
+
+    lateInitialize(): void {
+        debug("Late initializing AdConfig..");
+        const platform = config.session.platform;
         if (platform === "link" || platform === "viber") {
             this._setLinkViberAdUnitIds();
         } else if (platform === "facebook") {
             this._setFacebookAdUnitIds();
-        } else if (platform === "gd") {
-            this._gdCallbacks = {};
-            debug("AdConfig initialized: ", this._current);
-        } else if (platform === "wortal") {
-            debug("AdConfig initialized: ", this._current);
-        } else {
-            debug("AdConfig initialized: ", this._current);
         }
+
+        // Delay this so there's time to fetch the ad unit IDs.
+        setTimeout(() => {
+            debug("AdConfig initialized: ", this._current);
+        }, 1000);
     }
 
     get isAdBlocked(): boolean {
@@ -265,6 +291,30 @@ export class AdConfig {
 
     get rewardedId(): string {
         return this._current.rewardedId;
+    }
+
+    get clientID(): string {
+        return this._adSense.clientID;
+    }
+
+    setClientID(clientID: string): void {
+        this._adSense.clientID = clientID;
+    }
+
+    get hostID(): string {
+        return this._adSense.hostID;
+    }
+
+    setHostID(hostID: string): void {
+        this._adSense.hostID = hostID;
+    }
+
+    get channelID(): string {
+        return this._adSense.channelID;
+    }
+
+    setChannelID(channelID: string): void {
+        this._adSense.channelID = channelID;
     }
 
     get adsCalled(): number {
@@ -380,17 +430,17 @@ export class AdConfig {
  * implement the logic from that function here rather than try to refactor the ad calls in the instance implementations.
  * @hidden
  */
-function _showAd(placement: PlacementType, placementId: string, description: string, callbacks: AdCallbacks): void {
+function _showAd(placementType: PlacementType, placementId: string, description: string, callbacks: AdCallbacks): void {
     switch (config.session.platform) {
         case "wortal":
         case "debug":
-            return _showAd_Wortal(placement, description, callbacks);
+            return _showAd_Wortal(placementType, description, callbacks);
         case "link":
         case "viber":
         case "facebook":
-            return _showAd_Rakuten_Facebook(placement, placementId, callbacks);
+            return _showAd_Facebook_Rakuten(placementType, placementId, callbacks);
         case "gd":
-            return _showAd_GD(placement, callbacks);
+            return _showAd_GD(placementType, callbacks);
         default:
             exception(`Unsupported platform for ads: ${config.session.platform}`);
     }
@@ -404,11 +454,6 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
     debug("Showing ad", description);
 
     let adShown = false;
-    const clientId = getParameterByName("clientid");
-    const hostChannelId = getParameterByName("channelid");
-    const hostId = getParameterByName("hostid");
-    const sessionId = getParameterByName('sessid');
-
     const params: any = {
         type: placement,
         name: description,
@@ -419,10 +464,10 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
         const event = new AnalyticsEvent({
             name: 'AdBreakDone',
             features: {
-                client_id: clientId,
-                host_channel_id: hostChannelId,
-                host_id: hostId,
-                session_id: sessionId,
+                client_id: config.adConfig.clientID,
+                host_channel_id: config.adConfig.channelID,
+                host_id: config.adConfig.hostID,
+                session_id: (window as any).wortalSessionId,
                 placement,
                 breakFormat: placementInfo.breakFormat,
                 breakStatus: placementInfo.breakStatus,
@@ -466,10 +511,10 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
                 const event = new AnalyticsEvent({
                     name: 'AdShown',
                     features: {
-                        client_id: clientId,
-                        host_channel_id: hostChannelId,
-                        host_id: hostId,
-                        session_id: sessionId,
+                        client_id: config.adConfig.clientID,
+                        host_channel_id: config.adConfig.channelID,
+                        host_id: config.adConfig.hostID,
+                        session_id: (window as any).wortalSessionId,
                         placement
                     }
                 });
@@ -503,16 +548,16 @@ function _showAd_Wortal(placement: PlacementType, description: string, callbacks
  * Also: https://developers.facebook.com/docs/games/instant-games/sdk/fbinstant7.1/
  * @hidden
  */
-function _showAd_Rakuten_Facebook(placementType: PlacementType, placementId: string, callbacks: AdCallbacks): void {
+function _showAd_Facebook_Rakuten(placementType: PlacementType, placementId: string, callbacks: AdCallbacks): void {
     if (typeof config.platformSDK === "undefined") {
         exception("Platform SDK not initialized. This is a fatal error that should have been caught during initialization.");
         return;
     }
 
     if (placementType === "reward") {
-        return _showRewarded_Rakuten_Facebook(placementId, callbacks);
+        return _showRewarded_Facebook_Rakuten(placementId, callbacks);
     } else {
-        return _showInterstitial_Rakuten_Facebook(placementId, callbacks);
+        return _showInterstitial_Facebook_Rakuten(placementId, callbacks);
     }
 }
 
@@ -534,28 +579,30 @@ function _showAd_GD(placementType: PlacementType, callbacks: AdCallbacks): void 
 }
 
 /** @hidden */
-function _showInterstitial_Rakuten_Facebook(placementId: string, callbacks: AdCallbacks) {
+function _showInterstitial_Facebook_Rakuten(placementId: string, callbacks: AdCallbacks) {
     debug("Attempting to show interstitial ad..");
     let preloadedInterstitial: any = null;
     config.platformSDK.getInterstitialAdAsync(placementId)
         .then((interstitial: any) => {
+            debug("Interstitial ad fetched successfully. Attempting to load..", interstitial);
             callbacks.beforeAd && callbacks.beforeAd();
             preloadedInterstitial = interstitial;
             return preloadedInterstitial.loadAsync();
         })
         .then(() => {
+            debug("Interstitial ad loaded successfully. Attempting to show..");
             preloadedInterstitial.showAsync()
                 .then(() => {
                     debug("Interstitial ad finished successfully.");
                     callbacks.afterAd && callbacks.afterAd();
                 })
                 .catch((error: any) => {
-                    debug("Interstitial ad failed to show.");
+                    debug("Interstitial ad failed to show.", error);
                     _onAdErrorOrNoFill(error, callbacks);
                 });
         })
         .catch((error: any) => {
-            debug("Interstitial ad failed to show.");
+            debug("Interstitial ad failed to load.", error);
             _onAdErrorOrNoFill(error, callbacks);
         });
 }
@@ -573,16 +620,18 @@ function _showInterstitial_GD(placementType: PlacementType, callbacks: AdCallbac
 }
 
 /** @hidden */
-function _showRewarded_Rakuten_Facebook(placementId: string, callbacks: AdCallbacks) {
+function _showRewarded_Facebook_Rakuten(placementId: string, callbacks: AdCallbacks) {
     debug("Attempting to show rewarded video..");
     let preloadedRewardedVideo: any = null;
     config.platformSDK.getRewardedVideoAsync(placementId)
         .then((rewarded: any) => {
+            debug("Rewarded video fetched successfully. Attempting to load..", rewarded);
             callbacks.beforeAd && callbacks.beforeAd();
             preloadedRewardedVideo = rewarded;
             return preloadedRewardedVideo.loadAsync();
         })
         .then(() => {
+            debug("Rewarded video loaded successfully. Attempting to show..");
             preloadedRewardedVideo.showAsync()
                 .then(() => {
                     debug("Rewarded video watched successfully");
@@ -590,14 +639,14 @@ function _showRewarded_Rakuten_Facebook(placementId: string, callbacks: AdCallba
                     callbacks.afterAd && callbacks.afterAd();
                 })
                 .catch((error: any) => {
-                    debug("Rewarded video failed to show.");
+                    debug("Rewarded video failed to show.", error);
                     callbacks.adDismissed && callbacks.adDismissed();
                     callbacks.afterAd && callbacks.afterAd();
                     rethrowPlatformError(error, "showRewarded");
                 });
         })
         .catch((error: any) => {
-            debug("Rewarded video failed to show.");
+            debug("Rewarded video failed to load.", error);
             _onAdErrorOrNoFill(error, callbacks);
         });
 }
@@ -640,6 +689,88 @@ function _showRewarded_GD(callbacks: AdCallbacks): void {
         debug("Rewarded video failed to show.");
         _onAdErrorOrNoFill("No ad instance was found.", callbacks);
     }
+}
+
+/**
+ * Backfills an ad when a platform does not fill an ad request. Uses AFG to show the ad.
+ * @hidden
+ */
+function _showBackFill(placementType: PlacementType, description: string, callbacks: AdCallbacks): void {
+    debug("Showing backfill ad", description);
+
+    let adShown = false;
+    const params: any = {
+        type: placementType,
+        name: description,
+        google_ad_client: config.adConfig.clientID,
+        google_ad_channel: config.adConfig.channelID,
+        google_ad_host: config.adConfig.hostID,
+    };
+
+    params.adBreakDone = function (placementInfo: any) {
+        debug("Placement info", placementInfo);
+        const event = new AnalyticsEvent({
+            name: 'AdBreakDone',
+            features: {
+                client_id: config.adConfig.clientID,
+                host_channel_id: config.adConfig.channelID,
+                host_id: config.adConfig.hostID,
+                session_id: Wortal.player.getID(),
+                placementType,
+                breakFormat: placementInfo.breakFormat,
+                breakStatus: placementInfo.breakStatus,
+            }
+        });
+
+        event.send();
+        callbacks.adBreakDone && callbacks.adBreakDone(placementInfo);
+    }
+
+    if (callbacks.beforeReward) {
+        params.beforeReward = callbacks.beforeReward
+    }
+
+    if (callbacks.adDismissed) {
+        params.adDismissed = callbacks.adDismissed
+    }
+
+    if (callbacks.adViewed) {
+        params.adViewed = callbacks.adViewed
+    }
+
+    debug("Attempting to show", placementType);
+    // Set a timeout to handle ads not showing.
+    setTimeout(function () {
+        if (adShown) {
+            const event = new AnalyticsEvent({
+                name: 'AdShown',
+                features: {
+                    client_id: config.adConfig.clientID,
+                    host_channel_id: config.adConfig.channelID,
+                    host_id: config.adConfig.hostID,
+                    session_id: Wortal.player.getID(),
+                    placementType
+                }
+            });
+
+            event.send();
+        } else {
+            debug("Ad did not show. Skipping..");
+            if (typeof callbacks.noFill !== "function") {
+                return;
+            } else {
+                callbacks.noFill();
+            }
+        }
+    }, 500);
+
+    params.beforeAd = function () {
+        adShown = true;
+        callbacks.beforeAd();
+    };
+
+    params.afterAd = callbacks.afterAd;
+    (window as any).adBreak(params);
 }
 
 /**
