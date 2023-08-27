@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.4] - 2023-08-25
+### Added
+- Ads
+  - Backfill ads on Viber
+
+### Fixed
+- Ads
+  - Duplicate ad event fired on preroll ads
+
 ## [1.6.3] - 2023-08-22
 ### Fixed
 - Core
