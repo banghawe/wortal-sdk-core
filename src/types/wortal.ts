@@ -17,9 +17,13 @@ export const GD_EVENTS = {
     ON_PAUSE: "SDK_GAME_PAUSE",
 }
 
-/** @hidden */
+/**
+ * Different endpoints for Wortal API. Always ends with a slash.
+ * @hidden
+ */
 export const APIEndpoints = {
     ADS: "https://html5gameportal.com/api/v1/fig/ads/",
+    VIBER: "https://html5gameportal.com/api/v1/viber/",
     NOTIFICATIONS: "https://html5gameportal.com/api/v1/notification/",
 }
 
