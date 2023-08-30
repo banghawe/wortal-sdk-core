@@ -9,7 +9,7 @@ export interface CreateTournamentPayload {
      */
     initialScore: number;
     /**
-     * An object holding optional configurations for the tournament.
+     * An object holding configurations for the tournament.
      */
     config: CreateTournamentConfig;
     /**
@@ -53,7 +53,7 @@ export interface CreateTournamentConfig {
  */
 export interface ShareTournamentPayload {
     /**
-     * An optional integer value representing the player's latest score.
+     * An integer value representing the player's latest score.
      */
     score: number;
     /**

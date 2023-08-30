@@ -8,7 +8,7 @@ export default class SDKConfig {
     private readonly _game: GameState;
     private readonly _session: Session;
 
-    // We construct these in lateInitialize because they sometimes depend on a platform SDK to be initialized already
+    // We construct these in initialize/lateInitialize because they sometimes depend on a platform SDK to be initialized already
     // so that we can use the platform's API.
     private _adConfig!: AdConfig;
     private _player!: Player;
@@ -16,6 +16,7 @@ export default class SDKConfig {
     private _isIAPEnabled: boolean = false;
     private _isDebugMode: boolean = false;
     private _isInitialized: boolean = false;
+    private _isPlatformInitialized: boolean = false;
     private _isAutoInit: boolean = true;
 
     private _platformSDK: any;
@@ -25,9 +26,13 @@ export default class SDKConfig {
         this._game = new GameState();
     }
 
+    initialize() {
+        this._adConfig = new AdConfig();
+    }
+
     lateInitialize(): void {
         this._player = new Player().initialize();
-        this._adConfig = new AdConfig();
+        this._adConfig.lateInitialize();
         this._isInitialized = true;
     }
 
@@ -65,6 +70,14 @@ export default class SDKConfig {
 
     get isInitialized(): boolean {
         return this._isInitialized;
+    }
+
+    get isPlatformInitialized(): boolean {
+        return this._isPlatformInitialized;
+    }
+
+    set isPlatformInitialized(value: boolean) {
+        this._isPlatformInitialized = value;
     }
 
     get isAutoInit(): boolean {

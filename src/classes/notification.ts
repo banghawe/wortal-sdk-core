@@ -28,11 +28,13 @@ export class Notification implements INotification {
     send(): Promise<NotificationScheduleResult> {
         debug("Sending notification...");
         const url: string | undefined = this.getScheduleURL_Facebook();
-        if (typeof url === "undefined") {
-            return Promise.reject(operationFailed("Failed to schedule notification. ASID is not defined.", "notifications.scheduleAsync"));
-        }
-
         const body: string = this.buildSchedulePayload_Facebook();
+
+        if (typeof url === "undefined") {
+            return Promise.reject(operationFailed("Failed to schedule notification. ASID is not defined.",
+                "notifications.scheduleAsync",
+                "https://sdk.html5gameportal.com/api/notifications/#scheduleasync"));
+        }
 
         return new Promise((resolve, reject) => {
             fetch(url, {
@@ -47,7 +49,9 @@ export class Notification implements INotification {
                     return response.json();
                 } else {
                     return response.json().then((data) => {
-                        reject(operationFailed(`Failed to schedule notification. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`, "notifications.scheduleAsync"));
+                        reject(operationFailed(`Failed to schedule notification. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`,
+                            "notifications.scheduleAsync",
+                            "https://sdk.html5gameportal.com/api/notifications/#scheduleasync"));
                     });
                 }
             }).then(response => {
@@ -57,7 +61,9 @@ export class Notification implements INotification {
                     success: response.success,
                 });
             }).catch(error => {
-                reject(operationFailed(`Failed to schedule notification. Error: ${error}`, "notifications.scheduleAsync"));
+                reject(operationFailed(`Failed to schedule notification. Error: ${error}`,
+                    "notifications.scheduleAsync",
+                    "https://sdk.html5gameportal.com/api/notifications/#scheduleasync"));
             });
         });
     }
@@ -77,10 +83,11 @@ export class Notification implements INotification {
     }
 
     getScheduleURL_Facebook(): string | undefined {
-        if (typeof config.player.asid !== "string") {
+        if (typeof config.player.asid !== "string" || config.player.asid.length === 0) {
             return undefined;
+        } else {
+            return `${APIEndpoints.NOTIFICATIONS}${config.session.gameId}/fb/${config.player.asid}`;
         }
-        return `${APIEndpoints.NOTIFICATIONS}${config.session.gameId}/fb/${config.player.asid}`;
     }
 }
 

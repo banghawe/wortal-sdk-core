@@ -1,3 +1,4 @@
+import { APIEndpoints } from "../types/wortal";
 import * as _ads from './ads';
 import * as _analytics from './analytics';
 import * as _context from './context';
@@ -10,7 +11,13 @@ import * as _tournament from './tournament';
 import { InitializationOptions } from "../interfaces/session";
 import SDKConfig from "../utils/config";
 import { debug, exception, info } from "../utils/logger";
-import { initializationError, invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
+import {
+    initializationError,
+    invalidParams,
+    notSupported,
+    operationFailed,
+    rethrowPlatformError
+} from "../utils/error-handler";
 import { isValidNumber, isValidString } from "../utils/validators";
 import {
     addGameEndEventListener,
@@ -92,25 +99,44 @@ export let isInitialized: boolean = false;
  * </ul>
  */
 export async function initializeAsync(): Promise<void> {
+    if (!config.isPlatformInitialized) {
+        debug("Platform not initialized yet, awaiting platform initialization..");
+        await _delayUntilPlatformInitialized();
+    }
+
     if (config.isAutoInit) {
-        return Promise.reject(initializationError("SDK is configured to auto initialize. Only call this when manual initialization is enabled.", "initializeAsync"));
+        return Promise.reject(initializationError("SDK is configured to auto initialize. Only call this when manual initialization is enabled.",
+            "initializeAsync",
+            "https://sdk.html5gameportal.com/api/wortal/#initializeasync"));
     }
 
     if (config.isInitialized) {
-        return Promise.reject(initializationError("SDK already initialized.", "initializeAsync"));
+        return Promise.reject(initializationError("SDK already initialized.",
+            "initializeAsync",
+            "https://sdk.html5gameportal.com/api/wortal/#initializeasync"));
     }
 
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform !== "viber" && platform !== "link" && platform !== "facebook") {
-            throw notSupported(`initializeAsync not supported on platform: ${platform}`, "initializeAsync");
+            throw notSupported(`initializeAsync not supported on platform: ${platform}`,
+                "initializeAsync");
         }
 
         debug(`Initializing SDK for ${config.session.platform} platform.`);
         return config.platformSDK.initializeAsync().then(() => {
             config.lateInitialize();
+            tryEnableIAP();
+
+            isInitialized = true;
+            window.dispatchEvent(new Event("wortal-sdk-initialized"));
+
+            debug(`SDK initialized for ${config.session.platform} platform.`);
+            info("SDK initialization complete.");
         }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK: ${error.message}`, "initializeAsync");
+            throw initializationError(`Failed to initialize SDK: ${error.message}`,
+                "initializeAsync",
+                "https://sdk.html5gameportal.com/api/wortal/#initializeasync");
         });
     });
 }
@@ -140,27 +166,25 @@ export async function initializeAsync(): Promise<void> {
  */
 export async function startGameAsync(): Promise<void> {
     if (config.isAutoInit) {
-        return Promise.reject(initializationError("SDK is configured to auto initialize. Only call this when manual initialization is enabled.", "startGameAsync"));
+        return Promise.reject(initializationError("SDK is configured to auto initialize. Only call this when manual initialization is enabled.",
+            "startGameAsync",
+            "https://sdk.html5gameportal.com/api/wortal/#startgameasync"));
     }
 
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform !== "viber" && platform !== "link" && platform !== "facebook") {
-            throw notSupported(`startGameAsync not supported on platform: ${platform}`, "startGameAsync");
+            throw notSupported(`startGameAsync not supported on platform: ${platform}`,
+                "startGameAsync");
         }
 
         return config.platformSDK.startGameAsync().then(() => {
-            tryEnableIAP();
             analytics._logTrafficSource();
             analytics._logGameStart();
-
-            isInitialized = true;
-            window.dispatchEvent(new Event("wortal-sdk-initialized"));
-
-            debug(`SDK initialized for ${config.session.platform} platform.`);
-            info("SDK initialization complete.");
         }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK: ${error.message}`, "startGameAsync");
+            throw initializationError(`Failed to initialize SDK: ${error.message}`,
+                "startGameAsync",
+                "https://sdk.html5gameportal.com/api/wortal/#startgameasync");
         });
     });
 }
@@ -181,7 +205,9 @@ export async function startGameAsync(): Promise<void> {
 export function setLoadingProgress(value: number): void {
     const platform = config.session.platform;
     if (!isValidNumber(value) || value < 0 || value > 100) {
-        throw invalidParams("value must be a number between 0 and 100.", "setLoadingProgress");
+        throw invalidParams("value must be a number between 0 and 100.",
+            "setLoadingProgress",
+            "https://sdk.html5gameportal.com/api/wortal/#parameters_1");
     }
 
     if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -198,7 +224,9 @@ export function setLoadingProgress(value: number): void {
  */
 export function onPause(callback: () => void): void {
     if (typeof callback !== "function") {
-        throw invalidParams("callback needs to be a function.", "onPause");
+        throw invalidParams("callback needs to be a function.",
+            "onPause",
+            "https://sdk.html5gameportal.com/api/wortal/#parameters");
     }
 
     const platform = config.session.platform;
@@ -226,12 +254,15 @@ export function performHapticFeedbackAsync(): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (platform !== "facebook") {
-            throw notSupported(`Haptic feedback not supported on platform: ${platform}`, "performHapticFeedbackAsync");
+            throw notSupported(`Haptic feedback not supported on platform: ${platform}`,
+                "performHapticFeedbackAsync");
         }
 
         return config.platformSDK.performHapticFeedbackAsync()
             .catch((error: any) => {
-                rethrowPlatformError(error, "performHapticFeedbackAsync");
+                rethrowPlatformError(error,
+                    "performHapticFeedbackAsync",
+                    "https://sdk.html5gameportal.com/api/wortal/#performhapticfeedbackasync");
             });
     });
 }
@@ -265,8 +296,11 @@ export function getSupportedAPIs(): string[] {
  * */
 export async function _initializeInternal(options: InitializationOptions): Promise<void> {
     if (config.isInitialized) {
-        return Promise.reject(initializationError("SDK already initialized.", "_initializeInternal"));
+        return Promise.reject(initializationError("SDK already initialized.",
+            "_initializeInternal"));
     }
+
+    config.initialize();
 
     info("Initializing SDK " + __VERSION__);
     addLoadingListener();
@@ -275,6 +309,8 @@ export async function _initializeInternal(options: InitializationOptions): Promi
     const platform = config.session.platform;
     _initializePlatform().then(showAds => {
         debug("Platform: " + platform);
+        config.isPlatformInitialized = true;
+
         if (options.autoInitialize === false
             && (platform === "viber" || platform === "link" || platform === "facebook")) {
             config.isAutoInit = false;
@@ -343,35 +379,50 @@ function _initializePlatform(): Promise<boolean> {
 function _initializePlatform_Wortal(): Promise<boolean> {
     debug("Initializing Wortal platform SDK.");
     return new Promise((resolve, reject) => {
-        //TODO: cache these params as some are needed later for ad calls
         const metaElement = document.createElement("meta");
         const googleAdsSDK = document.createElement("script");
+
         const clientIdParam = getParameterByName("clientid");
-        const debugParam = getParameterByName("debug");
-        const hostChannelIdParam = getParameterByName("channelid");
         const hostIdParam = getParameterByName("hostid");
-        const frequencyCapParam = `${getParameterByName("freqcap") || 30}s`;
-        (window as any).wortalSessionId = getParameterByName('sessid') ?? "";
+        const channelIdParam = getParameterByName("channelid");
 
         if (!isValidString(clientIdParam)) {
-            reject(initializationError("Configuration \"clientid\" missing.", "_initializePlatform_Wortal()"));
+            reject(initializationError("Configuration \"clientid\" missing.",
+                "_initializePlatform_Wortal()"));
         }
+
+        // We don't reject these because they are likely not present in the test environment.
+        if (!isValidString(hostIdParam)) {
+            exception("Configuration \"hostid\" missing. Using default value.");
+        }
+
+        if (!isValidString(channelIdParam)) {
+            exception("Configuration \"channelid\" missing. Using default value.");
+        }
+
+        config.adConfig.setClientID(clientIdParam!);
+        config.adConfig.setHostID(hostIdParam || "");
+        config.adConfig.setChannelID(channelIdParam || "");
+
+        const debugParam = getParameterByName("debug");
+        const frequencyCapParam = `${getParameterByName("freqcap") || 30}s`;
+        (window as any).wortalSessionId = getParameterByName('sessid') ?? "";
 
         if (debugParam === "true") {
             googleAdsSDK.setAttribute("data-ad-client", "ca-pub-123456789");
             googleAdsSDK.setAttribute("data-adbreak-test", "on");
         } else {
-            googleAdsSDK.setAttribute("data-ad-host", hostIdParam ?? "");
-            googleAdsSDK.setAttribute("data-ad-client", clientIdParam!);
+            googleAdsSDK.setAttribute("data-ad-host", config.adConfig.hostID);
+            googleAdsSDK.setAttribute("data-ad-client", config.adConfig.clientID);
+            googleAdsSDK.setAttribute("data-ad-host-channel", config.adConfig.channelID);
             googleAdsSDK.setAttribute("data-ad-frequency-hint", frequencyCapParam);
-            hostChannelIdParam ? googleAdsSDK.setAttribute("data-ad-host-channel", hostChannelIdParam) : null;
         }
 
         googleAdsSDK.setAttribute("src", GOOGLE_SDK_SRC);
         googleAdsSDK.setAttribute("type", "text/javascript");
 
         metaElement.setAttribute("name", "google-adsense-platform-account");
-        metaElement.setAttribute("content", hostIdParam!);
+        metaElement.setAttribute("content", config.adConfig.hostID);
 
         googleAdsSDK.onload = () => {
             debug("Wortal platform SDK initialized with ads.");
@@ -409,7 +460,8 @@ function _initializePlatform_Link(): Promise<boolean> {
 
         linkSDK.onload = () => {
             if (typeof LinkGame === "undefined") {
-                reject(initializationError("Failed to load Link SDK.", "_initializePlatform_Link()"));
+                reject(initializationError("Failed to load Link SDK.",
+                    "_initializePlatform_Link()"));
             }
 
             debug("Link platform SDK initialized.");
@@ -418,7 +470,8 @@ function _initializePlatform_Link(): Promise<boolean> {
         }
 
         linkSDK.onerror = () => {
-            reject(initializationError("Failed to load Link SDK.", "_initializePlatform_Link()"));
+            reject(initializationError("Failed to load Link SDK.",
+                "_initializePlatform_Link()"));
         }
 
         document.head.appendChild(linkSDK);
@@ -439,16 +492,24 @@ function _initializePlatform_Viber(): Promise<boolean> {
 
         viberSDK.onload = () => {
             if (typeof ViberPlay === "undefined") {
-                reject(initializationError("Failed to load Viber SDK.", "_initializePlatform_Viber()"));
+                reject(initializationError("Failed to load Viber SDK.",
+                    "_initializePlatform_Viber()"));
             }
 
             debug("Viber platform SDK initialized.");
             config.platformSDK = ViberPlay;
-            resolve(true);
+            _initializeAdBackFill().then(() => {
+                resolve(true);
+            }).catch((error) => {
+                // We don't reject here because this shouldn't prevent the Viber SDK from working, just the backfill.
+                exception(error.message);
+                resolve(true);
+            });
         }
 
         viberSDK.onerror = () => {
-            reject(initializationError("Failed to load Viber SDK.", "_initializePlatform_Viber()"));
+            reject(initializationError("Failed to load Viber SDK.",
+                "_initializePlatform_Viber()"));
         }
 
         document.head.appendChild(viberSDK);
@@ -469,7 +530,8 @@ function _initializePlatform_Facebook(): Promise<boolean> {
 
         facebookSDK.onload = () => {
             if (typeof FBInstant === "undefined") {
-                reject(initializationError("Failed to load Facebook SDK.", "_initializePlatform_Facebook()"));
+                reject(initializationError("Failed to load Facebook SDK.",
+                    "_initializePlatform_Facebook()"));
             }
 
             debug("Facebook platform SDK initialized.");
@@ -478,7 +540,8 @@ function _initializePlatform_Facebook(): Promise<boolean> {
         }
 
         facebookSDK.onerror = () => {
-            reject(initializationError("Failed to load Facebook SDK.", "_initializePlatform_Facebook()"));
+            reject(initializationError("Failed to load Facebook SDK.",
+                "_initializePlatform_Facebook()"));
         }
 
         document.head.appendChild(facebookSDK);
@@ -515,7 +578,8 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
         const firstScript = document.getElementsByTagName("script")[0];
         if (document.getElementById(id)) {
             if (typeof gdsdk === "undefined") {
-                reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
+                reject(initializationError("Failed to load Game Distribution SDK.",
+                    "_initializePlatform_GD()"));
             }
 
             debug("Game Distribution platform SDK initialized.");
@@ -529,7 +593,8 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
 
             gdSDK.onload = function () {
                 if (typeof gdsdk === "undefined") {
-                    reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
+                    reject(initializationError("Failed to load Game Distribution SDK.",
+                        "_initializePlatform_GD()"));
                 }
 
                 debug("Game Distribution platform SDK initialized.");
@@ -538,7 +603,8 @@ function _initializePlatform_GD(options?: any): Promise<boolean> {
             }
 
             gdSDK.onerror = () => {
-                reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatform_GD()"));
+                reject(initializationError("Failed to load Game Distribution SDK.",
+                    "_initializePlatform_GD()"));
             }
         }
     });
@@ -575,15 +641,17 @@ function _initializeSDK_RakutenFacebook(): Promise<void> {
     debug(`Initializing SDK for ${config.session.platform} platform.`);
     return config.platformSDK.initializeAsync().then(() => {
         config.lateInitialize();
+        tryEnableIAP();
+        debug(`SDK initialized for ${config.session.platform} platform.`);
         return config.platformSDK.startGameAsync().then(() => {
-            tryEnableIAP();
             analytics._logTrafficSource();
-            debug(`SDK initialized for ${config.session.platform} platform.`);
         }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_RakutenFacebook()");
+            throw initializationError(`Failed to initialize SDK: ${error.message}`,
+                "_initializeSDK_RakutenFacebook()");
         });
     }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_RakutenFacebook()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`,
+            "_initializeSDK_RakutenFacebook()");
     });
 }
 
@@ -598,6 +666,9 @@ function _initializeSDK_WortalGD(): Promise<void> {
     return Promise.resolve().then(() => {
         config.lateInitialize();
         config.adConfig.adCalled();
+
+        tryEnableIAP();
+
         debug("Showing pre-roll ad.");
         ads.showInterstitial("preroll", "Preroll",
             () => {
@@ -606,11 +677,11 @@ function _initializeSDK_WortalGD(): Promise<void> {
                 config.adConfig.setPrerollShown(true);
                 config.adConfig.adShown();
                 removeLoadingCover();
-                tryEnableIAP();
                 debug(`SDK initialized for ${config.session.platform} platform.`);
             });
     }).catch((error) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_WortalGD()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`,
+            "_initializeSDK_WortalGD()");
     });
 }
 
@@ -623,10 +694,12 @@ function _initializeSDK_Debug(): Promise<void> {
     debug("Initializing SDK for debugging.");
     return Promise.resolve().then(() => {
         config.lateInitialize();
+        tryEnableIAP();
         removeLoadingCover();
         debug("SDK initialized for debugging.");
     }).catch((error) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_Debug()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`,
+            "_initializeSDK_Debug()");
     });
 }
 
@@ -645,6 +718,94 @@ function _initializeSDK_AdBlocked(): Promise<void> {
         tryEnableIAP();
         debug("SDK initialized for ad blocker.");
     }).catch((error) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, "_initializeSDK_AdBlocked()");
+        throw initializationError(`Failed to initialize SDK: ${error.message}`,
+            "_initializeSDK_AdBlocked()");
+    });
+}
+
+/**
+ * Initializes the ad backfill. This relies on Google AdSense to serve ads on other platforms when an ad request is
+ * not filled.
+ * @hidden
+ * @private
+ */
+function _initializeAdBackFill(): Promise<void> {
+    debug("Initializing ad backfill...");
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (platform !== "viber") {
+            throw notSupported(`Ad backfill not supported on platform: ${platform}`,
+                "_initializeAdBackFill()");
+        }
+
+        let url: string = "";
+        if (platform === "viber") {
+            url = `${APIEndpoints.VIBER}${config.session.gameId}/adsense`;
+        }
+
+        debug("Fetching ad config for backfill...", url);
+        fetch(url, {
+            method: "GET",
+        }).then((response) => {
+            debug("Received response for ad config for backfill.", response);
+            if (response.status === 200) {
+                response.json().then((json) => {
+                    debug("Parsed response for ad config for backfill.", json);
+                    const clientID = json.data.clientId;
+                    const clientHostID = json.data.clientHostId;
+                    const channelID = json.data.channelId;
+
+                    if (!isValidString(clientID)) {
+                        throw operationFailed("Failed to fetch ad config for backfill: clientID missing",
+                            "_initializeAdBackFill()");
+                    }
+
+                    if (!isValidString(clientHostID)) {
+                        throw operationFailed("Failed to fetch ad config for backfill: clientHostID missing",
+                            "_initializeAdBackFill()");
+                    }
+
+                    if (!isValidString(channelID)) {
+                        throw operationFailed("Failed to fetch ad config for backfill: channelID missing",
+                            "_initializeAdBackFill()");
+                    }
+
+                    config.adConfig.setClientID(clientID);
+                    config.adConfig.setHostID(clientHostID);
+                    config.adConfig.setChannelID(channelID);
+
+                    debug("Ad backfill initialized.");
+                }).catch((error) => {
+                    throw operationFailed(`Failed to parse response for backfill: ${error.message}`,
+                        "_initializeAdBackFill()");
+                });
+            } else {
+                throw operationFailed(`Failed to fetch ad config for backfill: ${response.status} // ${response.statusText}`,
+                    "_initializeAdBackFill()");
+            }
+        }).catch((error) => {
+            throw operationFailed(`Failed to fetch ad config for backfill: ${error.message}`,
+                "_initializeAdBackFill()");
+        });
+    });
+}
+
+/**
+ * @hidden
+ * @private
+ */
+function _delayUntilPlatformInitialized(): Promise<void> {
+    // It's possible for the game to call initializeAsync before the platform SDK has been initialized, so we need to
+    // wait for it to be initialized before we allow that call to continue. This is only used in manual initialization mode.
+    return new Promise(resolve => {
+        const checkPlatformInitialized = () => {
+            if (config.isPlatformInitialized) {
+                resolve();
+            } else {
+                debug("Waiting for platform SDK to initialize...");
+                setTimeout(checkPlatformInitialized, 100);
+            }
+        };
+        checkPlatformInitialized();
     });
 }

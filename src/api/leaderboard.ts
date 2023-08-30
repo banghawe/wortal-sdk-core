@@ -1,11 +1,12 @@
 import { Leaderboard, LeaderboardEntry } from "../classes/leaderboard";
+import Wortal from "../index";
 import {
     facebookLeaderboardEntryToWortal,
     facebookLeaderboardToWortal,
     rakutenLeaderboardEntryToWortal,
     rakutenLeaderboardToWortal
 } from "../utils/converters";
-import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
+import { invalidOperation, invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
 import { isValidString } from "../utils/validators";
 import { config } from "./index";
 
@@ -30,7 +31,19 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
-            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.", "leaderboard.getLeaderboardAsync");
+            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.",
+                "leaderboard.getLeaderboardAsync",
+                "https://sdk.html5gameportal.com/api/leaderboard/#parameters_3");
+        }
+
+        if (platform === "facebook") {
+            const id = Wortal.context.getId();
+            if (!isValidString(id)) {
+                throw invalidOperation("Global leaderboards are not supported on Facebook. Switch to a context before calling this API.",
+                    "leaderboard.getLeaderboardAsync",
+                    "https://sdk.html5gameportal.com/api/leaderboard/");
+            }
+            name += `.${id}`;
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -43,10 +56,13 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
                     }
                 })
                 .catch((e: any) => {
-                    throw rethrowPlatformError(e, "leaderboard.getLeaderboardAsync");
+                    throw rethrowPlatformError(e,
+                        "leaderboard.getLeaderboardAsync",
+                        "https://sdk.html5gameportal.com/api/leaderboard/#getleaderboardasync");
                 });
         } else {
-            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`, "leaderboard.getLeaderboardAsync");
+            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
+                "leaderboard.getLeaderboardAsync");
         }
     });
 }
@@ -76,7 +92,19 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
-            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.", "leaderboard.sendEntryAsync");
+            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.",
+                "leaderboard.sendEntryAsync",
+                "https://sdk.html5gameportal.com/api/leaderboard/#parameters_5");
+        }
+
+        if (platform === "facebook") {
+            const id = Wortal.context.getId();
+            if (!isValidString(id)) {
+                throw invalidOperation("Global leaderboards are not supported on Facebook. Switch to a context before calling this API.",
+                    "leaderboard.sendEntryAsync",
+                    "https://sdk.html5gameportal.com/api/leaderboard/");
+            }
+            name += `.${id}`;
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -90,10 +118,13 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
                     }
                 })
                 .catch((e: any) => {
-                    throw rethrowPlatformError(e, "leaderboard.sendEntryAsync");
+                    throw rethrowPlatformError(e,
+                        "leaderboard.sendEntryAsync",
+                        "https://sdk.html5gameportal.com/api/leaderboard/#sendentryasync");
                 });
         } else {
-            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`, "leaderboard.sendEntryAsync");
+            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
+                "leaderboard.sendEntryAsync");
         }
     });
 }
@@ -120,7 +151,19 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
-            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.", "leaderboard.getEntriesAsync");
+            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.",
+                "leaderboard.getEntriesAsync",
+                "https://sdk.html5gameportal.com/api/leaderboard/#parameters_1");
+        }
+
+        if (platform === "facebook") {
+            const id = Wortal.context.getId();
+            if (!isValidString(id)) {
+                throw invalidOperation("Global leaderboards are not supported on Facebook. Switch to a context before calling this API.",
+                    "leaderboard.getEntriesAsync",
+                    "https://sdk.html5gameportal.com/api/leaderboard/");
+            }
+            name += `.${id}`;
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -136,10 +179,13 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
                     })
                 })
                 .catch((e: any) => {
-                    throw rethrowPlatformError(e, "leaderboard.getEntriesAsync");
+                    throw rethrowPlatformError(e,
+                        "leaderboard.getEntriesAsync",
+                        "https://sdk.html5gameportal.com/api/leaderboard/#getentriesasync");
                 });
         } else {
-            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`, "leaderboard.getEntriesAsync");
+            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
+                "leaderboard.getEntriesAsync");
         }
     });
 }
@@ -164,7 +210,19 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
-            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.", "leaderboard.getPlayerEntryAsync");
+            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.",
+                "leaderboard.getPlayerEntryAsync",
+                "https://sdk.html5gameportal.com/api/leaderboard/#parameters_4");
+        }
+
+        if (platform === "facebook") {
+            const id = Wortal.context.getId();
+            if (!isValidString(id)) {
+                throw invalidOperation("Global leaderboards are not supported on Facebook. Switch to a context before calling this API.",
+                    "leaderboard.getPlayerEntryAsync",
+                    "https://sdk.html5gameportal.com/api/leaderboard/");
+            }
+            name += `.${id}`;
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -178,10 +236,13 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
                     }
                 })
                 .catch((e: any) => {
-                    throw rethrowPlatformError(e, "leaderboard.getPlayerEntryAsync");
+                    throw rethrowPlatformError(e,
+                        "leaderboard.getPlayerEntryAsync",
+                        "https://sdk.html5gameportal.com/api/leaderboard/#getplayerentryasync");
                 });
         } else {
-            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`, "leaderboard.getPlayerEntryAsync");
+            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
+                "leaderboard.getPlayerEntryAsync");
         }
     });
 }
@@ -205,7 +266,19 @@ export function getEntryCountAsync(name: string): Promise<number> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
-            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.", "leaderboard.getEntryCountAsync");
+            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.",
+                "leaderboard.getEntryCountAsync",
+                "https://sdk.html5gameportal.com/api/leaderboard/#parameters_2");
+        }
+
+        if (platform === "facebook") {
+            const id = Wortal.context.getId();
+            if (!isValidString(id)) {
+                throw invalidOperation("Global leaderboards are not supported on Facebook. Switch to a context before calling this API.",
+                    "leaderboard.getEntryCountAsync",
+                    "https://sdk.html5gameportal.com/api/leaderboard/");
+            }
+            name += `.${id}`;
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -215,10 +288,13 @@ export function getEntryCountAsync(name: string): Promise<number> {
                     return count;
                 })
                 .catch((e: any) => {
-                    throw rethrowPlatformError(e, "leaderboard.getEntryCountAsync");
+                    throw rethrowPlatformError(e,
+                        "leaderboard.getEntryCountAsync",
+                        "https://sdk.html5gameportal.com/api/leaderboard/#getentrycountasync");
                 });
         } else {
-            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`, "leaderboard.getEntryCountAsync");
+            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
+                "leaderboard.getEntryCountAsync");
         }
     });
 }
@@ -246,7 +322,19 @@ export function getConnectedPlayersEntriesAsync(name: string, count: number, off
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(name)) {
-            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.", "leaderboard.getConnectedPlayersEntriesAsync");
+            throw invalidParams("name cannot be null or empty. Please provide a valid string for the name parameter.",
+                "leaderboard.getConnectedPlayersEntriesAsync",
+                "https://sdk.html5gameportal.com/api/leaderboard/#parameters");
+        }
+
+        if (platform === "facebook") {
+            const id = Wortal.context.getId();
+            if (!isValidString(id)) {
+                throw invalidOperation("Global leaderboards are not supported on Facebook. Switch to a context before calling this API.",
+                    "leaderboard.getConnectedPlayersEntriesAsync",
+                    "https://sdk.html5gameportal.com/api/leaderboard/");
+            }
+            name += `.${id}`;
         }
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
@@ -262,10 +350,13 @@ export function getConnectedPlayersEntriesAsync(name: string, count: number, off
                     })
                 })
                 .catch((e: any) => {
-                    throw rethrowPlatformError(e, "leaderboard.getConnectedPlayersEntriesAsync");
+                    throw rethrowPlatformError(e,
+                        "leaderboard.getConnectedPlayersEntriesAsync",
+                        "https://sdk.html5gameportal.com/api/leaderboard/#getconnectedplayersentriesasync");
                 });
         } else {
-            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`, "leaderboard.getConnectedPlayersEntriesAsync");
+            throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
+                "leaderboard.getConnectedPlayersEntriesAsync");
         }
     });
 }

@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.6.5] - 2023-08-29
+### Added
+- Core
+  - Error messages now include a URL to the relevant API docs
+
+### Fixed
+- Core
+  - initializeAsync now awaits the platform SDK initialization in manual mode
+- Notifications
+  - Notification APIs now throw an error if the ASID is missing
+
+### Changed
+- IAP
+  - Check for IAP support now happens earlier
+- Leaderboard
+  - APIs now append current context ID to leaderboard name automatically
+  - APIs now throw errors if in solo context on Facebook
+
+## [1.6.4] - 2023-08-25
+### Added
+- Ads
+  - Backfill ads on Viber
+
+### Fixed
+- Ads
+  - Duplicate ad event fired on preroll ads
+
 ## [1.6.3] - 2023-08-22
 ### Fixed
 - Core
