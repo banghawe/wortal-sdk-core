@@ -3,8 +3,8 @@ import { ErrorMessage } from "../interfaces/wortal";
 /** @hidden */
 export function rethrowPlatformError(original: any, context: string, url?: string): ErrorMessage {
     return {
-        code: original.code,
-        message: original.message,
+        code: original.code || "UNKNOWN",
+        message: original.message || "No message provided by the platform SDK.",
         context: context,
         url: url,
     }
