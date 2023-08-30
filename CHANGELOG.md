@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.6] - 2023-08-31
+### Fixed
+- Core
+  - Async calls not being awaited during initialization
+- Player
+  - canSubscribeBotAsync no longer returns an implicit value
+
 ## [1.6.5] - 2023-08-29
 ### Added
 - Core
