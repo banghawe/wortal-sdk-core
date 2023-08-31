@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.7] - 2023-09-01
+### Fixed
+- Core
+  - Initialization failing in GD prod environment
+
 ## [1.6.6] - 2023-08-31
 ### Fixed
 - Core
