@@ -1,5 +1,5 @@
-let productID = "";
-let token = "";
+let productID = "mock.product.123";
+let token = "mock.purchase.123";
 
 function iapIsEnabled() {
     appendText(Wortal.iap.isEnabled());
@@ -30,6 +30,6 @@ function iapMakePurchaseAsync() {
 
 function iapConsumePurchaseAsync() {
     Wortal.iap.consumePurchaseAsync(token)
-        .then(result => appendText(JSON.stringify(result)))
+        .then("Purchase consumed")
         .catch(error => appendText(error));
 }

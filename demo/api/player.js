@@ -19,20 +19,20 @@ function playerIsFirstPlay() {
 }
 
 function playerGetDataAsync() {
-    Wortal.player.getDataAsync()
+    Wortal.player.getDataAsync(["test"])
         .then(result => appendText(JSON.stringify(result)))
         .catch(error => appendText(error));
 }
 
 function playerSetDataAsync() {
     Wortal.player.setDataAsync({test: "test"})
-        .then(result => appendText(JSON.stringify(result)))
+        .then("Data set")
         .catch(error => appendText(error));
 }
 
 function playerFlushDataAsync() {
     Wortal.player.flushDataAsync()
-        .then(result => appendText(JSON.stringify(result)))
+        .then("Data flushed")
         .catch(error => appendText(error));
 }
 
@@ -68,6 +68,6 @@ function playerCanSubscribeBotAsync() {
 
 function playerSubscribeBotAsync() {
     Wortal.player.subscribeBotAsync()
-        .then(result => appendText(JSON.stringify(result)))
+        .then("Bot subscribed")
         .catch(error => appendText(error));
 }

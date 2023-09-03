@@ -1,6 +1,6 @@
 import { LeaderboardData, LeaderboardEntryData } from "../interfaces/leaderboard";
 import { debug } from "../utils/logger";
-import { LeaderboardPlayer } from "./player";
+import { ConnectedPlayer, LeaderboardPlayer } from "./player";
 
 /**
  * Represents a leaderboard for the game.
@@ -32,6 +32,14 @@ export class Leaderboard {
      */
     get contextId(): string {
         return this._current.contextId;
+    }
+
+    /**
+     * Creates a mock leaderboard for debugging and testing purposes.
+     * @hidden
+     */
+    static mock(): Leaderboard {
+        return new Leaderboard(1234567890, "Mock Leaderboard", "1234567890");
     }
 }
 
@@ -98,5 +106,23 @@ export class LeaderboardEntry {
      */
     get details(): string {
         return this._current.details!;
+    }
+
+    /**
+     * Creates a mock leaderboard entry for debugging and testing purposes. Pass in optional rank and score if creating
+     * multiple entries to test sorting.
+     * @param rank Rank of the entry.
+     * @param score Score of the entry.
+     * @hidden
+     */
+    static mock(rank: number = 1, score: number = 100): LeaderboardEntry {
+        return new LeaderboardEntry({
+            player: ConnectedPlayer.mock(),
+            rank: rank || 1,
+            score: score || 100,
+            formattedScore: `${score} points`,
+            timestamp: Date.now() - (60000 * rank), // For testing sorting by timestamp
+            details: "Mock entry"
+        });
     }
 }

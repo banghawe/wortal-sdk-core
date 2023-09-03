@@ -46,10 +46,13 @@ export function tryEnableIAP(): void {
     if (platform === "viber" || platform === "facebook") {
         config.platformSDK.payments.onReady(() => {
             config.enableIAP();
-            debug("IAP initialized for platform.");
+            debug(`IAP initialized for ${platform} platform.`);
         });
+    } else if (platform === "debug") {
+        config.enableIAP();
+        debug("IAP initialized for debugging.");
     } else {
-        debug("IAP not supported. This may be due to platform, device or regional restrictions.");
+        debug(`IAP not supported in this session. This may be due to platform, device or regional restrictions. \nPlatform: ${platform} // Device: ${Wortal.session.getDevice()} // Region: ${config.session.country}`);
     }
 }
 
