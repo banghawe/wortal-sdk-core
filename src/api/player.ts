@@ -27,8 +27,8 @@ export function getName(): string | null {
 /**
  * Gets the player's photo from the platform.
  * @example
- * Wortal.player.getPhoto(); // 'data:image/png;base64,iVBORw0KGgoAAAANSUh..' (base64 encoded image)
- * @returns {string | null} URL of base64 image for the player's photo.
+ * Wortal.player.getPhoto();
+ * @returns {string | null} URL of image for the player's photo.
  */
 export function getPhoto(): string | null {
     return config.player.photo;
