@@ -130,4 +130,18 @@ export class ScheduledNotification {
     get createdTime(): string {
         return this.notificationData.createdTime;
     }
+
+    /**
+     * Creates a mock notification for debugging and testing purposes.
+     * @hidden
+     */
+    static mock(label?: string): ScheduledNotification {
+        const id = Math.floor(Math.random() * 1000000).toString();
+        return new ScheduledNotification({
+            id: id,
+            status: "SCHEDULED",
+            label: label || "mock_notification",
+            createdTime: new Date().toISOString(),
+        });
+    }
 }

@@ -29,27 +29,31 @@ import { config } from "./index";
  */
 export function scheduleAsync(payload: NotificationPayload): Promise<NotificationScheduleResult> {
     const platform = config.session.platform;
-
     return Promise.resolve().then(() => {
-        if (platform !== "facebook") {
-            return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`,
-                "notifications.scheduleAsync"));
-        }
-
         if (!isValidString(payload.title)) {
-            return Promise.reject(invalidParams("title cannot be null or empty. Please provide a valid string for the payload.title property.",
+            throw invalidParams("title cannot be null or empty. Please provide a valid string for the payload.title property.",
                 "notifications.scheduleAsync",
-                "https://sdk.html5gameportal.com/api/interfaces/notification-payload/"));
+                "https://sdk.html5gameportal.com/api/interfaces/notification-payload/");
         }
 
         if (!isValidString(payload.body)) {
-            return Promise.reject(invalidParams("body cannot be null or empty. Please provide a valid string for the payload.body property.",
+            throw invalidParams("body cannot be null or empty. Please provide a valid string for the payload.body property.",
                 "notifications.scheduleAsync",
-                "https://sdk.html5gameportal.com/api/interfaces/notification-payload/"));
+                "https://sdk.html5gameportal.com/api/interfaces/notification-payload/");
         }
 
-        const notification = new Notification(payload);
-        return notification.send();
+        if (platform === "facebook") {
+            const notification = new Notification(payload);
+            return notification.send();
+        } else if (platform === "debug") {
+            return {
+                id: "1234567890",
+                success: true,
+            };
+        } else {
+            throw notSupported(`Notifications not supported on platform: ${platform}`,
+                "notifications.scheduleAsync");
+        }
     });
 }
 
@@ -72,7 +76,9 @@ export function getHistoryAsync(): Promise<ScheduledNotification[]> {
     const platform = config.session.platform;
     const url: string | undefined = _getHistoryURL_Facebook();
 
-    if (platform !== "facebook") {
+    if (platform === "debug") {
+        return Promise.resolve([ScheduledNotification.mock("daily_reward"), ScheduledNotification.mock("resources_full"), ScheduledNotification.mock()]);
+    } else if (platform !== "facebook") {
         return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`,
             "notifications.getHistoryAsync"));
     }
@@ -136,7 +142,15 @@ export function cancelAsync(id: string): Promise<boolean> {
     const platform = config.session.platform;
     const url = _getCancelURL_Facebook();
 
-    if (platform !== "facebook") {
+    if (!isValidString(id)) {
+        return Promise.reject(invalidParams("id cannot be null or empty. Please provide a valid string for the id parameter.",
+            "notifications.cancelAsync",
+            "https://sdk.html5gameportal.com/api/notifications/#parameters_1"));
+    }
+
+    if (platform === "debug") {
+        return Promise.resolve(true);
+    } else if (platform !== "facebook") {
         return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`,
             "notifications.cancelAsync"));
     }
@@ -145,12 +159,6 @@ export function cancelAsync(id: string): Promise<boolean> {
         return Promise.reject(operationFailed("Failed to cancel notification. ASID is not available.",
             "notifications.cancelAsync",
             "https://sdk.html5gameportal.com/api/notifications/#cancelasync"));
-    }
-
-    if (!isValidString(id)) {
-        return Promise.reject(invalidParams("id cannot be null or empty. Please provide a valid string for the id parameter.",
-            "notifications.cancelAsync",
-            "https://sdk.html5gameportal.com/api/notifications/#parameters_1"));
     }
 
     return new Promise((resolve, reject) => {
@@ -199,7 +207,9 @@ export function cancelAllAsync(label?: string): Promise<boolean> {
     const platform = config.session.platform;
     const url = _getCancelAllURL_Facebook();
 
-    if (platform !== "facebook") {
+    if (platform === "debug") {
+        return Promise.resolve(true);
+    } else if (platform !== "facebook") {
         return Promise.reject(notSupported(`Notifications not supported on platform: ${platform}`,
             "notifications.cancelAllAsync"));
     }

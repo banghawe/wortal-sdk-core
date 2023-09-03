@@ -19,6 +19,11 @@ export function getEntryPointData(): Record<string, unknown> {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.getEntryPointData();
+    } else if (platform === "debug") {
+        return {
+            "referral_id": "debug",
+            "bonus_data": "debug",
+        };
     } else {
         return {};
     }
@@ -49,6 +54,8 @@ export function getEntryPointAsync(): Promise<string> {
                         "player.getEntryPointAsync",
                         "https://sdk.html5gameportal.com/api/session/#getentrypointasync");
                 });
+        } else if (platform === "debug") {
+            return "debug";
         } else {
             throw notSupported(`Session API not currently supported on platform: ${platform}`,
                 "session.getEntryPointAsync");
@@ -98,6 +105,11 @@ export function getTrafficSource(): TrafficSource {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber") {
         return config.platformSDK.getTrafficSource();
+    } else if (platform === "debug") {
+        return {
+            "r_entrypoint": "debug",
+            "utm_source": "debug",
+        };
     } else {
         return {};
     }
@@ -210,6 +222,8 @@ export function switchGameAsync(gameID: string, data?: object): Promise<void> {
                         "player.switchGameAsync",
                         "https://sdk.html5gameportal.com/api/session/#switchgameasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`Session API not currently supported on platform: ${platform}`,
                 "session.switchGameAsync");

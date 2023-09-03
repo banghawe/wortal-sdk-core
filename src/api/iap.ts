@@ -48,6 +48,8 @@ export function getCatalogAsync(): Promise<Product[]> {
                         "iap.getCatalogAsync",
                         "https://sdk.html5gameportal.com/api/iap/#getcatalogasync");
                 });
+        } else if (platform === "debug") {
+            return [_getMockProduct(), _getMockProduct(), _getMockProduct()];
         } else {
             throw notSupported(`IAP API not currently supported on platform: ${platform}`,
                 "iap.getCatalogAsync");
@@ -89,6 +91,8 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
                         "iap.getPurchasesAsync",
                         "https://sdk.html5gameportal.com/api/iap/#getpurchasesasync");
                 });
+        } else if (platform === "debug") {
+            return [_getMockPurchase(), _getMockPurchase(), _getMockPurchase()];
         } else {
             throw notSupported(`IAP API not currently supported on platform: ${platform}`,
                 "iap.getPurchasesAsync");
@@ -118,15 +122,15 @@ export function getPurchasesAsync(): Promise<Purchase[]> {
 export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (!config.isIAPEnabled) {
-            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.",
-                "iap.makePurchaseAsync");
-        }
-
         if (!isValidPurchaseConfig(purchase)) {
             throw invalidParams("productID cannot be null or empty. Please provide a valid string for the productID parameter.",
                 "iap.makePurchaseAsync",
                 "https://sdk.html5gameportal.com/api/interfaces/purchase-config/");
+        }
+
+        if (!config.isIAPEnabled) {
+            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.",
+                "iap.makePurchaseAsync");
         }
 
         if (platform === "viber" || platform === "facebook") {
@@ -139,6 +143,8 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
                         "iap.makePurchaseAsync",
                         "https://sdk.html5gameportal.com/api/iap/#makepurchaseasync");
                 });
+        } else if (platform === "debug") {
+            return _getMockPurchase();
         } else {
             throw notSupported(`IAP API not currently supported on platform: ${platform}`,
                 "iap.makePurchaseAsync");
@@ -167,15 +173,15 @@ export function makePurchaseAsync(purchase: PurchaseConfig): Promise<Purchase> {
 export function consumePurchaseAsync(token: string): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (!config.isIAPEnabled) {
-            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.",
-                "iap.consumePurchaseAsync");
-        }
-
         if (!isValidString(token)) {
             throw invalidParams("token cannot be null or empty. Please provide a valid string for the token parameter.",
                 "iap.consumePurchaseAsync",
                 "https://sdk.html5gameportal.com/api/iap/#parameters");
+        }
+
+        if (!config.isIAPEnabled) {
+            throw notSupported("IAP is currently disabled. Please check iap.isEnabled before using the IAP API.",
+                "iap.consumePurchaseAsync");
         }
 
         if (platform === "viber" || platform === "facebook") {
@@ -185,9 +191,52 @@ export function consumePurchaseAsync(token: string): Promise<void> {
                         "iap.consumePurchaseAsync",
                         "https://sdk.html5gameportal.com/api/iap/#consumepurchaseasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`IAP API not currently supported on platform: ${platform}`,
                 "iap.consumePurchaseAsync");
         }
     });
+}
+
+/**
+ * Returns a mock product for debug and testing purposes.
+ * Randomly generates a product ID (100-999) and price (0.10 - 99.99 USD).
+ * @hidden
+ * @private
+ */
+function _getMockProduct(): Product {
+    const productID = Math.floor(Math.random() * 900) + 100;
+    const cost = (Math.random() * (99.99 - 0.10) + 0.10).toFixed(2);
+
+    return {
+        productID: `mock.product.${productID}`,
+        title: `Mock Product ${productID}`,
+        description: "A mock product for testing.",
+        price: cost,
+        priceCurrencyCode: "USD",
+    };
+}
+
+/**
+ * Returns a mock purchase for debug and testing purposes.
+ * Randomly generates a product ID (100-999) and timestamp of 5 minutes ago. PaymentID and purchaseToken are generated
+ * from the product ID and timestamp. SignedRequest is a mock string and does not represent a real signed request or
+ * value that the platform SDK would return.
+ * @hidden
+ * @private
+ */
+function _getMockPurchase(): Purchase {
+    const productID = Math.floor(Math.random() * 900) + 100;
+    const timestamp = Math.floor((new Date().getTime() - 300000) / 1000).toString();
+    const paymentID = `mock.payment.${productID}.${timestamp}`;
+
+    return {
+        productID: `mock.product.${productID}`,
+        paymentID: paymentID,
+        purchaseTime: timestamp,
+        purchaseToken: paymentID,
+        signedRequest: "mock.signedRequest",
+    };
 }

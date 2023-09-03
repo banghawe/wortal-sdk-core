@@ -24,23 +24,46 @@ export class Tournament {
         }
     }
 
+    /**
+     * The ID of the tournament.
+     */
     get id(): string {
         return this._current.id;
     }
 
+    /**
+     * The ID of the context in which the tournament is running.
+     */
     get contextID(): string {
         return this._current.contextID;
     }
 
+    /**
+     * Unix timestamp of when the tournament ends.
+     */
     get endTime(): number {
         return this._current.endTime;
     }
 
+    /**
+     * The title of the tournament.
+     */
     get title(): string | undefined {
         return this._current.title;
     }
 
+    /**
+     * Payload attached to the tournament.
+     */
     get payload(): object | undefined {
         return this._current.payload;
+    }
+
+    /**
+     * Creates a mock tournament for debugging and testing purposes.
+     * @hidden
+     */
+    static mock(): Tournament {
+        return new Tournament("123456789", "987654321", 1234567890, "Test Tournament", '{"foo": "bar"}');
     }
 }

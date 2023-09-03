@@ -31,6 +31,8 @@ export function getId(): string | null {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.context.getID();
+    } else if (platform === "debug") {
+        return "debug";
     } else {
         return null;
     }
@@ -47,6 +49,8 @@ export function getType(): ContextType {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.context.getType();
+    } else if (platform === "debug") {
+        return "THREAD";
     } else {
         // Platform doesn't support context play so we'll just return solo.
         return "SOLO";
@@ -76,31 +80,33 @@ export function getType(): ContextType {
 export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "wortal" || platform === "gd") {
+        if (platform === "link" || platform === "viber" || platform === "facebook") {
+            return config.platformSDK.context.getPlayersAsync()
+                .then((players: any) => {
+                    return players.map((player: any) => {
+                        const playerData: PlayerData = {
+                            id: player.getID(),
+                            name: player.getName(),
+                            photo: player.getPhoto(),
+                            // Facebook's player model doesn't have the hasPlayed flag.
+                            isFirstPlay: platform === "facebook" ? false : !player.hasPlayed,
+                            daysSinceFirstPlay: 0,
+                        };
+
+                        return new ConnectedPlayer(playerData);
+                    });
+                })
+                .catch((e: any) => {
+                    throw rethrowPlatformError(e,
+                        "context.getPlayersAsync",
+                        "https://sdk.html5gameportal.com/api/context/#getplayersasync");
+                });
+        } else if (platform === "debug") {
+            return [ConnectedPlayer.mock(), ConnectedPlayer.mock(), ConnectedPlayer.mock()];
+        } else {
             throw notSupported(`context.getPlayersAsync not currently supported on platform: ${platform}`,
                 "context.getPlayersAsync");
         }
-
-        return config.platformSDK.context.getPlayersAsync()
-            .then((players: any) => {
-                return players.map((player: any) => {
-                    const playerData: PlayerData = {
-                        id: player.getID(),
-                        name: player.getName(),
-                        photo: player.getPhoto(),
-                        // Facebook's player model doesn't have the hasPlayed flag.
-                        isFirstPlay: platform === "facebook" ? false : !player.hasPlayed,
-                        daysSinceFirstPlay: 0,
-                    };
-
-                    return new ConnectedPlayer(playerData);
-                });
-            })
-            .catch((e: any) => {
-                throw rethrowPlatformError(e,
-                    "context.getPlayersAsync",
-                    "https://sdk.html5gameportal.com/api/context/#getplayersasync");
-            });
     });
 }
 
@@ -138,11 +144,6 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
 export function inviteAsync(payload: InvitePayload): Promise<number> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "wortal" || platform === "gd") {
-            throw notSupported(`context.inviteAsync not currently supported on platform: ${platform}`,
-                "context.inviteAsync");
-        }
-
         if (!isValidPayloadText(payload.text)) {
             throw invalidParams("text cannot be null or empty. Please provide a valid string for the payload.text property.",
                 "context.inviteAsync",
@@ -153,6 +154,13 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
             throw invalidParams("image was invalid. Please provide a valid data URL for a base64 encoded image for the payload.image property.",
                 "context.inviteAsync",
                 "https://sdk.html5gameportal.com/api/interfaces/invite-payload/");
+        }
+
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.inviteAsync not currently supported on platform: ${platform}`,
+                "context.inviteAsync");
+        } else if (platform === "debug") {
+            return 0;
         }
 
         let convertedPayload: any = payload;
@@ -217,11 +225,6 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
 export function shareAsync(payload: SharePayload): Promise<number> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "wortal" || platform === "gd") {
-            throw notSupported(`context.shareAsync not currently supported on platform: ${platform}`,
-                "context.shareAsync");
-        }
-
         if (!isValidPayloadText(payload.text)) {
             throw invalidParams("text cannot be null or empty. Please provide a valid string for the payload.text property.",
                 "context.shareAsync",
@@ -232,6 +235,13 @@ export function shareAsync(payload: SharePayload): Promise<number> {
             throw invalidParams("image was invalid. Please provide a valid data URL for a base64 encoded image for the payload.image property.",
                 "context.shareAsync",
                 "https://sdk.html5gameportal.com/api/interfaces/share-payload/");
+        }
+
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.shareAsync not currently supported on platform: ${platform}`,
+                "context.shareAsync");
+        } else if (platform === "debug") {
+            return 0;
         }
 
         let convertedPayload: any = payload;
@@ -286,15 +296,17 @@ export function shareAsync(payload: SharePayload): Promise<number> {
 export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform !== "facebook") {
-            throw notSupported(`context.shareLinkAsync not currently supported on platform: ${platform}`,
-                "context.shareLinkAsync");
-        }
-
         if (typeof payload.data === "undefined") {
             throw invalidParams("data cannot be null or empty. Please provide a valid object for the payload.data property.",
                 "context.shareLinkAsync",
                 "https://sdk.html5gameportal.com/api/interfaces/link-share-payload/");
+        }
+
+        if (platform === "debug") {
+            return;
+        } else if (platform !== "facebook") {
+            throw notSupported(`context.shareLinkAsync not currently supported on platform: ${platform}`,
+                "context.shareLinkAsync");
         }
 
         return config.platformSDK.shareLinkAsync(payload)
@@ -330,11 +342,6 @@ export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
 export function updateAsync(payload: UpdatePayload): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "wortal" || platform === "gd") {
-            throw notSupported(`context.updateAsync not currently supported on platform: ${platform}`,
-                "context.updateAsync");
-        }
-
         if (!isValidPayloadText(payload.text)) {
             throw invalidParams("text cannot be null or empty. Please provide a valid string for the payload.text property.",
                 "context.updateAsync",
@@ -345,6 +352,13 @@ export function updateAsync(payload: UpdatePayload): Promise<void> {
             throw invalidParams("image was invalid. Please provide a valid data URL for a base64 encoded image for the payload.image property.",
                 "context.updateAsync",
                 "https://sdk.html5gameportal.com/api/interfaces/update-payload/");
+        }
+
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.updateAsync not currently supported on platform: ${platform}`,
+                "context.updateAsync");
+        } else if (platform === "debug") {
+            return;
         }
 
         let convertedPayload: any = payload;
@@ -389,6 +403,8 @@ export function chooseAsync(payload?: ChoosePayload): Promise<void> {
         if (platform === "wortal" || platform === "gd") {
             throw notSupported(`context.chooseAsync not currently supported on platform: ${platform}`,
                 "context.chooseAsync");
+        } else if (platform === "debug") {
+            return;
         }
 
         //TODO: add support for link payload
@@ -433,15 +449,17 @@ export function switchAsync(contextId: string): Promise<void> {
     //TODO: add switchSilentlyIfSolo parameter
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "wortal" || platform === "gd") {
-            throw notSupported(`context.switchAsync not currently supported on platform: ${platform}`,
-                "context.switchAsync");
-        }
-
         if (!isValidString(contextId)) {
             throw invalidParams("contextId cannot be null or empty. Please provide a valid string for the contextID parameter.",
                 "context.switchAsync",
                 "https://sdk.html5gameportal.com/api/context/#parameters_6")
+        }
+
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.switchAsync not currently supported on platform: ${platform}`,
+                "context.switchAsync");
+        } else if (platform === "debug") {
+            return;
         }
 
         return config.platformSDK.context.switchAsync(contextId)
@@ -456,13 +474,19 @@ export function switchAsync(contextId: string): Promise<void> {
 //TODO: improve this doc
 /**
  * <p>Attempts to create a context between the current player and a specified player or a list of players. This API
- * supports 3 use cases: 1) When the input is a single playerID, it attempts to create or switch into a context between
- * a specified player and the current player 2) When the input is a list of connected playerIDs, it attempts to create
- * a context containing all the players 3) When there's no input, a friend picker will be loaded to ask the player to
- * create a context with friends to play with.</p>
+ * supports 3 use cases:
+ *
+ * 1. When the input is a single playerID, it attempts to create or switch into a context between a specified player
+ * and the current player
+ * 2. When the input is a list of connected playerIDs, it attempts to create a context containing all the players
+ * 3. When there's no input, a friend picker will be loaded to ask the player to create a context with friends to
+ * play with.</p>
  * <p>For each of these cases, the returned promise will reject if any of the players listed are not Connected Players
  * of the current player, or if the player denies the request to enter the new context. Otherwise, the promise will
  * resolve when the game has switched into the new context.</p>
+ *
+ * PLATFORM NOTE: Viber and Link only support context creation with a single player. If an array of player IDs is passed
+ * on these platforms, the call will be made with the first ID in the array.
  * @example
  * Wortal.context.createAsync('player123');
  * @param playerId ID of player to create a context with, or a list of player IDs to create a context with. If not
@@ -484,11 +508,6 @@ export function switchAsync(contextId: string): Promise<void> {
 export function createAsync(playerId?: string | string[]): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "wortal" || platform === "gd") {
-            throw notSupported(`context.createAsync not currently supported on platform: ${platform}`,
-                "context.createAsync");
-        }
-
         // Link & Viber only support creating a context with a single player, and we must pass in a player ID.
         // Facebook supports creating a context with a single player, list of players, or no player (to open a friend picker).
         if (platform === "link" || platform === "viber") {
@@ -501,6 +520,13 @@ export function createAsync(playerId?: string | string[]): Promise<void> {
             throw invalidParams(`playerId cannot be null or empty on platform: ${platform}. Please provide a valid string for the playerId parameter.`,
                 "context.createAsync",
                 "https://sdk.html5gameportal.com/api/context/#parameters_1");
+        }
+
+        if (platform === "wortal" || platform === "gd") {
+            throw notSupported(`context.createAsync not currently supported on platform: ${platform}`,
+                "context.createAsync");
+        } else if (platform === "debug") {
+            return;
         }
 
         return config.platformSDK.context.createAsync(playerId)
@@ -529,6 +555,12 @@ export function isSizeBetween(min?: number, max?: number): ContextSizeResponse |
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.context.isSizeBetween(min, max);
+    } else if (platform === "debug") {
+        return {
+            answer: true,
+            minSize: min || 2,
+            maxSize: max || 4,
+        };
     } else {
         return null;
     }

@@ -56,7 +56,7 @@ export class Player {
     }
 
     /**
-     * Data URL for the player's photo.
+     * URL for the player's photo.
      */
     get photo(): string {
         return this._current.photo;
@@ -90,10 +90,9 @@ export class Player {
             case "wortal":
                 return (window as any).wortalSessionId;
             case "gd":
-                return this.generateRandomID();
             case "debug":
             default:
-                return "debug";
+                return this.generateRandomID();
         }
     }
 
@@ -121,7 +120,7 @@ export class Player {
             case "gd":
             case "debug":
             default:
-                return "wortal-player-photo";
+                return "https://storage.googleapis.com/html5gameportal.com/images/08ac22fd-6e4b-4a33-9ea5-89bb412f6099-Trash_Factory_Facebook_Small_App_Icon_1024x1024.png";
         }
     }
 
@@ -206,6 +205,19 @@ export class ConnectedPlayer extends Player {
         this._current.photo = player.photo;
         this._current.isFirstPlay = player.isFirstPlay;
         this._current.daysSinceFirstPlay = player.daysSinceFirstPlay;
+    }
+
+    static mock(): ConnectedPlayer {
+        const data = {
+            id: "1234567890",
+            name: "Mock Player",
+            photo: "https://storage.googleapis.com/html5gameportal.com/images/08ac22fd-6e4b-4a33-9ea5-89bb412f6099-Trash_Factory_Facebook_Small_App_Icon_1024x1024.png",
+            isFirstPlay: false,
+            daysSinceFirstPlay: 0,
+        };
+
+        debug("Mocking ConnectedPlayer...", data);
+        return new ConnectedPlayer(data);
     }
 }
 

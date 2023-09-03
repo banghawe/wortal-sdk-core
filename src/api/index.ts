@@ -277,17 +277,20 @@ export function onPause(callback: () => void): void {
 export function performHapticFeedbackAsync(): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform !== "facebook") {
+        if (platform === "debug") {
+            debug("Haptic feedback requested successfully.");
+            return;
+        } else if (platform === "facebook") {
+            return config.platformSDK.performHapticFeedbackAsync()
+                .catch((error: any) => {
+                    rethrowPlatformError(error,
+                        "performHapticFeedbackAsync",
+                        "https://sdk.html5gameportal.com/api/wortal/#performhapticfeedbackasync");
+                });
+        } else {
             throw notSupported(`Haptic feedback not supported on platform: ${platform}`,
                 "performHapticFeedbackAsync");
         }
-
-        return config.platformSDK.performHapticFeedbackAsync()
-            .catch((error: any) => {
-                rethrowPlatformError(error,
-                    "performHapticFeedbackAsync",
-                    "https://sdk.html5gameportal.com/api/wortal/#performhapticfeedbackasync");
-            });
     });
 }
 
@@ -395,8 +398,7 @@ function _initializePlatform(): Promise<void> {
         case "gd":
             return _initializePlatform_GD();
         case "debug":
-            return Promise.resolve();
-        //TODO: Add debug platform initialization
+            return _initializePlatform_Debug();
         default:
             return Promise.resolve();
     }
@@ -631,6 +633,48 @@ function _initializePlatform_GD(options?: any): Promise<void> {
                     "_initializePlatform_GD()"));
             }
         }
+    });
+}
+
+/**
+ * Initializes the debugging platform. This is used when the game is running in a local or dev environment.
+ * This will mock the platform SDK and allow the game to run without any platform dependencies, returning mock data
+ * for all platform APIs. All APIs will be available, but some may not function exactly as they would on the platform.
+ * @returns {Promise<void>} Promise that resolve when the debugging platform has been initialized.
+ * @hidden
+ * @private
+ */
+function _initializePlatform_Debug(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const metaElement = document.createElement("meta");
+        const googleAdsSDK = document.createElement("script");
+
+        config.adConfig.setClientID("ca-pub-123456789");
+        config.adConfig.setHostID("");
+        config.adConfig.setChannelID("");
+
+        googleAdsSDK.setAttribute("data-ad-client", config.adConfig.clientID);
+        googleAdsSDK.setAttribute("data-adbreak-test", "on");
+
+        googleAdsSDK.setAttribute("src", GOOGLE_SDK_SRC);
+        googleAdsSDK.setAttribute("type", "text/javascript");
+
+        metaElement.setAttribute("name", "google-adsense-platform-account");
+        metaElement.setAttribute("content", config.adConfig.hostID);
+
+        googleAdsSDK.onload = () => {
+            debug("Debug platform SDK initialized with ads.");
+            resolve();
+        }
+
+        googleAdsSDK.onerror = () => {
+            debug("Ad blocker detected. Debug platform SDK initialized without ads.");
+            config.adConfig.setAdBlocked(true);
+            resolve();
+        };
+
+        document.head.appendChild(metaElement);
+        document.head.appendChild(googleAdsSDK);
     });
 }
 
