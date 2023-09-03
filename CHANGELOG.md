@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.6.8] - 2023-09-04
+### Added
+- Core
+  - Full API support in debug mode
+
+### Fixed
+- Ads
+  - Duplicate preroll no longer called on GD platform
+- Context
+  - updateAsync now adds the action and template properties to the payload if none is provided on Facebook
+- Player
+  - getPhoto docs now correctly state that it returns a URL and not a base64 string
+
+### Changed
+- Core
+  - initializeAsync and startGameAsync now work on all platforms for manual initialization
+  - Validation checks now occur before platform checks in all APIs
+  - Local testing no longer requires appending query params to the URL
+
 ## [1.6.7] - 2023-09-01
 ### Fixed
 - Core

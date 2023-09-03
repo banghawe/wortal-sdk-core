@@ -60,6 +60,8 @@ export function getLeaderboardAsync(name: string): Promise<Leaderboard> {
                         "leaderboard.getLeaderboardAsync",
                         "https://sdk.html5gameportal.com/api/leaderboard/#getleaderboardasync");
                 });
+        } else if (platform === "debug") {
+            return Leaderboard.mock();
         } else {
             throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
                 "leaderboard.getLeaderboardAsync");
@@ -122,6 +124,8 @@ export function sendEntryAsync(name: string, score: number, details: string = ""
                         "leaderboard.sendEntryAsync",
                         "https://sdk.html5gameportal.com/api/leaderboard/#sendentryasync");
                 });
+        } else if (platform === "debug") {
+            return LeaderboardEntry.mock(1, score);
         } else {
             throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
                 "leaderboard.sendEntryAsync");
@@ -183,6 +187,12 @@ export function getEntriesAsync(name: string, count: number, offset: number = 0)
                         "leaderboard.getEntriesAsync",
                         "https://sdk.html5gameportal.com/api/leaderboard/#getentriesasync");
                 });
+        } else if (platform === "debug") {
+            const entries: LeaderboardEntry[] = [];
+            for (let i = 0; i < count; i++) {
+                entries[i] = LeaderboardEntry.mock(offset + i + 1, 10000 - i);
+            }
+            return entries;
         } else {
             throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
                 "leaderboard.getEntriesAsync");
@@ -240,6 +250,8 @@ export function getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
                         "leaderboard.getPlayerEntryAsync",
                         "https://sdk.html5gameportal.com/api/leaderboard/#getplayerentryasync");
                 });
+        } else if (platform === "debug") {
+            return LeaderboardEntry.mock(1, 10000);
         } else {
             throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
                 "leaderboard.getPlayerEntryAsync");
@@ -292,6 +304,8 @@ export function getEntryCountAsync(name: string): Promise<number> {
                         "leaderboard.getEntryCountAsync",
                         "https://sdk.html5gameportal.com/api/leaderboard/#getentrycountasync");
                 });
+        } else if (platform === "debug") {
+            return 100;
         } else {
             throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
                 "leaderboard.getEntryCountAsync");
@@ -354,6 +368,12 @@ export function getConnectedPlayersEntriesAsync(name: string, count: number, off
                         "leaderboard.getConnectedPlayersEntriesAsync",
                         "https://sdk.html5gameportal.com/api/leaderboard/#getconnectedplayersentriesasync");
                 });
+        } else if (platform === "debug") {
+            const entries: LeaderboardEntry[] = [];
+            for (let i = 0; i < count; i++) {
+                entries[i] = LeaderboardEntry.mock(offset + i + 1, 10000 - i);
+            }
+            return entries;
         } else {
             throw notSupported(`Leaderboard API not currently supported on platform: ${platform}`,
                 "leaderboard.getConnectedPlayersEntriesAsync");

@@ -1,4 +1,4 @@
-let contextID = "";
+let contextID = "mockID";
 
 function contextGetId() {
     const id = Wortal.context.getId();
@@ -75,5 +75,5 @@ function contextCreateAsync() {
 
 function contextIsSizeBetween() {
     const isSizeBetween = Wortal.context.isSizeBetween(2, 4);
-    appendText(`isSizeBetween: ${isSizeBetween}`);
+    appendText(`isSizeBetween:`, isSizeBetween);
 }

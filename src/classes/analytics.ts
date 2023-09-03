@@ -1,3 +1,4 @@
+import { config } from "../api";
 import { AnalyticsEventData, IAnalyticsEvent } from "../interfaces/analytics";
 import { debug } from "../utils/logger";
 
@@ -13,6 +14,11 @@ export class AnalyticsEvent implements IAnalyticsEvent {
     }
 
     send(): void {
+        if (config.session.platform === "debug") {
+            debug("Mock analytics event", this.data);
+            return;
+        }
+
         debug("Sending analytics event", this.data);
         const name = this.data.name;
         const features = this.data.features;

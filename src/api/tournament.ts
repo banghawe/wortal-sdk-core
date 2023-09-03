@@ -65,6 +65,8 @@ export function getCurrentAsync(): Promise<Tournament> {
                         "tournament.getCurrentAsync",
                         "https://sdk.html5gameportal.com/api/tournament/#getcurrentasync");
                 });
+        } else if (platform === "debug") {
+            return Tournament.mock();
         } else {
             throw notSupported(`Tournament API not currently supported on platform: ${platform}`,
                 "tournament.getCurrentAsync");
@@ -106,7 +108,10 @@ export function getAllAsync(): Promise<Tournament[]> {
                         "tournament.getAllAsync",
                         "https://sdk.html5gameportal.com/api/tournament/#getallasync");
                 });
-        } else {
+        } else if (platform === "debug") {
+            return [Tournament.mock(), Tournament.mock(), Tournament.mock()];
+        }
+        else {
             throw notSupported(`Tournament API not currently supported on platform: ${platform}`,
                 "tournament.getAllAsync");
         }
@@ -148,6 +153,8 @@ export function postScoreAsync(score: number): Promise<void> {
                         "tournament.postScoreAsync",
                         "https://sdk.html5gameportal.com/api/tournament/#postscoreasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`Tournament API not currently supported on platform: ${platform}`,
                 "tournament.postScoreAsync");
@@ -201,6 +208,8 @@ export function createAsync(payload: CreateTournamentPayload): Promise<Tournamen
                         "tournament.createAsync",
                         "https://sdk.html5gameportal.com/api/tournament/#createasync");
                 });
+        } else if (platform === "debug") {
+            return Tournament.mock();
         } else {
             throw notSupported(`Tournament API not currently supported on platform: ${platform}`,
                 "tournament.createAsync");
@@ -240,6 +249,8 @@ export function shareAsync(payload: ShareTournamentPayload): Promise<void> {
                         "tournament.shareAsync",
                         "https://sdk.html5gameportal.com/api/tournament/#shareasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`Tournament API not currently supported on platform: ${platform}`,
                 "tournament.shareAsync");
@@ -282,6 +293,8 @@ export function joinAsync(tournamentID: string): Promise<void> {
                         "tournament.joinAsync",
                         "https://sdk.html5gameportal.com/api/tournament/#joinasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`Tournament API not currently supported on platform: ${platform}`,
                 "tournament.joinAsync");

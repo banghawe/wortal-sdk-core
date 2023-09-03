@@ -1,6 +1,6 @@
 {
     "name": "@digital-will/wortal-sdk",
-    "version": "1.6.7",
+    "version": "1.6.8",
     "description": "SDK for integrating games into the Wortal HTML5 content platform.",
     "homepage": "https://sdk.html5gameportal.com/",
     "bugs": "https://github.com/Digital-Will-Inc/wortal-sdk-core/issues",
@@ -17,6 +17,7 @@
         "build:prod": "webpack --mode=production",
         "demo:dev": "bash scripts/build-demo.sh && bash scripts/deploy-demo.sh --dev",
         "demo:prod": "bash scripts/build-demo.sh && bash scripts/deploy-demo.sh --prod",
+        "demo:run": "python3 -m http.server --directory demo",
         "docs": "rm -rf docs && typedoc --plugin typedoc-plugin-markdown",
         "lint": "eslint src --ext .ts",
         "typecheck": "tsc --noEmit -p tsconfig.json"

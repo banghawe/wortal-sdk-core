@@ -1,7 +1,7 @@
 import { ConnectedPlayer } from "../classes/player";
 import { ConnectedPlayerPayload, PlayerData, SignedASID } from "../interfaces/player";
-import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
-import { debug } from "../utils/logger";
+import { invalidParams, notSupported, operationFailed, rethrowPlatformError } from "../utils/error-handler";
+import { warn } from "../utils/logger";
 import { config } from "./index";
 
 /**
@@ -27,8 +27,8 @@ export function getName(): string | null {
 /**
  * Gets the player's photo from the platform.
  * @example
- * Wortal.player.getPhoto(); // 'data:image/png;base64,iVBORw0KGgoAAAANSUh..' (base64 encoded image)
- * @returns {string | null} URL of base64 image for the player's photo.
+ * Wortal.player.getPhoto();
+ * @returns {string | null} URL of image for the player's photo.
  */
 export function getPhoto(): string | null {
     return config.player.photo;
@@ -87,6 +87,19 @@ export function getDataAsync(keys: string[]): Promise<any> {
                         "player.getDataAsync",
                         "https://sdk.html5gameportal.com/api/player/#getdataasync");
                 });
+        } else if (platform === "debug") {
+            const data = localStorage.getItem("wortal-data");
+            if (data) {
+                const dataObj = JSON.parse(data);
+                const result: any = {};
+                keys.forEach((key) => {
+                    result[key] = dataObj[key];
+                });
+                return result;
+            } else {
+                warn("No wortal-data found in localStorage. Returning empty object.");
+                return {};
+            }
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.getDataAsync");
@@ -129,6 +142,13 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
                         "player.setDataAsync",
                         "https://sdk.html5gameportal.com/api/player/#setdataasync");
                 });
+        } else if (platform === "debug") {
+            try {
+                localStorage.setItem("wortal-data", JSON.stringify(data));
+            } catch (error: any) {
+                throw operationFailed(`Error saving object to localStorage: ${error.message}`,
+                    "player.setDataAsync");
+            }
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.setDataAsync");
@@ -165,6 +185,8 @@ export function flushDataAsync(): Promise<void> {
                         "player.flushDataAsync",
                         "https://sdk.html5gameportal.com/api/player/#flushdataasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.flushDataAsync");
@@ -217,6 +239,8 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
                         "player.getConnectedPlayersAsync",
                         "https://sdk.html5gameportal.com/api/player/#getconnectedplayersasync");
                 });
+        } else if (platform === "debug") {
+            return [ConnectedPlayer.mock(), ConnectedPlayer.mock(), ConnectedPlayer.mock()];
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.getConnectedPlayersAsync");
@@ -262,6 +286,11 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
                         "player.getSignedPlayerInfoAsync",
                         "https://sdk.html5gameportal.com/api/player/#getsignedplayerinfoasync");
                 });
+        } else if (platform === "debug") {
+            return {
+                id: config.player.id,
+                signature: "debug.signature",
+            };
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.getSignedPlayerInfoAsync");
@@ -292,6 +321,8 @@ export function getASIDAsync(): Promise<string> {
                         "player.getASIDAsync",
                         "https://sdk.html5gameportal.com/api/player/#getasidasync");
                 });
+        } else if (platform === "debug") {
+            return config.player.id;
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.getASIDAsync");
@@ -334,6 +365,11 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
                         "player.getSignedASIDAsync",
                         "https://sdk.html5gameportal.com/api/player/#getsignedasidasync");
                 });
+        } else if (platform === "debug") {
+            return {
+                asid: config.player.id,
+                signature: "debug.signature",
+            };
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.getSignedASIDAsync");
@@ -370,6 +406,8 @@ export function canSubscribeBotAsync(): Promise<boolean> {
                         "player.canSubscribeBotAsync",
                         "https://sdk.html5gameportal.com/api/player/#cansubscribebotasync");
                 });
+        } else if (platform === "debug") {
+            return true;
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.canSubscribeBotAsync");
@@ -403,6 +441,8 @@ export function subscribeBotAsync(): Promise<void> {
                         "player.subscribeBotAsync",
                         "https://sdk.html5gameportal.com/api/player/#subscribebotasync");
                 });
+        } else if (platform === "debug") {
+            return;
         } else {
             throw notSupported(`Player API not currently supported on platform: ${platform}`,
                 "player.subscribeBotAsync");

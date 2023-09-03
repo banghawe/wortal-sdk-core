@@ -46,10 +46,13 @@ export function tryEnableIAP(): void {
     if (platform === "viber" || platform === "facebook") {
         config.platformSDK.payments.onReady(() => {
             config.enableIAP();
-            debug("IAP initialized for platform.");
+            debug(`IAP initialized for ${platform} platform.`);
         });
+    } else if (platform === "debug") {
+        config.enableIAP();
+        debug("IAP initialized for debugging.");
     } else {
-        debug("IAP not supported. This may be due to platform, device or regional restrictions.");
+        debug(`IAP not supported in this session. This may be due to platform, device or regional restrictions. \nPlatform: ${platform} // Device: ${Wortal.session.getDevice()} // Region: ${config.session.country}`);
     }
 }
 
@@ -121,6 +124,8 @@ export function addGDCallback(eventName: string, callback: () => void): void {
 
     if (typeof config.adConfig.gdCallbacks !== "undefined") {
         config.adConfig.gdCallbacks[eventName] = callback;
+    } else {
+        exception("GD callbacks is undefined. This is a fatal error that should have been caught during initialization.");
     }
 }
 
@@ -133,6 +138,7 @@ export function gdEventTrigger(value: string): void {
     if (typeof config.adConfig.gdCallbacks !== "undefined") {
         const callback = config.adConfig.gdCallbacks[value];
         if (typeof callback !== "undefined") {
+            debug(`GD event triggered. Event: ${value}}`);
             callback();
         } else {
             debug(`GD event triggered, but no callback is defined for this event. Event: ${value}}`);
