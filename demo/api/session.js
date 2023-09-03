@@ -1,5 +1,5 @@
-const gameID_Viber = "";
-const gameID_Facebook = "";
+const gameID_Viber = "mock.id";
+const gameID_Facebook = "mock.id";
 
 function sessionGetEntryPointData() {
     const entryPointData = Wortal.session.getEntryPointData();

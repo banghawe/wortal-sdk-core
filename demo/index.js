@@ -17,8 +17,8 @@ function showGrid(gridId) {
     mainGrid.style.display = 'none';
 }
 
-function appendText(message) {
-    console.log(message);
+function appendText(message, args) {
+    console.log(message, args);
 
     // On screen log for device testing.
     if (typeof message === 'object') {

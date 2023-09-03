@@ -1,4 +1,4 @@
-let tournamentID = "";
+let tournamentID = "mockID";
 
 function tournamentGetCurrentAsync() {
     Wortal.tournament.getCurrentAsync()
