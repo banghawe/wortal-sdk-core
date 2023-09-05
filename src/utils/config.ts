@@ -27,13 +27,17 @@ export default class SDKConfig {
     }
 
     initialize() {
+        // This depends on session.platform being set.
         this._adConfig = new AdConfig();
     }
 
     async lateInitialize(): Promise<void> {
+        // This may depend on the platform SDK being initialized to fetch the player's data.
         this._player = new Player();
         await this._player.initialize();
+        // This may depend on the platform SDK or Wortal API to fetch the ad config.
         await this._adConfig.lateInitialize();
+        // It should now be safe to mark the SDK as initialized and allow the game to use it.
         this._isInitialized = true;
     }
 
@@ -95,7 +99,8 @@ export default class SDKConfig {
 
     // This needs to be updated every time a new API is added to the SDK or a platform adds support for an existing API.
     // Failure to do so can result in a game not using the feature when it's available as the developer may not
-    // make the API call if they don't think it's supported.
+    // make the API call if they don't think it's supported. This is more error-prone than we'd like, but many
+    // devs are used to this function from FB Instant Games SDK, so we want to keep it consistent.
     _supportedAPIs: Record<Platform, string[]> = {
         wortal: [
             "ads.isAdBlocked",
@@ -300,6 +305,16 @@ export default class SDKConfig {
             "tournament.createAsync",
             "tournament.shareAsync",
             "tournament.joinAsync",
+        ],
+        crazygames: [
+            "ads.isAdBlocked",
+            "ads.showInterstitial",
+            "ads.showRewarded",
+            "session.happyTimeAsync",
+            "session.gameplayStartAsync",
+            "session.gameplayStopAsync",
+            "session.gameLoadingStartAsync",
+            "session.gameLoadingStopAsync",
         ],
     };
 }

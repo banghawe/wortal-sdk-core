@@ -5,6 +5,7 @@ export const PLATFORM_DOMAINS = {
     "wortal": ["html5gameportal.com", "html5gameportal.dev"],
     "gd": ["revision.gamedistribution.com", "gamedistribution.com", "html5.gamedistribution.com"],
     "facebook": ["facebook.com", "www.facebook.com", "apps.fbsbx.com"],
+    "crazygames": ["crazygames.com", "www.crazygames.com", "developer.crazygames.com"],
 }
 
 /** @hidden */

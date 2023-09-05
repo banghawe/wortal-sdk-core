@@ -1,12 +1,12 @@
 /**
  * Platform the game is currently being played on.
  */
-export type Platform = 'wortal' | 'link' | 'viber' | 'gd' | 'facebook' | 'debug'
+export type Platform = 'wortal' | 'link' | 'viber' | 'gd' | 'facebook' | 'crazygames' | 'debug'
 
 /**
  * Device the player is currently using.
  */
-export type Device = 'ANDROID' | 'IOS' | 'DESKTOP'
+export type Device = 'ANDROID' | 'IOS' | 'DESKTOP' | 'WEB'
 
 /**
  * Device orientation.

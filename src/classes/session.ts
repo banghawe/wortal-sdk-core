@@ -54,6 +54,8 @@ export class Session {
             return "facebook";
         } else if (PLATFORM_DOMAINS["wortal"].some(domain => host.includes(domain))) {
             return "wortal";
+        } else if (PLATFORM_DOMAINS["crazygames"].some(domain => host.includes(domain))) {
+            return "crazygames";
         } else {
             return "debug";
         }
@@ -104,6 +106,12 @@ export class Session {
             case "facebook":
                 // This is assigned in wortal-data.js that gets added to the bundle when uploading to Facebook.
                 id = (window as any).wortalGameID;
+                break;
+            case "crazygames":
+                // Example URL: https://www.crazygames.com/game/sushi-supply-co
+                // ID: sushi-supply-co
+                url = document.URL.split("/");
+                id = url[4];
                 break;
             case "debug":
             default:
