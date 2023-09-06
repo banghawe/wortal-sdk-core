@@ -71,3 +71,25 @@ function playerSubscribeBotAsync() {
         .then("Bot subscribed")
         .catch(error => appendText(error));
 }
+
+function playerGetTokenAsync() {
+    Wortal.player.getTokenAsync()
+        .then(result => appendText(result))
+        .catch(error => appendText(error));
+}
+
+function playerShowAuthPromptAsync() {
+    Wortal.player.showAuthPromptAsync()
+        .then("Auth prompt showed")
+        .catch(error => appendText(error));
+}
+
+function playerShowLinkAccountPromptAsync() {
+    Wortal.player.showLinkAccountPromptAsync()
+        .then(result => appendText(result))
+        .catch(error => appendText(error));
+}
+
+function playerOnLogin() {
+    Wortal.player.onLogin(() => appendText("Login"));
+}
