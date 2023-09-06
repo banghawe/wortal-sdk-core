@@ -633,31 +633,41 @@ function _initializePlatform_GD(options?: any): Promise<void> {
  * @private
  */
 function _initializePlatform_CrazyGames(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return Promise.resolve().then(() => {
         const crazyGamesSDK = document.createElement("script");
         crazyGamesSDK.src = CRAZY_GAMES_SRC;
 
         crazyGamesSDK.onload = () => {
             if (typeof (window as any).CrazyGames.SDK === "undefined") {
-                reject(initializationError("Failed to load Crazy Games SDK.",
-                    "_initializePlatform_CrazyGames()"));
+                throw initializationError("Failed to load Crazy Games SDK.",
+                    "_initializePlatform_CrazyGames()");
             }
 
-            debug("Crazy Games platform SDK initialized.");
+            debug("Crazy Games platform SDK loaded.");
             config.platformSDK = (window as any).CrazyGames.SDK;
 
-            return config.platformSDK.ad.hasAdblock().then((hasAdblock: boolean) => {
-                config.adConfig.setAdBlocked(hasAdblock);
-                resolve();
-            }).catch((error: any) => {
-                throw initializationError(`Failed to initialize SDK while waiting for platform SDK to initialize: ${error.message}`,
-                    "_initializePlatform_CrazyGames()");
+            return new Promise((resolve) => {
+                const callback = (error: any, result: any) => {
+                    if (error) {
+                        // Don't reject here because not being able to check for adblock shouldn't prevent the SDK from working.
+                        exception(error);
+                        resolve(error);
+                    } else {
+                        // This seems to always return false as of v1.6.9. We still guard against this when we show ads
+                        // as the CrazyGames SDK will return the adError callback, which triggers our noFill callback.
+                        debug("CrazyGames adblock check complete.", result);
+                        config.adConfig.setAdBlocked(result);
+                        resolve(result);
+                    }
+                };
+
+                config.platformSDK.ad.hasAdblock(callback);
             });
         }
 
         crazyGamesSDK.onerror = () => {
-            reject(initializationError("Failed to load Crazy Games SDK.",
-                "_initializePlatform_CrazyGames()"));
+            throw initializationError("Failed to load Crazy Games SDK.",
+                "_initializePlatform_CrazyGames()");
         }
 
         document.head.appendChild(crazyGamesSDK);
