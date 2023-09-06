@@ -4,11 +4,29 @@ import { Device } from "../types/session";
 import { ShareTo } from "../types/wortal";
 import { invalidParams } from "./error-handler";
 import { debug, exception } from "./logger";
-import { isValidShareDestination } from "./validators";
+import { isValidShareDestination, isValidString } from "./validators";
 
-//
-// UTILITY FUNCTIONS
-//
+/**
+ * Does what the name suggests -- delays execution until a condition is met.
+ * @param {Function} condition Function that returns a boolean. If the boolean is true, the promise will resolve.
+ * @param {string} message Message to log while waiting for the condition to be met.
+ * @hidden
+ */
+export function delayUntilConditionMet(condition: () => boolean, message: string = ""): Promise<void> {
+    return new Promise(resolve => {
+        const checkIfConditionMet = () => {
+            if (condition()) {
+                resolve();
+            } else {
+                if (isValidString(message)) {
+                    debug(message);
+                }
+                setTimeout(checkIfConditionMet, 100);
+            }
+        };
+        checkIfConditionMet();
+    });
+}
 
 /**
  * Gets a parameter from the URL.
@@ -81,6 +99,10 @@ export function addLoadingListener(): void {
  * @hidden
  */
 export function addLoadingCover(): void {
+    if (config.adConfig.hasPrerollShown || config.adConfig.isAdBlocked) {
+        return;
+    }
+
     const cover = document.createElement("div");
     cover.id = "loading-cover";
     cover.style.cssText = "background: #000000; width: 100%; height: 100%; position: fixed; z-index: 100;";
@@ -164,10 +186,6 @@ export function detectDevice(): Device {
         return "DESKTOP";
     }
 }
-
-//
-// PLATFORM FUNCTIONS
-//
 
 /**
  * Shares the game on the specified platform. This is only supported on Wortal and was ported over from the now

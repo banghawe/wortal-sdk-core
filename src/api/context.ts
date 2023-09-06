@@ -283,7 +283,7 @@ export function shareAsync(payload: SharePayload): Promise<number> {
  * })
  * .then(() => resumeGame);
  * @param payload Object defining the payload for the custom link.
- * @returns {Promise<void>} Promise that resolves when the dialog is closed.
+ * @returns {Promise<string | void>} Promise that resolves when the dialog is closed. May include a string with the link.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -293,7 +293,7 @@ export function shareAsync(payload: SharePayload): Promise<number> {
  * <li>INVALID_OPERATION</li>
  * </ul>
  */
-export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
+export function shareLinkAsync(payload: LinkSharePayload): Promise<string | void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (typeof payload.data === "undefined") {
@@ -304,17 +304,31 @@ export function shareLinkAsync(payload: LinkSharePayload): Promise<void> {
 
         if (platform === "debug") {
             return;
-        } else if (platform !== "facebook") {
+        } else if (platform !== "facebook" && platform !== "crazygames") {
             throw notSupported(`context.shareLinkAsync not currently supported on platform: ${platform}`,
                 "context.shareLinkAsync");
         }
 
-        return config.platformSDK.shareLinkAsync(payload)
-            .catch((e: any) => {
-                throw rethrowPlatformError(e,
-                    "context.shareLinkAsync",
-                    "https://sdk.html5gameportal.com/api/context/#sharelinkasync");
+        if (platform === "facebook") {
+            return config.platformSDK.shareLinkAsync(payload)
+                .catch((e: any) => {
+                    throw rethrowPlatformError(e,
+                        "context.shareLinkAsync",
+                        "https://sdk.html5gameportal.com/api/context/#sharelinkasync");
+                });
+        } else if (platform === "crazygames") {
+            return new Promise((resolve, reject) => {
+                const callback = (error: any, link: any) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(link);
+                    }
+                };
+
+                config.platformSDK.game.inviteLink(payload.data, callback);
             });
+        }
     });
 }
 

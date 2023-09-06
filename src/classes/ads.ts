@@ -444,6 +444,8 @@ function _showAd(placementType: PlacementType, placementId: string, description:
             return _showAd_Facebook_Rakuten(placementType, placementId, callbacks);
         case "gd":
             return _showAd_GD(placementType, callbacks);
+        case "crazygames":
+            return _showAd_CrazyGames(placementType, callbacks);
         default:
             exception(`Unsupported platform for ads: ${config.session.platform}`);
     }
@@ -581,6 +583,23 @@ function _showAd_GD(placementType: PlacementType, callbacks: AdCallbacks): void 
     }
 }
 
+/**
+ * See: https://docs.crazygames.com/sdk/html5-v2/
+ * @hidden
+ */
+function _showAd_CrazyGames(placementType: PlacementType, callbacks: AdCallbacks): void {
+    if (typeof config.platformSDK === "undefined") {
+        exception("Platform SDK not initialized. This is a fatal error that should have been caught during initialization.");
+        return;
+    }
+
+    if (placementType === "reward") {
+        return _showRewarded_CrazyGames(callbacks);
+    } else {
+        return _showInterstitial_CrazyGames(callbacks);
+    }
+}
+
 /** @hidden */
 function _showInterstitial_Facebook_Rakuten(placementId: string, callbacks: AdCallbacks) {
     debug("Attempting to show interstitial ad..");
@@ -620,6 +639,16 @@ function _showInterstitial_GD(placementType: PlacementType, callbacks: AdCallbac
     if (typeof config.platformSDK !== "undefined" && config.platformSDK.showAd !== "undefined") {
         config.platformSDK.showAd("interstitial");
     }
+}
+
+/** @hidden */
+function _showInterstitial_CrazyGames(callbacks: AdCallbacks): void {
+    const callbacksObj = {
+        adStarted: callbacks.beforeAd,
+        adFinished: callbacks.afterAd,
+        adError: (error: any) => { _onAdErrorOrNoFill(error, callbacks); },
+    };
+    config.platformSDK.ad.requestAd("midgame", callbacksObj);
 }
 
 /** @hidden */
@@ -692,6 +721,22 @@ function _showRewarded_GD(callbacks: AdCallbacks): void {
         debug("Rewarded video failed to show.");
         _onAdErrorOrNoFill("No ad instance was found.", callbacks);
     }
+}
+
+/** @hidden */
+function _showRewarded_CrazyGames(callbacks: AdCallbacks): void {
+    const callbacksObj = {
+        adStarted: callbacks.beforeAd,
+        adFinished: () => {
+            callbacks.afterAd && callbacks.afterAd();
+            callbacks.adViewed && callbacks.adViewed();
+        },
+        adError: (error: any) => {
+            callbacks.adDismissed && callbacks.adDismissed();
+            _onAdErrorOrNoFill(error, callbacks);
+        },
+    };
+    config.platformSDK.ad.requestAd("rewarded", callbacksObj);
 }
 
 /**
@@ -780,9 +825,9 @@ function _showBackFill(placementType: PlacementType, description: string, callba
  * Called when there was an error, timeout or no fill for an ad instance.
  * @hidden
  */
-function _onAdErrorOrNoFill(error: any, options: any) {
+function _onAdErrorOrNoFill(error: any, callbacks: any) {
     warn("Ad instance encountered an error or was not filled.", error);
-    options.noFill && options.noFill();
+    callbacks.noFill && callbacks.noFill();
 }
 
 

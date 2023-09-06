@@ -61,3 +61,23 @@ function sessionSwitchGameAsync() {
     Wortal.session.switchGameAsync(gameID, data)
         .catch(error => appendText(error));
 }
+
+function sessionHappyTime() {
+    Wortal.session.happyTime();
+}
+
+function sessionGameplayStart() {
+    Wortal.session.gameplayStart();
+}
+
+function sessionGameplayStop() {
+    Wortal.session.gameplayStop();
+}
+
+function sessionGameLoadingStart() {
+    Wortal.session.gameLoadingStart();
+}
+
+function sessionGameLoadingStop() {
+    Wortal.session.gameLoadingStop();
+}

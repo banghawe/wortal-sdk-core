@@ -238,6 +238,22 @@ document.getElementById('player-subscribeBotAsync').addEventListener('click', ()
     playerSubscribeBotAsync();
 });
 
+document.getElementById('player-getTokenAsync').addEventListener('click', () => {
+    playerGetTokenAsync();
+});
+
+document.getElementById('player-showAuthPromptAsync').addEventListener('click', () => {
+    playerShowAuthPromptAsync();
+});
+
+document.getElementById('player-showLinkAccountPromptAsync').addEventListener('click', () => {
+    playerShowLinkAccountPromptAsync();
+});
+
+document.getElementById('player-onLogin').addEventListener('click', () => {
+    playerOnLogin();
+});
+
 ////////////////////////////////////
 // Session
 ////////////////////////////////////
@@ -279,6 +295,26 @@ document.getElementById('session-onOrientationChange').addEventListener('click',
 
 document.getElementById('session-switchGameAsync').addEventListener('click', () => {
     sessionSwitchGameAsync();
+});
+
+document.getElementById('session-happyTime').addEventListener('click', () => {
+    sessionHappyTime();
+});
+
+document.getElementById('session-gameplayStart').addEventListener('click', () => {
+    sessionGameplayStart();
+});
+
+document.getElementById('session-gameplayStop').addEventListener('click', () => {
+    sessionGameplayStop();
+});
+
+document.getElementById('session-gameLoadingStart').addEventListener('click', () => {
+    sessionGameLoadingStart();
+});
+
+document.getElementById('session-gameLoadingStop').addEventListener('click', () => {
+    sessionGameLoadingStop();
 });
 
 ////////////////////////////////////

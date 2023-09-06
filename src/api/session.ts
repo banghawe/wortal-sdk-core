@@ -16,6 +16,7 @@ import { config } from "./index";
  * @returns {Record<string, unknown>} Data about the entry point or an empty object if none exists.
  */
 export function getEntryPointData(): Record<string, unknown> {
+    //TODO: parse crazygames entrypoint data
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.getEntryPointData();
@@ -229,4 +230,109 @@ export function switchGameAsync(gameID: string, data?: object): Promise<void> {
                 "session.switchGameAsync");
         }
     });
+}
+
+/**
+ * The happyTimeAsync method can be called on various player achievements (beating a boss, reaching a high score, etc.).
+ * It makes the website celebrate (for example by launching some confetti). There is no need to call this when a level
+ * is completed, or an item is obtained.
+ * @example
+ * // Player defeats a boss
+ * Wortal.session.happyTime();
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function happyTime(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        return config.platformSDK.game.happytime();
+    } else {
+        throw notSupported(`Session API not currently supported on platform: ${platform}`,
+            "session.happyTime");
+    }
+}
+
+/**
+ * Tracks the start of a gameplay session, including resuming play after a break.
+ * Call whenever the player starts playing or resumes playing after a break
+ * (menu/loading/achievement screen, game paused, etc.).
+ * @example
+ * // Player closes in-game menu and resumes playing
+ * Wortal.session.gameplayStart();
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function gameplayStart(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        return config.platformSDK.game.gameplayStart();
+    } else {
+        throw notSupported(`Session API not currently supported on platform: ${platform}`,
+            "session.gameplayStart");
+    }
+}
+
+/**
+ * Tracks the end of a gameplay session, including pausing play or opening a menu.
+ * Call on every game break (entering a menu, switching level, pausing the game, ...)
+ * @example
+ * // Player opens in-game menu
+ * Wortal.session.gameplayStop();
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function gameplayStop(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        return config.platformSDK.game.gameplayStop();
+    } else {
+        throw notSupported(`Session API not currently supported on platform: ${platform}`,
+            "session.gameplayStop");
+    }
+}
+
+/**
+ * Tracks the start of the game loading in the session. This is used to determine how long the game takes to load.
+ * @example
+ * // Game starts loading
+ * Wortal.session.gameLoadingStart();
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function gameLoadingStart(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        return config.platformSDK.game.sdkGameLoadingStart();
+    } else {
+        throw notSupported(`Session API not currently supported on platform: ${platform}`,
+            "session.gameLoadingStart");
+    }
+}
+
+/**
+ * Tracks the end of the game loading in the session. This is used to determine how long the game takes to load.
+ * @example
+ * // Game finishes loading
+ * Wortal.session.gameLoadingStop();
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function gameLoadingStop(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        return config.platformSDK.game.sdkGameLoadingStop();
+    } else {
+        throw notSupported(`Session API not currently supported on platform: ${platform}`,
+            "session.gameLoadingStop");
+    }
 }

@@ -41,8 +41,12 @@ function contextShareLinkAsync() {
         image: payloadImage,
         text: 'Share text',
         data: {exampleData: 'yourData'},
-    }).then(() => appendText("Link shared!"))
-        .catch(error => appendText(error));
+    }).then(link => {
+        appendText("Link shared!");
+        if (link) {
+            appendText(link);
+        }
+    }).catch(error => appendText(error));
 }
 
 function contextUpdateAsync() {
