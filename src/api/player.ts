@@ -1,7 +1,13 @@
 import { ConnectedPlayer } from "../classes/player";
 import { ConnectedPlayerPayload, PlayerData, SignedASID } from "../interfaces/player";
-import { invalidParams, notSupported, operationFailed, rethrowPlatformError } from "../utils/error-handler";
-import { warn } from "../utils/logger";
+import {
+    invalidParams,
+    notSupported,
+    operationFailed,
+    rethrowCrazyGamesError,
+    rethrowPlatformError
+} from "../utils/error-handler";
+import { debug, warn } from "../utils/logger";
 import { config } from "./index";
 
 /**
@@ -448,4 +454,143 @@ export function subscribeBotAsync(): Promise<void> {
                 "player.subscribeBotAsync");
         }
     });
+}
+
+/**
+ * Gets the player token from the platform.
+ * @example
+ * Wortal.player.getTokenAsync()
+ * .then(token => console.log("Player token: " + token));
+ * @returns {Promise<string>} Promise that resolves with the player token.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>AUTH_NOT_ENABLED</li>
+ * <li>USER_NOT_AUTHENTICATED</li>
+ * <li>UNKNOWN</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function getTokenAsync(): Promise<string> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (platform === "crazygames") {
+            return new Promise((resolve) => {
+                const callback = (error: any, token: string) => {
+                    if (error) {
+                        throw rethrowCrazyGamesError(error,
+                            "player.getTokenAsync",
+                            "https://sdk.html5gameportal.com/api/player/#gettokenasync");
+                    } else {
+                        resolve(token);
+                    }
+                };
+
+                config.platformSDK.user.getUserToken(callback);
+            });
+        } else {
+            throw notSupported(`Player API not currently supported on platform: ${platform}`,
+                "player.getTokenAsync");
+        }
+    });
+}
+
+/**
+ * Shows the authentication prompt to the player. This allows the player to log in or register for an account. If the
+ * player successfully logs in or registers, the player API will be updated with the new player information.
+ * @example
+ * Wortal.player.showAuthPromptAsync()
+ * .then(() => console.log("Player logged in or registered"));
+ * @returns {Promise<void>} Promise that resolves when the player has logged in or registered.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>AUTH_IN_PROGRESS</li>
+ * <li>USER_ALREADY_AUTHENTICATED</li>
+ * <li>USER_INPUT</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function showAuthPromptAsync(): Promise<void> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (platform === "crazygames") {
+            return new Promise((resolve) => {
+                const callback = (error: any, user: any) => {
+                    if (error) {
+                        throw rethrowCrazyGamesError(error,
+                            "player.showAuthPromptAsync",
+                            "https://sdk.html5gameportal.com/api/player/#showauthprompt");
+                    } else {
+                        config.player.crazyGamesPlayer = user;
+                        resolve();
+                    }
+                };
+
+                config.platformSDK.user.showAuthPrompt(callback);
+            });
+        } else {
+            throw notSupported(`Player API not currently supported on platform: ${platform}`,
+                "player.showAuthPromptAsync");
+        }
+    });
+}
+
+/**
+ * Shows the link account prompt to the player. This allows the player to link their account to a different platform.
+ * @example
+ * Wortal.player.showLinkAccountPromptAsync()
+ * .then(isLinked => console.log("Player linked account: " + isLinked));
+ * @returns {Promise<boolean>} Promise that resolves when the player has linked their account.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>LINK_IN_PROGRESS</li>
+ * <li>USER_NOT_AUTHENTICATED</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function showLinkAccountPromptAsync(): Promise<boolean> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (platform === "crazygames") {
+            return new Promise((resolve) => {
+                const callback = (error: any, response: any) => {
+                    if (error) {
+                        throw rethrowCrazyGamesError(error,
+                            "player.showLinkAccountPromptAsync",
+                            "https://sdk.html5gameportal.com/api/player/#showlinkaccountpromptasync");
+                    } else {
+                        if (response["response"] === "yes") {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    }
+                };
+
+                config.platformSDK.user.showAccountLinkPrompt(callback);
+            });
+        } else {
+            throw notSupported(`Player API not currently supported on platform: ${platform}`,
+                "player.showLinkAccountPromptAsync");
+        }
+    });
+}
+
+/**
+ * Registers a callback to be called when the player logs in or registers for an account.
+ * @param callback Callback to be called when the player logs in or registers for an account.
+ * @example
+ * Wortal.player.onLogin(() => console.log("Player logged in or registered"));
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function onLogin(callback: () => void): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        config.platformSDK.user.addAuthListener(callback);
+    } else {
+        throw notSupported(`Player API not currently supported on platform: ${platform}`,
+            "player.onLogin");
+    }
 }
