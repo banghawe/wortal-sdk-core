@@ -38,7 +38,11 @@ function playerFlushDataAsync() {
 
 function playerGetConnectedPlayersAsync() {
     Wortal.player.getConnectedPlayersAsync()
-        .then(result => appendText(JSON.stringify(result)))
+        .then(result => {
+            appendText("Connected players: " + result.length);
+            appendText("Connect player 1: ", result[0].name);
+            appendText(JSON.stringify(result))
+        })
         .catch(error => appendText(error));
 }
 

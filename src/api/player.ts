@@ -129,9 +129,11 @@ export function getDataAsync(keys: string[]): Promise<any> {
  * });
  * @param data An object containing a set of key-value pairs that should be persisted to cloud storage. The object must
  * contain only serializable values - any non-serializable values will cause the entire modification to be rejected.
- * @returns {Promise<void>} Promise that resolves when the input values are set. NOTE: The promise resolving does not
- * necessarily mean that the input has already been persisted. Rather, it means that the data was valid and has been
- * scheduled to be saved. It also guarantees that all values that were set are now available in player.getDataAsync.
+ * @returns {Promise<void>} Promise that resolves when the input values are set.
+ *
+ * NOTE: The promise resolving does not necessarily mean that the input has already been persisted. Rather, it means
+ * that the data was valid and has been scheduled to be saved. It also guarantees that all values that were set are now
+ * available in `player.getDataAsync`.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -170,7 +172,7 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
  * critical changes where persistence needs to be immediate and known by the game. Non-critical changes should rely on
  * the platform to persist them in the background.
  *
- * NOTE: Calls to player.setDataAsync will be rejected while this function's result is pending.
+ * NOTE: Calls to `player.setDataAsync` will be rejected while this function's result is pending.
  * @example
  * Wortal.player.flushDataAsync()
  *  .then(() => console.log("Data flushed."));
@@ -399,7 +401,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
  * Wortal.player.canSubscribeBotAsync()
  * .then(canSubscribe => console.log("Can subscribe to bot: " + canSubscribe));
  * @returns {Promise<boolean>} Promise that resolves whether a player can subscribe to the game bot or not. Developer can only call
- * subscribeBotAsync() after checking canSubscribeBotAsync(), and the game will only be able to show the player their
+ * `player.subscribeBotAsync()` after checking `player.canSubscribeBotAsync()`, and the game will only be able to show the player their
  * bot subscription dialog once per week.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>

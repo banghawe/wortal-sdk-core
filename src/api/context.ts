@@ -121,10 +121,12 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
 
 /**
  * This invokes a dialog to let the user invite one or more people to the game. A blob of data can be attached to the
- * invite which every game session launched from the invite will be able to access from Wortal.session.getEntryPointData().
+ * invite which every game session launched from the invite will be able to access from `Wortal.session.getEntryPointData()`.
  * This data must be less than or equal to 1000 characters when stringified. The user may choose to cancel the action
  * and close the dialog, and the returned promise will resolve when the dialog is closed regardless of whether the user
- * actually invited people or not. The sections included in the dialog can be customized by using the sections parameter.
+ * actually invited people or not.
+ *
+ * The sections included in the dialog can be customized by using the `sections` parameter.
  * This can specify which sections to include, how many results to include in each section, and what order the sections
  * should appear in. The last section will include as many results as possible. If no sections are specified, the
  * default section settings will be applied. The filters parameter allows for filtering the results. If no results are
@@ -139,7 +141,9 @@ export function getPlayersAsync(): Promise<ConnectedPlayer[]> {
  * .then(() => console.log("Invite sent!"))
  * @param {InvitePayload} payload Specify what to share in the invite. See example for details.
  * @returns {Promise<number>} Promise that resolves when the platform's friend picker has closed.
- * Includes number of friends the invite was shared with. Facebook will always return 0.
+ * Includes number of friends the invite was shared with.
+ *
+ * PLATFORM NOTE: Facebook will always return 0.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -201,7 +205,7 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
 /**
  * This invokes a dialog to let the user share specified content, as a post on the user's timeline, for example.
  * A blob of data can be attached to the share which every game session launched from the share will be able to access
- * from Wortal.session.getEntryPointData(). This data must be less than or equal to 1000 characters when stringified.
+ * from `Wortal.session.getEntryPointData()`. This data must be less than or equal to 1000 characters when stringified.
  * The user may choose to cancel the share action and close the dialog, and the returned promise will resolve when the
  * dialog is closed regardless if the user actually shared the content or not.
  * @example
@@ -213,7 +217,9 @@ export function inviteAsync(payload: InvitePayload): Promise<number> {
  * }).then(result => console.log(result)); // Contains shareCount with number of friends the share was sent to.
  * @param {SharePayload} payload Object defining the share message.
  * @returns {Promise<number>} Promise that resolves when the platform's friend picker has closed.
- * Includes number of friends the message was shared with. Facebook will always return 0.
+ * Includes number of friends the message was shared with.
+ *
+ * PLATFORM NOTE: Facebook will always return 0.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -270,7 +276,7 @@ export function shareAsync(payload: SharePayload): Promise<number> {
 /**
  * This invokes a dialog that contains a custom game link that users can copy to their clipboard, or share.
  * A blob of data can be attached to the custom link - game sessions initiated from the link will be able to access the
- * data through Wortal.session.getEntryPointData(). This data should be less than or equal to 1000 characters when
+ * data through `Wortal.session.getEntryPointData()`. This data should be less than or equal to 1000 characters when
  * stringified. The provided text and image will be used to generate the link preview, with the game name as the title
  * of the preview. The text is recommended to be less than 44 characters. The image is recommended to either be a square
  * or of the aspect ratio 1.91:1. The returned promise will resolve when the dialog is closed regardless if the user
