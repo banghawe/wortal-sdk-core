@@ -1,7 +1,17 @@
 import { ConnectedPlayer } from "../classes/player";
 import { ConnectedPlayerPayload, PlayerData, SignedASID } from "../interfaces/player";
-import { invalidParams, notSupported, operationFailed, rethrowPlatformError } from "../utils/error-handler";
+import { Error_Facebook_Rakuten } from "../interfaces/wortal";
+import { Error_CrazyGames } from "../types/wortal";
+import { API_URL, WORTAL_API } from "../utils/config";
+import {
+    invalidParams,
+    notSupported,
+    operationFailed,
+    rethrowError_CrazyGames,
+    rethrowError_Facebook_Rakuten
+} from "../utils/error-handler";
 import { warn } from "../utils/logger";
+import { isSupportedOnCurrentPlatform } from "../utils/wortal-utils";
 import { config } from "./index";
 
 /**
@@ -72,27 +82,19 @@ export function getDataAsync(keys: string[]): Promise<any> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!Array.isArray(keys) || !keys.length) {
-            throw invalidParams("keys cannot be null or empty. Please provide a valid string array for the keys parameter.",
-                "player.getDataAsync",
-                "https://sdk.html5gameportal.com/api/player/#parameters_1");
+            throw invalidParams(undefined, WORTAL_API.PLAYER_GET_DATA_ASYNC, API_URL.PLAYER_GET_DATA_ASYNC);
         }
 
-        if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return config.platformSDK.player.getDataAsync(keys)
-                .then((data: any) => {
-                    return data;
-                })
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.getDataAsync",
-                        "https://sdk.html5gameportal.com/api/player/#getdataasync");
-                });
-        } else if (platform === "debug") {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_GET_DATA_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_GET_DATA_ASYNC);
+        }
+
+        if (platform === "debug") {
             const data = localStorage.getItem("wortal-data");
             if (data) {
                 const dataObj = JSON.parse(data);
                 const result: any = {};
-                keys.forEach((key) => {
+                keys.forEach((key: string) => {
                     result[key] = dataObj[key];
                 });
                 return result;
@@ -100,9 +102,16 @@ export function getDataAsync(keys: string[]): Promise<any> {
                 warn("No wortal-data found in localStorage. Returning empty object.");
                 return {};
             }
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.getDataAsync");
+        }
+
+        if (platform === "link" || platform === "viber" || platform === "facebook") {
+            return config.platformSDK.player.getDataAsync(keys)
+                .then((data: any) => {
+                    return data;
+                })
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_GET_DATA_ASYNC, API_URL.PLAYER_GET_DATA_ASYNC);
+                });
         }
     });
 }
@@ -120,9 +129,11 @@ export function getDataAsync(keys: string[]): Promise<any> {
  * });
  * @param data An object containing a set of key-value pairs that should be persisted to cloud storage. The object must
  * contain only serializable values - any non-serializable values will cause the entire modification to be rejected.
- * @returns {Promise<void>} Promise that resolves when the input values are set. NOTE: The promise resolving does not
- * necessarily mean that the input has already been persisted. Rather, it means that the data was valid and has been
- * scheduled to be saved. It also guarantees that all values that were set are now available in player.getDataAsync.
+ * @returns {Promise<void>} Promise that resolves when the input values are set.
+ *
+ * NOTE: The promise resolving does not necessarily mean that the input has already been persisted. Rather, it means
+ * that the data was valid and has been scheduled to be saved. It also guarantees that all values that were set are now
+ * available in `player.getDataAsync`.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
  * <li>NOT_SUPPORTED</li>
@@ -135,23 +146,23 @@ export function getDataAsync(keys: string[]): Promise<any> {
 export function setDataAsync(data: Record<string, unknown>): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
-        if (platform === "link" || platform === "viber" || platform === "facebook") {
-            return config.platformSDK.player.setDataAsync(data)
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.setDataAsync",
-                        "https://sdk.html5gameportal.com/api/player/#setdataasync");
-                });
-        } else if (platform === "debug") {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_SET_DATA_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_SET_DATA_ASYNC);
+        }
+
+        if (platform === "debug") {
             try {
                 localStorage.setItem("wortal-data", JSON.stringify(data));
             } catch (error: any) {
-                throw operationFailed(`Error saving object to localStorage: ${error.message}`,
-                    "player.setDataAsync");
+                throw operationFailed(`Error saving object to localStorage: ${error.message}`, WORTAL_API.PLAYER_SET_DATA_ASYNC);
             }
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.setDataAsync");
+        }
+
+        if (platform === "link" || platform === "viber" || platform === "facebook") {
+            return config.platformSDK.player.setDataAsync(data)
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+                });
         }
     });
 }
@@ -161,7 +172,7 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
  * critical changes where persistence needs to be immediate and known by the game. Non-critical changes should rely on
  * the platform to persist them in the background.
  *
- * NOTE: Calls to player.setDataAsync will be rejected while this function's result is pending.
+ * NOTE: Calls to `player.setDataAsync` will be rejected while this function's result is pending.
  * @example
  * Wortal.player.flushDataAsync()
  *  .then(() => console.log("Data flushed."));
@@ -178,18 +189,19 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
 export function flushDataAsync(): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_FLUSH_DATA_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_FLUSH_DATA_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return;
+        }
+
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.flushDataAsync()
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.flushDataAsync",
-                        "https://sdk.html5gameportal.com/api/player/#flushdataasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_FLUSH_DATA_ASYNC, API_URL.PLAYER_FLUSH_DATA_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return;
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.flushDataAsync");
         }
     });
 }
@@ -218,6 +230,14 @@ export function flushDataAsync(): Promise<void> {
 export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Promise<ConnectedPlayer[]> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_GET_CONNECTED_PLAYERS_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_GET_CONNECTED_PLAYERS_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return [ConnectedPlayer.mock(), ConnectedPlayer.mock(), ConnectedPlayer.mock()];
+        }
+
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.getConnectedPlayersAsync(payload)
                 .then((players: any) => {
@@ -230,20 +250,12 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
                             isFirstPlay: platform === "facebook" ? false : !player.hasPlayed,
                             daysSinceFirstPlay: 0,
                         };
-
                         return new ConnectedPlayer(playerData);
                     });
                 })
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.getConnectedPlayersAsync",
-                        "https://sdk.html5gameportal.com/api/player/#getconnectedplayersasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_GET_CONNECTED_PLAYERS_ASYNC, API_URL.PLAYER_GET_CONNECTED_PLAYERS_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return [ConnectedPlayer.mock(), ConnectedPlayer.mock(), ConnectedPlayer.mock()];
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.getConnectedPlayersAsync");
         }
     });
 }
@@ -273,6 +285,17 @@ export function getConnectedPlayersAsync(payload?: ConnectedPlayerPayload): Prom
 export function getSignedPlayerInfoAsync(): Promise<object> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_GET_SIGNED_PLAYER_INFO_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_GET_SIGNED_PLAYER_INFO_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return {
+                id: config.player.id,
+                signature: "debug.signature",
+            };
+        }
+
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.getSignedPlayerInfoAsync()
                 .then((info: any) => {
@@ -281,19 +304,9 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
                         signature: info.getSignature(),
                     };
                 })
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.getSignedPlayerInfoAsync",
-                        "https://sdk.html5gameportal.com/api/player/#getsignedplayerinfoasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_GET_SIGNED_PLAYER_INFO_ASYNC, API_URL.PLAYER_GET_SIGNED_PLAYER_INFO_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return {
-                id: config.player.id,
-                signature: "debug.signature",
-            };
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.getSignedPlayerInfoAsync");
         }
     });
 }
@@ -314,18 +327,22 @@ export function getSignedPlayerInfoAsync(): Promise<object> {
 export function getASIDAsync(): Promise<string> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_GET_ASID_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_GET_ASID_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return config.player.id;
+        }
+
         if (platform === "facebook") {
             return config.platformSDK.player.getASIDAsync()
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.getASIDAsync",
-                        "https://sdk.html5gameportal.com/api/player/#getasidasync");
+                .then((asid: string) => {
+                    return asid;
+                })
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_GET_ASID_ASYNC, API_URL.PLAYER_GET_ASID_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return config.player.id;
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.getASIDAsync");
         }
     });
 }
@@ -352,6 +369,17 @@ export function getASIDAsync(): Promise<string> {
 export function getSignedASIDAsync(): Promise<SignedASID> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_GET_SIGNED_ASID_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_GET_SIGNED_ASID_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return {
+                asid: config.player.id,
+                signature: "debug.signature",
+            };
+        }
+
         if (platform === "facebook") {
             return config.platformSDK.player.getSignedASIDAsync()
                 .then((info: any) => {
@@ -360,19 +388,9 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
                         signature: info.getSignature(),
                     };
                 })
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.getSignedASIDAsync",
-                        "https://sdk.html5gameportal.com/api/player/#getsignedasidasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_GET_SIGNED_ASID_ASYNC, API_URL.PLAYER_GET_SIGNED_ASID_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return {
-                asid: config.player.id,
-                signature: "debug.signature",
-            };
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.getSignedASIDAsync");
         }
     });
 }
@@ -383,7 +401,7 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
  * Wortal.player.canSubscribeBotAsync()
  * .then(canSubscribe => console.log("Can subscribe to bot: " + canSubscribe));
  * @returns {Promise<boolean>} Promise that resolves whether a player can subscribe to the game bot or not. Developer can only call
- * subscribeBotAsync() after checking canSubscribeBotAsync(), and the game will only be able to show the player their
+ * `player.subscribeBotAsync()` after checking `player.canSubscribeBotAsync()`, and the game will only be able to show the player their
  * bot subscription dialog once per week.
  * @throws {ErrorMessage} See error.message for details.
  * <ul>
@@ -396,21 +414,22 @@ export function getSignedASIDAsync(): Promise<SignedASID> {
 export function canSubscribeBotAsync(): Promise<boolean> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_CAN_SUBSCRIBE_BOT_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_CAN_SUBSCRIBE_BOT_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return true;
+        }
+
         if (platform === "facebook") {
             return config.platformSDK.player.canSubscribeBotAsync()
                 .then((canSubscribe: boolean) => {
                     return canSubscribe;
                 })
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.canSubscribeBotAsync",
-                        "https://sdk.html5gameportal.com/api/player/#cansubscribebotasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_CAN_SUBSCRIBE_BOT_ASYNC, API_URL.PLAYER_CAN_SUBSCRIBE_BOT_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return true;
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.canSubscribeBotAsync");
         }
     });
 }
@@ -434,18 +453,173 @@ export function canSubscribeBotAsync(): Promise<boolean> {
 export function subscribeBotAsync(): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_SUBSCRIBE_BOT_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_SUBSCRIBE_BOT_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return;
+        }
+
         if (platform === "facebook") {
             return config.platformSDK.player.subscribeBotAsync()
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.subscribeBotAsync",
-                        "https://sdk.html5gameportal.com/api/player/#subscribebotasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_CAN_SUBSCRIBE_BOT_ASYNC, API_URL.PLAYER_CAN_SUBSCRIBE_BOT_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return;
-        } else {
-            throw notSupported(`Player API not currently supported on platform: ${platform}`,
-                "player.subscribeBotAsync");
         }
     });
+}
+
+/**
+ * Gets the player token from the platform.
+ * @example
+ * Wortal.player.getTokenAsync()
+ * .then(token => console.log("Player token: " + token));
+ * @returns {Promise<string>} Promise that resolves with the player token.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>AUTH_NOT_ENABLED</li>
+ * <li>USER_NOT_AUTHENTICATED</li>
+ * <li>UNKNOWN</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function getTokenAsync(): Promise<string | undefined> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_GET_TOKEN_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_GET_TOKEN_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return "debug.token";
+        }
+
+        if (platform === "crazygames") {
+            return new Promise((resolve) => {
+                const callback = (error: Error_CrazyGames, token: string) => {
+                    if (error) {
+                        throw rethrowError_CrazyGames(error, WORTAL_API.PLAYER_GET_TOKEN_ASYNC, API_URL.PLAYER_GET_TOKEN_ASYNC);
+                    } else {
+                        resolve(token);
+                    }
+                };
+                config.platformSDK.user.getUserToken(callback);
+            });
+        }
+    });
+}
+
+/**
+ * Shows the authentication prompt to the player. This allows the player to log in or register for an account. If the
+ * player successfully logs in or registers, the player API will be updated with the new player information.
+ * @example
+ * Wortal.player.showAuthPromptAsync()
+ * .then(() => console.log("Player logged in or registered"));
+ * @returns {Promise<void>} Promise that resolves when the player has logged in or registered.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>AUTH_IN_PROGRESS</li>
+ * <li>USER_ALREADY_AUTHENTICATED</li>
+ * <li>USER_INPUT</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function showAuthPromptAsync(): Promise<void> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_SHOW_AUTH_PROMPT_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_SHOW_AUTH_PROMPT_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return;
+        }
+
+        if (platform === "crazygames") {
+            return new Promise((resolve) => {
+                const callback = (error: Error_CrazyGames, user: any) => {
+                    if (error) {
+                        throw rethrowError_CrazyGames(error, WORTAL_API.PLAYER_SHOW_AUTH_PROMPT_ASYNC, API_URL.PLAYER_SHOW_AUTH_PROMPT_ASYNC);
+                    } else {
+                        config.player.crazyGamesPlayer = user;
+                        resolve();
+                    }
+                };
+                config.platformSDK.user.showAuthPrompt(callback);
+            });
+        }
+    });
+}
+
+/**
+ * Shows the link account prompt to the player. This allows the player to link their account to a different platform.
+ * @example
+ * Wortal.player.showLinkAccountPromptAsync()
+ * .then(isLinked => console.log("Player linked account: " + isLinked));
+ * @returns {Promise<boolean>} Promise that resolves when the player has linked their account.
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>LINK_IN_PROGRESS</li>
+ * <li>USER_NOT_AUTHENTICATED</li>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function showLinkAccountPromptAsync(): Promise<boolean | undefined> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_SHOW_LINK_ACCOUNT_PROMPT_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.PLAYER_SHOW_LINK_ACCOUNT_PROMPT_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return true;
+        }
+
+        if (platform === "crazygames") {
+            return new Promise((resolve) => {
+                const callback = (error: Error_CrazyGames, response: any) => {
+                    if (error) {
+                        throw rethrowError_CrazyGames(error, WORTAL_API.PLAYER_SHOW_LINK_ACCOUNT_PROMPT_ASYNC, API_URL.PLAYER_SHOW_LINK_ACCOUNT_PROMPT_ASYNC);
+                    } else {
+                        if (response["response"] === "yes") {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    }
+                };
+                config.platformSDK.user.showAccountLinkPrompt(callback);
+            });
+        }
+    });
+}
+
+/**
+ * Registers a callback to be called when the player logs in or registers for an account.
+ * @param callback Callback to be called when the player logs in or registers for an account.
+ * @example
+ * Wortal.player.onLogin(() => console.log("Player logged in or registered"));
+ * @throws {ErrorMessage} See error.message for details.
+ * <ul>
+ * <li>NOT_SUPPORTED</li>
+ * </ul>
+ */
+export function onLogin(callback: () => void): void {
+    const platform = config.session.platform;
+    if (typeof callback !== "function") {
+        throw invalidParams(undefined, WORTAL_API.PLAYER_ON_LOGIN, API_URL.PLAYER_ON_LOGIN);
+    }
+
+    if (!isSupportedOnCurrentPlatform(WORTAL_API.PLAYER_ON_LOGIN)) {
+        throw notSupported(undefined, WORTAL_API.PLAYER_ON_LOGIN);
+    }
+
+    if (platform === "debug") {
+        callback();
+    }
+
+    if (platform === "crazygames") {
+        config.platformSDK.user.addAuthListener(callback);
+    }
 }

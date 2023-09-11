@@ -54,6 +54,8 @@ export class Session {
             return "facebook";
         } else if (PLATFORM_DOMAINS["wortal"].some(domain => host.includes(domain))) {
             return "wortal";
+        } else if (PLATFORM_DOMAINS["crazygames"].some(domain => host.includes(domain))) {
+            return "crazygames";
         } else {
             return "debug";
         }
@@ -105,6 +107,12 @@ export class Session {
                 // This is assigned in wortal-data.js that gets added to the bundle when uploading to Facebook.
                 id = (window as any).wortalGameID;
                 break;
+            case "crazygames":
+                // Example URL: https://www.crazygames.com/game/sushi-supply-co
+                // ID: sushi-supply-co
+                url = document.URL.split("/");
+                id = url[4];
+                break;
             case "debug":
             default:
                 id = "debug";
@@ -122,11 +130,16 @@ export class GameState {
         gameTimer: 0,
         levelName: "",
         levelTimer: 0,
-        levelTimerHandle: 0
+        levelTimerHandle: 0,
+        gameLoadTimer: 0,
     };
 
     get gameTimer(): number {
         return this._current.gameTimer;
+    }
+
+    get gameLoadTimer(): number {
+        return this._current.gameLoadTimer;
     }
 
     startGameTimer(): void {
@@ -135,6 +148,14 @@ export class GameState {
                 this._current.gameTimer += 1
             }
         }, 1000);
+    }
+
+    startGameLoadTimer(): void {
+        this._current.gameLoadTimer = performance.now();
+    }
+
+    stopGameLoadTimer(): void {
+        this._current.gameLoadTimer = performance.now() - this._current.gameLoadTimer;
     }
 
     get levelName(): string {

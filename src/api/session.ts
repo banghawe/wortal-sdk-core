@@ -1,8 +1,15 @@
 import { TrafficSource } from "../interfaces/session";
+import { Error_Facebook_Rakuten } from "../interfaces/wortal";
 import { Device, Orientation, Platform } from "../types/session";
-import { invalidParams, notSupported, rethrowPlatformError } from "../utils/error-handler";
+import { API_URL, WORTAL_API } from "../utils/config";
+import { invalidParams, notSupported, rethrowError_Facebook_Rakuten } from "../utils/error-handler";
 import { isValidString } from "../utils/validators";
-import { detectDevice } from "../utils/wortal-utils";
+import {
+    delayUntilConditionMet,
+    detectDevice,
+    getAllQueryParameters,
+    isSupportedOnCurrentPlatform
+} from "../utils/wortal-utils";
 import { config } from "./index";
 
 /**
@@ -19,6 +26,8 @@ export function getEntryPointData(): Record<string, unknown> {
     const platform = config.session.platform;
     if (platform === "link" || platform === "viber" || platform === "facebook") {
         return config.platformSDK.getEntryPointData();
+    } else if (platform === "crazygames") {
+        return getAllQueryParameters();
     } else if (platform === "debug") {
         return {
             "referral_id": "debug",
@@ -44,21 +53,22 @@ export function getEntryPointData(): Record<string, unknown> {
 export function getEntryPointAsync(): Promise<string> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.SESSION_GET_ENTRY_POINT_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.SESSION_GET_ENTRY_POINT_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return "debug";
+        }
+
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.getEntryPointAsync()
                 .then((entryPoint: string) => {
                     return entryPoint;
                 })
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.getEntryPointAsync",
-                        "https://sdk.html5gameportal.com/api/session/#getentrypointasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.SESSION_GET_ENTRY_POINT_ASYNC, API_URL.SESSION_GET_ENTRY_POINT_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return "debug";
-        } else {
-            throw notSupported(`Session API not currently supported on platform: ${platform}`,
-                "session.getEntryPointAsync");
         }
     });
 }
@@ -173,13 +183,11 @@ export function getOrientation(): Orientation {
  */
 export function onOrientationChange(callback: (orientation: Orientation) => void): void {
     if (typeof callback !== "function") {
-        throw invalidParams("[Wortal] Callback is not a function.",
-            "onOrientationChange()",
-            "https://sdk.html5gameportal.com/api/session/#parameters");
+        throw invalidParams(undefined, WORTAL_API.SESSION_ON_ORIENTATION_CHANGE, API_URL.SESSION_ON_ORIENTATION_CHANGE);
     }
 
-    window.matchMedia("(orientation: portrait)").addEventListener("change", e => {
-        const portrait = e.matches;
+    window.matchMedia("(orientation: portrait)").addEventListener("change", event => {
+        const portrait = event.matches;
         if (portrait) {
             callback("portrait");
         } else {
@@ -210,23 +218,100 @@ export function switchGameAsync(gameID: string, data?: object): Promise<void> {
     const platform = config.session.platform;
     return Promise.resolve().then(() => {
         if (!isValidString(gameID)) {
-            throw invalidParams("gameID is not a valid string.",
-                "session.switchGameAsync",
-                "https://sdk.html5gameportal.com/api/session/#parameters_2");
+            throw invalidParams(undefined, WORTAL_API.SESSION_SWITCH_GAME_ASYNC, API_URL.SESSION_SWITCH_GAME_ASYNC);
+        }
+
+        if (!isSupportedOnCurrentPlatform(WORTAL_API.SESSION_SWITCH_GAME_ASYNC)) {
+            throw notSupported(undefined, WORTAL_API.SESSION_SWITCH_GAME_ASYNC);
+        }
+
+        if (platform === "debug") {
+            return;
         }
 
         if (platform === "facebook") {
             return config.platformSDK.switchGameAsync(gameID, data)
-                .catch((e: any) => {
-                    throw rethrowPlatformError(e,
-                        "player.switchGameAsync",
-                        "https://sdk.html5gameportal.com/api/session/#switchgameasync");
+                .catch((error: Error_Facebook_Rakuten) => {
+                    throw rethrowError_Facebook_Rakuten(error, WORTAL_API.SESSION_SWITCH_GAME_ASYNC, API_URL.SESSION_SWITCH_GAME_ASYNC);
                 });
-        } else if (platform === "debug") {
-            return;
-        } else {
-            throw notSupported(`Session API not currently supported on platform: ${platform}`,
-                "session.switchGameAsync");
         }
     });
+}
+
+/**
+ * The happyTimeAsync method can be called on various player achievements (beating a boss, reaching a high score, etc.).
+ * It makes the website celebrate (for example by launching some confetti). There is no need to call this when a level
+ * is completed, or an item is obtained.
+ * @example
+ * // Player defeats a boss
+ * Wortal.session.happyTime();
+ */
+export function happyTime(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        config.platformSDK.game.happytime();
+    }
+}
+
+/**
+ * Tracks the start of a gameplay session, including resuming play after a break.
+ * Call whenever the player starts playing or resumes playing after a break
+ * (menu/loading/achievement screen, game paused, etc.).
+ * @example
+ * // Player closes in-game menu and resumes playing
+ * Wortal.session.gameplayStart();
+ */
+export function gameplayStart(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        config.platformSDK.game.gameplayStart();
+    }
+}
+
+/**
+ * Tracks the end of a gameplay session, including pausing play or opening a menu.
+ * Call on every game break (entering a menu, switching level, pausing the game, ...)
+ * @example
+ * // Player opens in-game menu
+ * Wortal.session.gameplayStop();
+ */
+export function gameplayStop(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        config.platformSDK.game.gameplayStop();
+    }
+}
+
+/**
+ * Tracks the start of the game loading in the session. This is used to determine how long the game takes to load.
+ * @hidden
+ * @private
+ */
+export function _gameLoadingStart(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        if (!config.isPlatformInitialized) {
+            delayUntilConditionMet(() => config.isPlatformInitialized).then(() => {
+                config.platformSDK.game.sdkGameLoadingStart();
+            });
+        } else {
+            config.platformSDK.game.sdkGameLoadingStart();
+        }
+    } else {
+        config.game.startGameLoadTimer();
+    }
+}
+
+/**
+ * Tracks the end of the game loading in the session. This is used to determine how long the game takes to load.
+ * @hidden
+ * @private
+ */
+export function _gameLoadingStop(): void {
+    const platform = config.session.platform;
+    if (platform === "crazygames") {
+        config.platformSDK.game.sdkGameLoadingStop();
+    } else {
+        config.game.stopGameLoadTimer();
+    }
 }

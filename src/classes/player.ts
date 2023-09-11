@@ -2,7 +2,10 @@ import { config } from "../api";
 import Wortal from "../index";
 import { PlayerData } from "../interfaces/player";
 import { LeaderboardPlayerData } from "../types/leaderboard";
+import { Error_CrazyGames } from "../types/wortal";
+import { rethrowError_CrazyGames } from "../utils/error-handler";
 import { debug, exception } from "../utils/logger";
+import { delayUntilConditionMet } from "../utils/wortal-utils";
 
 /**
  * Represents a player in the game. To access info about the current player, use the Wortal.player API.
@@ -17,10 +20,29 @@ export class Player {
         daysSinceFirstPlay: 0,
     };
 
+    /**
+     * Used by CrazyGames platform to determine if the user API is available. CrazyGames allows embedding games into
+     * other sites which will cause this to be disabled.
+     * @hidden
+     * @private
+     */
+    private _isUserAPIAvailable: boolean = false;
+    /**
+     * Used to store the CrazyGames player object if the user API is available. CrazyGames SDK doesn't offer
+     * individual APIs for getting player info, so we just store the player object.
+     * @hidden
+     * @private
+     */
+    private _crazyGamesPlayer: any = null;
+
     /** @hidden */
     async initialize(): Promise<Player> {
         debug("Initializing player...");
         const platform = config.session.platform;
+
+        if (platform === "crazygames") {
+            await this._initializeCrazyGamesPlayer();
+        }
 
         this._current.id = this.setId();
         this._current.name = this.setName();
@@ -81,6 +103,14 @@ export class Player {
         return this._current.asid;
     }
 
+    /** @hidden */
+    set crazyGamesPlayer(player: any) {
+        this._crazyGamesPlayer = player;
+        this._current.id = this.setId();
+        this._current.name = this.setName();
+        this._current.photo = this.setPhoto();
+    }
+
     protected setId(): string {
         switch (config.session.platform) {
             case "viber":
@@ -89,6 +119,8 @@ export class Player {
                 return config.platformSDK.player.getID();
             case "wortal":
                 return (window as any).wortalSessionId;
+            case "crazygames":
+                return this._crazyGamesPlayer?.id || this.generateRandomID();
             case "gd":
             case "debug":
             default:
@@ -102,6 +134,8 @@ export class Player {
             case "link":
             case "facebook":
                 return config.platformSDK.player.getName();
+            case "crazygames":
+                return this._crazyGamesPlayer?.username || "CrazyGames Player";
             case "wortal":
             case "gd":
             case "debug":
@@ -116,6 +150,8 @@ export class Player {
             case "link":
             case "facebook":
                 return config.platformSDK.player.getPhoto();
+            case "crazygames":
+                return this._crazyGamesPlayer?.profilePictureUrl || "https://images.crazygames.com/userportal/avatars/4.png";
             case "wortal":
             case "gd":
             case "debug":
@@ -133,6 +169,7 @@ export class Player {
                 return this.isWortalFirstPlay();
             case "facebook":
             case "gd":
+            case "crazygames":
             case "debug":
             default:
                 return false;
@@ -192,6 +229,65 @@ export class Player {
         ];
 
         return segments.join('-');
+    }
+
+    /**
+     * Initializes the CrazyGames player object if the user API is available. This is used to get the player's
+     * info, if it is available.
+     * @hidden
+     * @private
+     */
+    async _initializeCrazyGamesPlayer(): Promise<void> {
+        // The CrazyGames SDK takes a little longer to initialize than the others, so we have to wait for it here.
+        if (typeof config.platformSDK === "undefined") {
+            await delayUntilConditionMet(() => {
+                return typeof config.platformSDK !== "undefined";
+            }, "Waiting for CrazyGames SDK to load...");
+        }
+
+        await this.isUserAPIAvailable().then((isAvailable) => {
+            this._isUserAPIAvailable = isAvailable;
+        }).catch((error: any) => {
+            exception("Error checking if user API is available: ", error);
+        });
+
+        if (this._isUserAPIAvailable) {
+            await this.fetchCrazyGamesPlayer().then((player) => {
+                this._crazyGamesPlayer = player;
+            }).catch((error: any) => {
+                exception("Error fetching CrazyGames player: ", error);
+            });
+        }
+    }
+
+    protected isUserAPIAvailable(): Promise<boolean> {
+        return new Promise((resolve) => {
+            const callback = (error: Error_CrazyGames, isAvailable: boolean) => {
+                if (error) {
+                    rethrowError_CrazyGames(error, "isUserAccountAvailable");
+                } else {
+                    debug("User API available: ", isAvailable);
+                    resolve(isAvailable);
+                }
+            };
+
+            config.platformSDK.user.isUserAccountAvailable(callback);
+        });
+    }
+
+    protected fetchCrazyGamesPlayer(): Promise<any> {
+        return new Promise((resolve) => {
+            const callback = (error: Error_CrazyGames, player: any) => {
+                if (error) {
+                    rethrowError_CrazyGames(error, "getUser");
+                } else {
+                    debug("CrazyGames player fetched:", player);
+                    resolve(player);
+                }
+            };
+
+            config.platformSDK.user.getUser(callback);
+        });
     }
 }
 

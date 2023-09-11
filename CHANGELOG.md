@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.6.9] - 2023-09-11
+### Added
+- Core
+  - Support for CrazyGames platform
+- Analytics
+  - Tracking for game load times
+- Context
+  - context.switchAsync now has an optional payload
+  - context.chooseAsync now supports payloads on Link
+
+### Fixed
+- Ads
+  - Preroll loading cover can no longer be added after initialization or when ads are blocked
+
+### Changed
+- Core
+  - Improved internal error handling
+
 ## [1.6.8] - 2023-09-04
 ### Added
 - Core

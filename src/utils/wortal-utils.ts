@@ -1,14 +1,32 @@
 import { config } from "../api";
 import Wortal from "../index";
-import { Device } from "../types/session";
+import { Device, Platform } from "../types/session";
 import { ShareTo } from "../types/wortal";
 import { invalidParams } from "./error-handler";
 import { debug, exception } from "./logger";
-import { isValidShareDestination } from "./validators";
+import { isValidShareDestination, isValidString } from "./validators";
 
-//
-// UTILITY FUNCTIONS
-//
+/**
+ * Does what the name suggests -- delays execution until a condition is met.
+ * @param {Function} condition Function that returns a boolean. If the boolean is true, the promise will resolve.
+ * @param {string} message Message to log while waiting for the condition to be met.
+ * @hidden
+ */
+export function delayUntilConditionMet(condition: () => boolean, message: string = ""): Promise<void> {
+    return new Promise(resolve => {
+        const checkIfConditionMet = () => {
+            if (condition()) {
+                resolve();
+            } else {
+                if (isValidString(message)) {
+                    debug(message);
+                }
+                setTimeout(checkIfConditionMet, 100);
+            }
+        };
+        checkIfConditionMet();
+    });
+}
 
 /**
  * Gets a parameter from the URL.
@@ -32,6 +50,22 @@ export function getParameterByName(name: string): string | null {
     }
 
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+/**
+ * Gets all parameters from the URL.
+ * @returns {Record<string, string>} Object containing all parameters from the URL.
+ * @hidden
+ */
+export function getAllQueryParameters(): Record<string, string> {
+    const params: any = {};
+    const queryString = window.location.search.slice(1);
+    const pairs = queryString.split("&");
+    for (const pair of pairs) {
+        const [key, value] = pair.split("=");
+        params[key] = value;
+    }
+    return params;
 }
 
 /**
@@ -81,6 +115,10 @@ export function addLoadingListener(): void {
  * @hidden
  */
 export function addLoadingCover(): void {
+    if (config.adConfig.hasPrerollShown || config.adConfig.isAdBlocked) {
+        return;
+    }
+
     const cover = document.createElement("div");
     cover.id = "loading-cover";
     cover.style.cssText = "background: #000000; width: 100%; height: 100%; position: fixed; z-index: 100;";
@@ -119,7 +157,7 @@ export function addGameEndEventListener(): void {
  */
 export function addGDCallback(eventName: string, callback: () => void): void {
     if (typeof callback !== "function") {
-        throw invalidParams("[Wortal] Callback is not a function.", "addGDEvents()");
+        throw invalidParams(undefined, "addGDCallback()");
     }
 
     if (typeof config.adConfig.gdCallbacks !== "undefined") {
@@ -165,9 +203,19 @@ export function detectDevice(): Device {
     }
 }
 
-//
-// PLATFORM FUNCTIONS
-//
+/**
+ * Returns whether the specified API is supported on the current platform. This is just a wrapper for
+ * Wortal.getSupportedAPIs().includes(api) so it's easier to read.
+ * @param api API to check for support.
+ * @returns {boolean} Whether the API is supported on the current platform. Always true on debug platform.
+ * @hidden
+ */
+export function isSupportedOnCurrentPlatform(api: string): boolean {
+    if (config.session.platform === "debug") {
+        return true;
+    }
+    return Wortal.getSupportedAPIs().includes(api);
+}
 
 /**
  * Shares the game on the specified platform. This is only supported on Wortal and was ported over from the now
@@ -177,7 +225,7 @@ export function detectDevice(): Device {
  */
 (window as any).shareGame = function (destination: ShareTo, message: string): void {
     if (!isValidShareDestination(destination)) {
-        throw invalidParams("[Wortal] Invalid share destination.", "shareGame()");
+        throw invalidParams(undefined, "shareGame()");
     }
 
     switch (destination) {

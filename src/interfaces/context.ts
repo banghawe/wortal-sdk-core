@@ -39,6 +39,36 @@ export interface ChoosePayload {
      * Context minimum size for matching.
      */
     minSize?: number;
+    /**
+     * Image which will be displayed to contact.
+     * A string containing data URL of a base64 encoded image.
+     * If not specified, game's icon image will be used by default.
+     *
+     * PLATFORM NOTE: Link only.
+     */
+    image?: string,
+    /**
+     * Message which will be displayed to contact.
+     * If not specified, "SENDER_NAMEと一緒に「GAME_NAME」をプレイしよう！" will be used by default.
+     *
+     * PLATFORM NOTE: Link only.
+     */
+    text?: string | LocalizableContent,
+    /**
+     * Text of the call-to-action button.
+     * If not specified, "今すぐプレイ" will be used by default.
+     *
+     * PLATFORM NOTE: Link only.
+     */
+    caption?: string | LocalizableContent,
+    /**
+     * Object passed to any session launched from this update message.
+     * It can be accessed from `Wortal.session.getEntryPointData()`.
+     * Its size must be <=1000 chars when stringified.
+     *
+     * PLATFORM NOTE: Link only.
+     */
+    data?: Record<string, unknown>,
 }
 
 /**
@@ -160,6 +190,31 @@ export interface SharePayload {
      * PLATFORM NOTE: Facebook only.
      */
     switchContext?: boolean;
+}
+
+/**
+ * Payload for context.switchAsync. Defines the message to be sent to the context.
+ */
+export interface SwitchPayload {
+    /**
+     * Text of the call-to-action button.
+     *
+     * PLATFORM NOTE: Link only.
+     */
+    caption?: string | LocalizableContent;
+    /**
+     * Message which will be displayed to contact. GAME_NAME, SENDER_NAME, RECEIVER_NAME can be used as template string in the text.
+     *
+     * PLATFORM NOTE: Link only.
+     */
+    text?: string | LocalizableContent;
+    /**
+     * If switching into a solo context, set this to true to switch silently, with no confirmation dialog or toast.
+     * This only has an effect when switching into a solo context. Defaults to false.
+     *
+     * PLATFORM NOTE: Facebook only.
+     */
+    switchSilentlyIfSolo?: boolean;
 }
 
 /**

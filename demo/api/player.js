@@ -38,7 +38,11 @@ function playerFlushDataAsync() {
 
 function playerGetConnectedPlayersAsync() {
     Wortal.player.getConnectedPlayersAsync()
-        .then(result => appendText(JSON.stringify(result)))
+        .then(result => {
+            appendText("Connected players: " + result.length);
+            appendText("Connect player 1: ", result[0].name);
+            appendText(JSON.stringify(result))
+        })
         .catch(error => appendText(error));
 }
 
@@ -70,4 +74,26 @@ function playerSubscribeBotAsync() {
     Wortal.player.subscribeBotAsync()
         .then("Bot subscribed")
         .catch(error => appendText(error));
+}
+
+function playerGetTokenAsync() {
+    Wortal.player.getTokenAsync()
+        .then(result => appendText(result))
+        .catch(error => appendText(error));
+}
+
+function playerShowAuthPromptAsync() {
+    Wortal.player.showAuthPromptAsync()
+        .then("Auth prompt showed")
+        .catch(error => appendText(error));
+}
+
+function playerShowLinkAccountPromptAsync() {
+    Wortal.player.showLinkAccountPromptAsync()
+        .then(result => appendText(result))
+        .catch(error => appendText(error));
+}
+
+function playerOnLogin() {
+    Wortal.player.onLogin(() => appendText("Login"));
 }
