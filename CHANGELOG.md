@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.10] - 2023-09-13
+### Added
+- Core
+  - authenticateAsync and linkAccountAsync APIs
+
+### Changed
+- Analytics
+  - Analytics are no longer tracked on Game Distribution
+
 ## [1.6.9] - 2023-09-11
 ### Added
 - Core
