@@ -1,6 +1,6 @@
 import { config } from "../api";
 import Wortal from "../index";
-import { Device, Platform } from "../types/session";
+import { Device } from "../types/session";
 import { ShareTo } from "../types/wortal";
 import { invalidParams } from "./error-handler";
 import { debug, exception } from "./logger";
@@ -176,10 +176,10 @@ export function gdEventTrigger(value: string): void {
     if (typeof config.adConfig.gdCallbacks !== "undefined") {
         const callback = config.adConfig.gdCallbacks[value];
         if (typeof callback !== "undefined") {
-            debug(`GD event triggered. Event: ${value}}`);
+            debug(`GD event triggered. Event: ${value}`);
             callback();
         } else {
-            debug(`GD event triggered, but no callback is defined for this event. Event: ${value}}`);
+            debug(`GD event triggered, but no callback is defined for this event. Event: ${value}`);
         }
     } else {
         exception("GD event triggered, but GDCallbacks is undefined. This is a fatal error that should have been caught during initialization.");
