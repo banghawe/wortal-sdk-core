@@ -690,14 +690,13 @@ function _showInterstitial_CrazyGames(callbacks: AdCallbacks): void {
 function _showInterstitial_GamePix(callbacks: AdCallbacks): void {
     callbacks.beforeAd && callbacks.beforeAd();
     config.platformSDK.interstitialAd().then((result: any) => {
-        debug("Interstitial ad result", result);
         // The docs say to check result.success but this was consistently undefined during testing despite
         // the ad showing successfully.
         if (result) {
             callbacks.afterAd && callbacks.afterAd();
         } else {
-            debug("Interstitial ad failed to show.");
-            _onAdErrorOrNoFill(null, callbacks);
+            debug("Interstitial ad failed to show.", result.message);
+            _onAdErrorOrNoFill(result.message, callbacks);
         }
     }).catch((error: any) => {
         debug("Interstitial ad failed to show.", error);
@@ -802,8 +801,15 @@ function _showRewarded_GamePix(callbacks: AdCallbacks): void {
             callbacks.afterAd && callbacks.afterAd();
             callbacks.adViewed && callbacks.adViewed();
         } else {
-            callbacks.afterAd && callbacks.afterAd();
-            callbacks.adDismissed && callbacks.adDismissed();
+            // A message property is added when there was an error, if undefined it indicates the player dismissed the ad.
+            if (typeof result.message !== "undefined") {
+                debug("Rewarded ad failed to show.", result.message);
+                _onAdErrorOrNoFill(result.message, callbacks);
+            } else {
+                debug("Rewarded ad dismissed by player.");
+                callbacks.afterAd && callbacks.afterAd();
+                callbacks.adDismissed && callbacks.adDismissed();
+            }
         }
     }).catch((error: any) => {
         debug("Rewarded ad failed to show.", error);
