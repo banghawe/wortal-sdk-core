@@ -1,3 +1,5 @@
+import { ShareTo } from "./wortal";
+
 declare global {
     const __VERSION__: string;
 
@@ -28,11 +30,11 @@ declare global {
         /**
          * Calls for an ad break. This is used by the Google Adsense SDK.
          */
-        adBreak: Function;
+        adBreak: (params: object) => void;
         /**
          * Ad configuration. This is used by the Google Adsense SDK.
          */
-        adConfig: Function;
+        adConfig: (params: object) => void;
         /**
          * GD SDK requires an options object to be set in the window that holds their configuration and events.
          * he onEvent property is where we can listen for their SDK events.
@@ -49,7 +51,7 @@ declare global {
          * displaying the game.
          * @hidden
          */
-        shareGame: (destination: string, message: string) => void;
+        shareGame: (destination: ShareTo, message: string) => void;
     }
 
     interface CrazyGamesSDK {

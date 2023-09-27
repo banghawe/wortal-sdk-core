@@ -219,6 +219,7 @@ export function authenticateAsync(payload?: AuthPayload): Promise<AuthResponse |
         }
 
         if (platform === "debug") {
+            debug("Player authenticated successfully. Payload:", payload);
             const response: AuthResponse = {
                 status: "success",
             };

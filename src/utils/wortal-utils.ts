@@ -243,7 +243,6 @@ export function isSupportedOnCurrentPlatform(api: string): boolean {
 //#endregion
 //#region Wortal page functions
 
-//@ts-ignore
 window.shareGame = function (destination: ShareTo, message: string): void {
     if (!isValidShareDestination(destination)) {
         throw invalidParams(undefined, "shareGame()");

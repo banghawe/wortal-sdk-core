@@ -112,7 +112,7 @@ export function getHistoryAsync(): Promise<ScheduledNotification[] | undefined> 
                     if (response.ok) {
                         return response.json();
                     } else {
-                        let data = await response.json();
+                        const data = await response.json();
                         reject(operationFailed(`Failed to get notifications. Request failed with status code: ${data.message || data.detail || "No message found, sorry."}`,
                             WORTAL_API.NOTIFICATIONS_GET_HISTORY_ASYNC,
                             API_URL.NOTIFICATIONS_GET_HISTORY_ASYNC));
@@ -186,7 +186,7 @@ export function cancelAsync(id: string): Promise<boolean | undefined> {
                     if (response.ok) {
                         return response.json();
                     } else {
-                        let data = await response.json();
+                        const data = await response.json();
                         reject(operationFailed(`Failed to cancel notification. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`,
                             WORTAL_API.NOTIFICATIONS_CANCEL_ASYNC,
                             API_URL.NOTIFICATIONS_CANCEL_ASYNC));
@@ -248,7 +248,7 @@ export function cancelAllAsync(label?: string): Promise<boolean | undefined> {
                     if (response.ok) {
                         return response.json();
                     } else {
-                        let data = await response.json();
+                        const data = await response.json();
                         reject(operationFailed(`Failed to cancel all notifications. Request failed with status code: ${response.status}. \n Message: ${data.message || data.detail || "No message found, sorry."}`,
                             WORTAL_API.NOTIFICATIONS_CANCEL_ALL_ASYNC,
                             API_URL.NOTIFICATIONS_CANCEL_ALL_ASYNC));
