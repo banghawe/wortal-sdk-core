@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.13] - 2023-09-22
+### Added
+- Core
+  - Support for GamePix platform
+  - onPause now triggers on all platforms
+
+### Fixed
+- Core
+  - Typo in event logs on GD platform
+
+### Changed
+- Session
+  - GameID now parsed from wortal-data.js on all platforms
+
 ## [1.6.12] - 2023-09-19
 ### Changed
 - Ads
