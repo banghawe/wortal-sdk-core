@@ -106,6 +106,7 @@ export default class SDKConfig {
             WORTAL_API.INITIALIZE_ASYNC,
             WORTAL_API.START_GAME_ASYNC,
             WORTAL_API.SET_LOADING_PROGRESS,
+            WORTAL_API.ON_PAUSE,
             WORTAL_API.ADS_IS_AD_BLOCKED,
             WORTAL_API.ADS_SHOW_INTERSTITIAL,
             WORTAL_API.ADS_SHOW_REWARDED,
@@ -223,6 +224,7 @@ export default class SDKConfig {
             WORTAL_API.INITIALIZE_ASYNC,
             WORTAL_API.START_GAME_ASYNC,
             WORTAL_API.SET_LOADING_PROGRESS,
+            WORTAL_API.ON_PAUSE,
             WORTAL_API.ADS_IS_AD_BLOCKED,
             WORTAL_API.ADS_SHOW_INTERSTITIAL,
             WORTAL_API.ADS_SHOW_REWARDED,
@@ -311,6 +313,8 @@ export default class SDKConfig {
         crazygames: [
             WORTAL_API.INITIALIZE_ASYNC,
             WORTAL_API.START_GAME_ASYNC,
+            WORTAL_API.SET_LOADING_PROGRESS,
+            WORTAL_API.ON_PAUSE,
             WORTAL_API.AUTHENTICATE_ASYNC,
             WORTAL_API.LINK_ACCOUNT_ASYNC,
             WORTAL_API.SET_LOADING_PROGRESS,
@@ -338,6 +342,30 @@ export default class SDKConfig {
             WORTAL_API.SESSION_GAMEPLAY_START,
             WORTAL_API.SESSION_GAMEPLAY_STOP,
         ],
+        gamepix: [
+            WORTAL_API.INITIALIZE_ASYNC,
+            WORTAL_API.START_GAME_ASYNC,
+            WORTAL_API.SET_LOADING_PROGRESS,
+            WORTAL_API.ON_PAUSE,
+            WORTAL_API.ADS_IS_AD_BLOCKED,
+            WORTAL_API.ADS_SHOW_INTERSTITIAL,
+            WORTAL_API.ADS_SHOW_REWARDED,
+            WORTAL_API.IAP_IS_ENABLED,
+            WORTAL_API.PLAYER_GET_ID,
+            WORTAL_API.PLAYER_GET_NAME,
+            WORTAL_API.PLAYER_GET_PHOTO,
+            WORTAL_API.PLAYER_IS_FIRST_PLAY,
+            WORTAL_API.PLAYER_GET_DATA_ASYNC,
+            WORTAL_API.PLAYER_SET_DATA_ASYNC,
+            WORTAL_API.SESSION_GET_LOCALE,
+            WORTAL_API.SESSION_GET_PLATFORM,
+            WORTAL_API.SESSION_GET_DEVICE,
+            WORTAL_API.SESSION_GET_ORIENTATION,
+            WORTAL_API.SESSION_ON_ORIENTATION_CHANGE,
+            WORTAL_API.SESSION_GAME_LOADING_START,
+            WORTAL_API.SESSION_GAME_LOADING_STOP,
+            WORTAL_API.SESSION_HAPPY_TIME,
+            ],
         debug: [],
     };
 }
@@ -385,6 +413,10 @@ export const WORTAL_API= {
     IAP_GET_PURCHASES_ASYNC: "iap.getPurchasesAsync",
     IAP_MAKE_PURCHASE_ASYNC: "iap.makePurchaseAsync",
     IAP_CONSUME_PURCHASE_ASYNC: "iap.consumePurchaseAsync",
+    IAP_GET_SUBSCRIBABLE_CATALOG_ASYNC: "iap.getSubscribableCatalogAsync",
+    IAP_PURCHASE_SUBSCRIPTION_ASYNC: "iap.purchaseSubscriptionAsync",
+    IAP_GET_SUBSCRIPTIONS_ASYNC: "iap.getSubscriptionsAsync",
+    IAP_CANCEL_SUBSCRIPTION_ASYNC: "iap.cancelSubscriptionAsync",
     LEADERBOARD_GET_LEADERBOARD_ASYNC: "leaderboard.getLeaderboardAsync",
     LEADERBOARD_SEND_ENTRY_ASYNC: "leaderboard.sendEntryAsync",
     LEADERBOARD_GET_ENTRIES_ASYNC: "leaderboard.getEntriesAsync",
@@ -465,6 +497,10 @@ export const API_URL = {
     IAP_GET_PURCHASES_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iapgetpurchasesasync",
     IAP_MAKE_PURCHASE_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iapmakepurchaseasync",
     IAP_CONSUME_PURCHASE_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iapconsumepurchaseasync",
+    IAP_GET_SUBSCRIBABLE_CATALOG_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iapgetsubscribablecatalogasync",
+    IAP_PURCHASE_SUBSCRIPTION_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iappurchasesubscriptionasync",
+    IAP_GET_SUBSCRIPTIONS_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iapgetsubscriptionsasync",
+    IAP_CANCEL_SUBSCRIPTION_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#iapcancelsubscriptionasync",
     LEADERBOARD_GET_LEADERBOARD_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#leaderboardgetleaderboardasync",
     LEADERBOARD_SEND_ENTRY_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#leaderboardsendentryasync",
     LEADERBOARD_GET_ENTRIES_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#leaderboardgetentriesasync",
@@ -496,4 +532,18 @@ export const API_URL = {
     TOURNAMENT_CREATE_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#tournamentcreateasync",
     TOURNAMENT_SHARE_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#tournamentshareasync",
     TOURNAMENT_JOIN_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#tournamentjoinasync",
+}
+
+/**
+ * Source URLs for platform SDKs.
+ * @hidden
+ */
+export const SDK_SRC = {
+    GOOGLE: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+    LINK: "https://lg.rgames.jp/libs/link-game-sdk/1.3.0/bundle.js",
+    VIBER: "https://vbrpl.io/libs/viber-play-sdk/1.14.0/bundle.js",
+    FACEBOOK: "https://connect.facebook.net/en_US/fbinstant.7.1.js",
+    GD: "https://html5.api.gamedistribution.com/main.min.js",
+    CRAZY_GAMES: "https://sdk.crazygames.com/crazygames-sdk-v2.js",
+    GAME_PIX: "https://integration.gamepix.com/sdk/v3/gamepix.sdk.js",
 }

@@ -1,5 +1,3 @@
-import { AuthPayload, AuthResponse, AuthResponse_CrazyGames, Error_Facebook_Rakuten } from "../interfaces/wortal";
-import { APIEndpoints, Error_CrazyGames, GD_EVENTS } from "../types/wortal";
 import * as _ads from './ads';
 import * as _analytics from './analytics';
 import * as _context from './context';
@@ -9,8 +7,10 @@ import * as _notifications from './notifications';
 import * as _player from './player';
 import * as _session from './session';
 import * as _tournament from './tournament';
+import { APIEndpoints, Error_CrazyGames, GD_EVENTS } from "../types/wortal";
+import { AuthPayload, AuthResponse, AuthResponse_CrazyGames, Error_Facebook_Rakuten } from "../interfaces/wortal";
 import { InitializationOptions } from "../interfaces/session";
-import SDKConfig, { API_URL, WORTAL_API } from "../utils/config";
+import SDKConfig, { API_URL, SDK_SRC, WORTAL_API } from "../utils/config";
 import { debug, exception, info } from "../utils/logger";
 import {
     initializationError,
@@ -22,6 +22,7 @@ import {
 } from "../utils/error-handler";
 import { isValidNumber, isValidString } from "../utils/validators";
 import {
+    onPauseFunctions,
     addGameEndEventListener,
     addLoadingListener,
     getParameterByName,
@@ -30,35 +31,17 @@ import {
     tryEnableIAP,
     addGDCallback,
     delayUntilConditionMet,
-    isSupportedOnCurrentPlatform
+    isSupportedOnCurrentPlatform,
+    addPauseListener
 } from "../utils/wortal-utils";
-
-// This is the version of the SDK. It is set by the build process.
-declare const __VERSION__: string;
-
-// References to the platform SDKs. They are declared here so that we can map these to config.platformSDK
-// once they are initialized.
-
-declare const LinkGame: any;
-declare const ViberPlay: any;
-declare const FBInstant: any;
-declare const gdsdk: any;
-
-// URLs for the platform SDKs. They are declared here so that we can use them to load the SDKs when we
-// initialize the platforms.
-
-const GOOGLE_SDK_SRC: string = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-const LINK_SDK_SRC: string = "https://lg.rgames.jp/libs/link-game-sdk/1.3.0/bundle.js";
-const VIBER_SDK_SRC: string = "https://vbrpl.io/libs/viber-play-sdk/1.14.0/bundle.js";
-const FB_SDK_SRC: string = "https://connect.facebook.net/en_US/fbinstant.7.1.js";
-const GD_SDK_SRC: string = "https://html5.api.gamedistribution.com/main.min.js";
-const CRAZY_GAMES_SRC: string = "https://sdk.crazygames.com/crazygames-sdk-v2.js";
 
 /**
  * Contains the configuration for the SDK. This includes the current session, game state, platform SDK, etc.
  * @hidden
  */
 export const config = new SDKConfig();
+
+//#region Public API
 
 /** Ads API */
 export const ads = _ads;
@@ -236,6 +219,7 @@ export function authenticateAsync(payload?: AuthPayload): Promise<AuthResponse |
         }
 
         if (platform === "debug") {
+            debug("Player authenticated successfully. Payload:", payload);
             const response: AuthResponse = {
                 status: "success",
             };
@@ -352,6 +336,8 @@ export function onPause(callback: () => void): void {
                 callback();
             });
         }
+    } else {
+        onPauseFunctions.push(callback);
     }
 }
 
@@ -399,6 +385,8 @@ export function getSupportedAPIs(): string[] {
     return config._supportedAPIs[config.session.platform];
 }
 
+//#endregion
+
 /**
  * Initializes the SDK. This should be called as soon as the script has been loaded and any configuration options
  * have been set. This will first initialize the SDK config which determines which platform the game is running on.
@@ -425,6 +413,7 @@ export async function _initializeInternal(options: InitializationOptions): Promi
     info("Initializing SDK " + __VERSION__);
     addLoadingListener();
     addGameEndEventListener();
+    addPauseListener();
 
     const platform = config.session.platform;
     _initializePlatform().then(() => {
@@ -458,6 +447,8 @@ export async function _initializeInternal(options: InitializationOptions): Promi
     });
 }
 
+//#region Platform Initialization
+
 /**
  * Initializes the platform SDK for the current platform. This is called after the SDK config has been initialized and
  * before the SDK initialization.
@@ -483,6 +474,8 @@ function _initializePlatform(): Promise<void> {
             return _initializePlatform_GD();
         case "crazygames":
             return _initializePlatform_CrazyGames();
+        case "gamepix":
+            return _initializePlatform_GamePix();
         case "debug":
             return _initializePlatform_Debug();
         default:
@@ -525,7 +518,8 @@ function _initializePlatform_Wortal(): Promise<void> {
 
         const debugParam = getParameterByName("debug");
         const frequencyCapParam = `${getParameterByName("freqcap") || 30}s`;
-        (window as any).wortalSessionId = getParameterByName('sessid') ?? "";
+        //TODO: deprecate this when player persistence is implemented
+        window.wortalSessionId = getParameterByName('sessid') ?? "";
 
         if (debugParam === "true") {
             googleAdsSDK.setAttribute("data-ad-client", "ca-pub-123456789");
@@ -537,7 +531,7 @@ function _initializePlatform_Wortal(): Promise<void> {
             googleAdsSDK.setAttribute("data-ad-frequency-hint", frequencyCapParam);
         }
 
-        googleAdsSDK.setAttribute("src", GOOGLE_SDK_SRC);
+        googleAdsSDK.setAttribute("src", SDK_SRC.GOOGLE);
         googleAdsSDK.setAttribute("type", "text/javascript");
 
         metaElement.setAttribute("name", "google-adsense-platform-account");
@@ -570,7 +564,7 @@ function _initializePlatform_Link(): Promise<void> {
     const functionName = "_initializePlatform_Link()";
     return new Promise((resolve, reject) => {
         const linkSDK = document.createElement("script");
-        linkSDK.src = LINK_SDK_SRC;
+        linkSDK.src = SDK_SRC.LINK;
 
         linkSDK.onload = () => {
             if (typeof LinkGame === "undefined") {
@@ -600,7 +594,7 @@ function _initializePlatform_Viber(): Promise<void> {
     const functionName = "_initializePlatform_Viber()";
     return new Promise((resolve, reject) => {
         const viberSDK = document.createElement("script");
-        viberSDK.src = VIBER_SDK_SRC;
+        viberSDK.src = SDK_SRC.VIBER;
 
         viberSDK.onload = () => {
             if (typeof ViberPlay === "undefined") {
@@ -636,7 +630,7 @@ function _initializePlatform_Facebook(): Promise<void> {
     const functionName = "_initializePlatform_Facebook()";
     return new Promise((resolve, reject) => {
         const facebookSDK = document.createElement("script");
-        facebookSDK.src = FB_SDK_SRC;
+        facebookSDK.src = SDK_SRC.FACEBOOK;
 
         facebookSDK.onload = () => {
             if (typeof FBInstant === "undefined") {
@@ -671,9 +665,7 @@ function _initializePlatform_GD(options?: any): Promise<void> {
     const id = "gamedistribution-jssdk";
 
     return new Promise((resolve, reject) => {
-        // GD SDK requires an options object to be set in the window. The onEvent property is where we can listen for
-        // their SDK events. We use this to map their events to our own callbacks.
-        (window as any).GD_OPTIONS = {
+        window.GD_OPTIONS = {
             gameId: config.session.gameId,
             onEvent: (event: any) => {
                 gdEventTrigger(event.name);
@@ -694,7 +686,7 @@ function _initializePlatform_GD(options?: any): Promise<void> {
             resolve();
         } else {
             gdSDK = document.createElement("script");
-            gdSDK.src = GD_SDK_SRC;
+            gdSDK.src = SDK_SRC.GD;
             gdSDK.id = id;
             firstScript.parentNode?.insertBefore(gdSDK, firstScript);
 
@@ -719,6 +711,7 @@ function _initializePlatform_GD(options?: any): Promise<void> {
 
 /**
  * Initializes the CrazyGames platform. This relies on Crazy Games' SDK.
+ * @returns {Promise<void>} Promise that resolve when the CrazyGames SDK has been initialized.
  * @hidden
  * @private
  */
@@ -726,15 +719,15 @@ function _initializePlatform_CrazyGames(): Promise<void> {
     const functionName = "_initializePlatform_CrazyGames()";
     return Promise.resolve().then(() => {
         const crazyGamesSDK = document.createElement("script");
-        crazyGamesSDK.src = CRAZY_GAMES_SRC;
+        crazyGamesSDK.src = SDK_SRC.CRAZY_GAMES;
 
         crazyGamesSDK.onload = () => {
-            if (typeof (window as any).CrazyGames.SDK === "undefined") {
+            if (typeof window.CrazyGames.SDK === "undefined") {
                 throw initializationError("Failed to load Crazy Games SDK.", functionName);
             }
 
             debug("Crazy Games platform SDK loaded.");
-            config.platformSDK = (window as any).CrazyGames.SDK;
+            config.platformSDK = window.CrazyGames.SDK;
 
             return new Promise((resolve) => {
                 const callback = (error: any, result: any) => {
@@ -764,6 +757,35 @@ function _initializePlatform_CrazyGames(): Promise<void> {
 }
 
 /**
+ * Initializes the GamePix platform. This relies on GamePix's SDK.
+ * @returns {Promise<void>} Promise that resolve when the GamePix SDK has been initialized.
+ * @hidden
+ * @private
+ */
+function _initializePlatform_GamePix(): Promise<void> {
+    const functionName = "_initializePlatform_GamePix()";
+    return Promise.resolve().then(() => {
+        const gamePixSDK = document.createElement("script");
+        gamePixSDK.src = SDK_SRC.GAME_PIX;
+
+        gamePixSDK.onload = () => {
+            if (typeof GamePix === "undefined") {
+                throw initializationError("Failed to load GamePix SDK.", functionName);
+            }
+
+            debug("GamePix platform SDK loaded.");
+            config.platformSDK = GamePix;
+        }
+
+        gamePixSDK.onerror = () => {
+            throw initializationError("Failed to load GamePix SDK.", functionName);
+        }
+
+        document.head.appendChild(gamePixSDK);
+    });
+}
+
+/**
  * Initializes the debugging platform. This is used when the game is running in a local or dev environment.
  * This will mock the platform SDK and allow the game to run without any platform dependencies, returning mock data
  * for all platform APIs. All APIs will be available, but some may not function exactly as they would on the platform.
@@ -783,7 +805,7 @@ function _initializePlatform_Debug(): Promise<void> {
         googleAdsSDK.setAttribute("data-ad-client", config.adConfig.clientID);
         googleAdsSDK.setAttribute("data-adbreak-test", "on");
 
-        googleAdsSDK.setAttribute("src", GOOGLE_SDK_SRC);
+        googleAdsSDK.setAttribute("src", SDK_SRC.GOOGLE);
         googleAdsSDK.setAttribute("type", "text/javascript");
 
         metaElement.setAttribute("name", "google-adsense-platform-account");
@@ -805,6 +827,9 @@ function _initializePlatform_Debug(): Promise<void> {
     });
 }
 
+//#endregion
+//#region SDK Initialization
+
 /**
  * Initializes the Wortal SDK. This is called after the platform has been initialized.
  * @hidden
@@ -825,6 +850,9 @@ function _initializeSDK(): Promise<void> {
             return _initializeSDK_RakutenFacebook();
         case "crazygames":
             return _initializeSDK_CrazyGames();
+        case "gamepix":
+            return _initializeSDK_GamePix();
+        case "debug":
         default:
             return _initializeSDK_Debug();
     }
@@ -944,6 +972,25 @@ function _initializeSDK_CrazyGames(): Promise<void> {
 }
 
 /**
+ * Initializes the SDK for the GamePix platform.
+ * @hidden
+ * @private
+ */
+function _initializeSDK_GamePix(): Promise<void> {
+    const functionName = "_initializeSDK_GamePix()";
+    return Promise.resolve().then(() => {
+        return config.lateInitialize().then(() => {
+            tryEnableIAP();
+            debug(`SDK initialized for ${config.session.platform} platform.`);
+        }).catch((error: any) => {
+            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, functionName);
+        });
+    }).catch((error: any) => {
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
+    });
+}
+
+/**
  * Initializes the SDK for the debugging.
  * @hidden
  * @private
@@ -1021,3 +1068,5 @@ function _initializeAdBackFill(): Promise<void> {
         });
     });
 }
+
+//#endregion

@@ -56,71 +56,84 @@ export class Session {
             return "wortal";
         } else if (PLATFORM_DOMAINS["crazygames"].some(domain => host.includes(domain))) {
             return "crazygames";
+        } else if (PLATFORM_DOMAINS["gamepix"].some(domain => host.includes(domain))) {
+            return "gamepix";
         } else {
             return "debug";
         }
     }
 
-    private _setCountry(): string {
-        // This isn't very reliable as the time zone can be easily changed, but we want a way to get the country
-        // without using any personal information or geolocation.
-        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const arr = zone.split("/");
-        const city = arr[arr.length - 1];
-        return country[city];
-    }
-
     private _setGameID(): string {
-        // We sync the different IDs on the backend, we'll just parse the ID for the current platform and send it to Wombat.
-        let url: string[] = [];
-        let subdomain: string[] = [];
-        let id: string;
+        let id: string = window.wortalGameID;
+        if (id === undefined) {
+            debug("Game ID not found in window.wortalGameID, trying to get it from the URL...");
+            // We keep this in for backwards compatibility. As of v1.6.13 Wortal will automatically add the game ID to
+            // wortal-data.js when uploaded a revision, but some games have not (and may never) be updated so we
+            // need a fallback for getting the gameID.
+            let url: string[] = [];
+            let subdomain: string[] = [];
 
-        switch (this.platform) {
-            case "wortal":
-                // Example URL: https://gameportal.digitalwill.co.jp/games/cactus-bowling/19/
-                // ID: 19
-                url = document.URL.split("/");
-                id = url[5];
-                break;
-            case "link":
-                // Example URL: https://05cabb33-07f4-4074-8ebd-69b78815697a.g.rgsbx.net/11/index.html
-                // ID: 05cabb33-07f4-4074-8ebd-69b78815697a
-                url = document.URL.split("/");
-                subdomain = url[2].split(".");
-                id = subdomain[0];
-                break;
-            case "viber":
-                // Example URL: https://r83ysr3u613lxyh8u93piwf0h0jbxbhk.g.vbrplsbx.io/44/index.html
-                // ID: r83ysr3u613lxyh8u93piwf0h0jbxbhk
-                url = document.URL.split("/");
-                subdomain = url[2].split(".");
-                id = subdomain[0];
-                break;
-            case "gd":
-                // Example URL: https://revision.gamedistribution.com/b712105e1fff4bceb87667522d798f97
-                // ID: b712105e1fff4bceb87667522d798f97
-                url = document.URL.split("/");
-                id = url[3];
-                break;
-            case "facebook":
-                // This is assigned in wortal-data.js that gets added to the bundle when uploading to Facebook.
-                id = (window as any).wortalGameID;
-                break;
-            case "crazygames":
-                // Example URL: https://www.crazygames.com/game/sushi-supply-co
-                // ID: sushi-supply-co
-                url = document.URL.split("/");
-                id = url[4];
-                break;
-            case "debug":
-            default:
-                id = "debug";
-                break;
+            switch (this.platform) {
+                case "wortal":
+                    // Example URL: https://gameportal.digitalwill.co.jp/games/cactus-bowling/19/
+                    // ID: 19
+                    url = document.URL.split("/");
+                    id = url[5];
+                    break;
+                case "link":
+                    // Example URL: https://05cabb33-07f4-4074-8ebd-69b78815697a.g.rgsbx.net/11/index.html
+                    // ID: 05cabb33-07f4-4074-8ebd-69b78815697a
+                    url = document.URL.split("/");
+                    subdomain = url[2].split(".");
+                    id = subdomain[0];
+                    break;
+                case "viber":
+                    // Example URL: https://r83ysr3u613lxyh8u93piwf0h0jbxbhk.g.vbrplsbx.io/44/index.html
+                    // ID: r83ysr3u613lxyh8u93piwf0h0jbxbhk
+                    url = document.URL.split("/");
+                    subdomain = url[2].split(".");
+                    id = subdomain[0];
+                    break;
+                case "gd":
+                    // Example URL: https://revision.gamedistribution.com/b712105e1fff4bceb87667522d798f97
+                    // ID: b712105e1fff4bceb87667522d798f97
+                    url = document.URL.split("/");
+                    id = url[3];
+                    break;
+                case "facebook":
+                    // wortal-data.js was always added to FB revisions, so we shouldn't reach this case.
+                    id = window.wortalGameID;
+                    break;
+                case "crazygames":
+                    // Example URL: https://www.crazygames.com/game/sushi-supply-co
+                    // ID: sushi-supply-co
+                    url = document.URL.split("/");
+                    id = url[4];
+                    break;
+                case "gamepix":
+                    // Example URL: https://www.gamepix.com/play/sushi-supply-co
+                    // ID: sushi-supply-co
+                    url = document.URL.split("/");
+                    id = url[4];
+                    break;
+                case "debug":
+                default:
+                    id = "debug";
+                    break;
+            }
         }
 
         debug("Game ID: " + id);
         return id;
+    }
+
+    private _setCountry(): string {
+        // This isn't very reliable as the time zone can be easily changed, but we want a way to get the country
+        // without using any personal information or geolocation to avoid GDPR/privacy law issues.
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const arr = zone.split("/");
+        const city = arr[arr.length - 1];
+        return country[city];
     }
 }
 
