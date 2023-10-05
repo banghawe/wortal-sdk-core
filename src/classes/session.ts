@@ -58,6 +58,8 @@ export class Session {
             return "crazygames";
         } else if (PLATFORM_DOMAINS["gamepix"].some(domain => host.includes(domain))) {
             return "gamepix";
+        } else if (PLATFORM_DOMAINS["idev"].some(domain => host.includes(domain))) {
+            return "idev";
         } else {
             return "debug";
         }
@@ -68,7 +70,7 @@ export class Session {
         if (id === undefined) {
             debug("Game ID not found in window.wortalGameID, trying to get it from the URL...");
             // We keep this in for backwards compatibility. As of v1.6.13 Wortal will automatically add the game ID to
-            // wortal-data.js when uploaded a revision, but some games have not (and may never) be updated so we
+            // wortal-data.js when uploading a revision, but some games have not (and may never) be updated, so we
             // need a fallback for getting the gameID.
             let url: string[] = [];
             let subdomain: string[] = [];
@@ -113,6 +115,12 @@ export class Session {
                 case "gamepix":
                     // Example URL: https://www.gamepix.com/play/sushi-supply-co
                     // ID: sushi-supply-co
+                    url = document.URL.split("/");
+                    id = url[4];
+                    break;
+                case "idev":
+                    // Example URL: https://idev.games/game/wortal-sdk-test
+                    // ID: wortal-sdk-test
                     url = document.URL.split("/");
                     id = url[4];
                     break;

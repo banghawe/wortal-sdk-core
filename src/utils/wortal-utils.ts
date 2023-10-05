@@ -1,8 +1,8 @@
 import { config } from "../api";
 import Wortal from "../index";
 import { Device } from "../types/session";
-import { ShareTo } from "../types/wortal";
-import { invalidParams } from "./error-handler";
+import { APIEndpoints, ShareTo } from "../types/wortal";
+import { invalidParams, notSupported, operationFailed } from "./error-handler";
 import { debug, exception } from "./logger";
 import { isValidShareDestination, isValidString } from "./validators";
 
@@ -207,6 +207,54 @@ export function gdEventTrigger(value: string): void {
     } else {
         exception("GD event triggered, but GDCallbacks is undefined. This is a fatal error that should have been caught during initialization.");
     }
+}
+
+/**
+ * Makes a post request to the iDev API. This is how we communicate with the iDev platform as there is no SDK.
+ * @param endPoint Endpoint to make the request to. This should be the path after the base URL. Ex: "user/create".
+ * @param data Data to send with the request. This is sent as a URL encoded form.
+ * @hidden
+ */
+export function iDevPostRequestAsync(endPoint: string, data: Record<string, string>): Promise<unknown> {
+    return Promise.resolve().then(() => {
+        if (!isValidString(endPoint) || !data) {
+            throw invalidParams(undefined, `iDevPostRequestAsync() -- ${endPoint}`);
+        }
+
+        if (config.session.platform !== "idev") {
+            throw notSupported("Request only supported on iDev platform.", `iDevPostRequestAsync() -- ${endPoint}`);
+        }
+
+        const url = `${APIEndpoints.IDEV_POST}${endPoint}`;
+        const params = new URLSearchParams();
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                params.append(key, data[key]);
+            }
+        }
+
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                "auth_token": config.platformAPIKey,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: params,
+        }).then((response: Response) => {
+            if (response.ok) {
+                const contentType = response.headers.get('Content-Type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    return response.text();
+                }
+            } else {
+                throw operationFailed(response.statusText, `iDevPostRequestAsync() -- ${endPoint}`);
+            }
+        }).catch((error) => {
+            throw operationFailed(error, `iDevPostRequestAsync() -- ${endPoint}`);
+        });
+    });
 }
 
 /**

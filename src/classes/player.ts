@@ -34,6 +34,7 @@ export class Player {
      * @private
      */
     private _crazyGamesPlayer: any = null;
+    private _authToken: string = "";
 
     /** @hidden */
     async initialize(): Promise<Player> {
@@ -104,6 +105,16 @@ export class Player {
     }
 
     /** @hidden */
+    get authToken(): string {
+        return this._authToken;
+    }
+
+    /** @hidden */
+    set authToken(token: string) {
+        this._authToken = token;
+    }
+
+    /** @hidden */
     set crazyGamesPlayer(player: any) {
         this._crazyGamesPlayer = player;
         this._current.id = this.setId();
@@ -121,6 +132,8 @@ export class Player {
                 return window.wortalSessionId;
             case "crazygames":
                 return this._crazyGamesPlayer?.id || this.generateRandomID();
+            case "idev":
+                //TODO: Implement iDevGames player ID.
             case "gd":
             case "gamepix":
             case "debug":
@@ -137,6 +150,8 @@ export class Player {
                 return config.platformSDK.player.getName();
             case "crazygames":
                 return this._crazyGamesPlayer?.username || "CrazyGames Player";
+            case "idev":
+                //TODO: Implement iDevGames player ID.
             case "wortal":
             case "gd":
             case "gamepix":
@@ -154,6 +169,8 @@ export class Player {
                 return config.platformSDK.player.getPhoto();
             case "crazygames":
                 return this._crazyGamesPlayer?.profilePictureUrl || "https://images.crazygames.com/userportal/avatars/4.png";
+            case "idev":
+                //TODO: Implement iDevGames player ID.
             case "wortal":
             case "gd":
             case "gamepix":
@@ -170,6 +187,8 @@ export class Player {
                 return config.platformSDK.player.hasPlayed();
             case "wortal":
                 return this.isWortalFirstPlay();
+            case "idev":
+                //TODO: Implement iDevGames player ID.
             case "facebook":
             case "gd":
             case "crazygames":

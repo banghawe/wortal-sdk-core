@@ -20,6 +20,9 @@ export default class SDKConfig {
     private _isAutoInit: boolean = true;
 
     private _platformSDK: any;
+    // This is used to authenticate the platform SDK/API. Some platforms require an API key unique to each game
+    // to make API calls or initialize the SDK. This is set in the backend and parsed from wortal-data.js.
+    private _platformAPIKey: string = "";
 
     constructor() {
         this._game = new GameState();
@@ -71,6 +74,14 @@ export default class SDKConfig {
 
     set platformSDK(sdk: any) {
         this._platformSDK = sdk;
+    }
+
+    get platformAPIKey(): string {
+        return this._platformAPIKey;
+    }
+
+    set platformAPIKey(key: string) {
+        this._platformAPIKey = key;
     }
 
     get isInitialized(): boolean {
@@ -366,6 +377,27 @@ export default class SDKConfig {
             WORTAL_API.SESSION_GAME_LOADING_STOP,
             WORTAL_API.SESSION_HAPPY_TIME,
             ],
+        idev: [
+            WORTAL_API.INITIALIZE_ASYNC,
+            WORTAL_API.START_GAME_ASYNC,
+            WORTAL_API.SET_LOADING_PROGRESS,
+            WORTAL_API.ON_PAUSE,
+            WORTAL_API.AUTHENTICATE_ASYNC,
+            WORTAL_API.IAP_IS_ENABLED,
+            WORTAL_API.PLAYER_GET_ID,
+            WORTAL_API.PLAYER_GET_NAME,
+            WORTAL_API.PLAYER_GET_PHOTO,
+            WORTAL_API.PLAYER_IS_FIRST_PLAY,
+            WORTAL_API.PLAYER_GET_DATA_ASYNC,
+            WORTAL_API.PLAYER_SET_DATA_ASYNC,
+            WORTAL_API.SESSION_GET_LOCALE,
+            WORTAL_API.SESSION_GET_PLATFORM,
+            WORTAL_API.SESSION_GET_DEVICE,
+            WORTAL_API.SESSION_GET_ORIENTATION,
+            WORTAL_API.SESSION_ON_ORIENTATION_CHANGE,
+            WORTAL_API.SESSION_GAME_LOADING_START,
+            WORTAL_API.SESSION_GAME_LOADING_STOP,
+        ],
         debug: [],
     };
 }
@@ -465,6 +497,11 @@ export const WORTAL_API= {
     TOURNAMENT_JOIN_ASYNC: "tournament.joinAsync",
 };
 
+/**
+ * URLs to the API docs for each function. This is passed into error messages to help developers find the relevant
+ * docs for the error.
+ * @hidden
+ */
 export const API_URL = {
     GET_SUPPORTED_APIS: "https://sdk.html5gameportal.com/api/wortal/#getsupportedapis",
     INITIALIZE_ASYNC: "https://sdk.html5gameportal.com/api/wortal/#initializeasync",

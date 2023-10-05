@@ -105,3 +105,19 @@ const _crazyGamesErrors: Record<string, string> = {
     showAccountLinkPromptInProgress: "LINK_IN_PROGRESS",
     unexpectedError: "UNKNOWN",
 }
+
+const _iDevGamesErrors: Record<string, string> = {
+    "Unauthorized": "USER_NOT_AUTHENTICATED",
+    "User already exists.": "USER_ALREADY_AUTHENTICATED",
+    "Missing fields.": "INVALID_PARAM",
+    "Missing email field.": "INVALID_PARAM",
+    "No table specified": "INVALID_PARAM",
+    "Row not specified": "INVALID_PARAM",
+    "Column not specified": "INVALID_PARAM",
+    "No table or value specified": "INVALID_PARAM",
+    "Column not found": "INVALID_OPERATION",
+    "No table found": "INVALID_OPERATION",
+    "Table not found": "INVALID_OPERATION",
+    "Row either does not exist or does not belong to this user": "INVALID_OPERATION",
+    "Error": "UNKNOWN",
+}

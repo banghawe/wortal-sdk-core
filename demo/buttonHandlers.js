@@ -117,8 +117,20 @@ document.getElementById('context-isSizeBetween').addEventListener('click', () =>
 ////////////////////////////////////
 // Core
 ////////////////////////////////////
-document.getElementById('core-authenticateAsync').addEventListener('click', () => {
-    coreAuthenticateAsync();
+document.getElementById('core-authenticateAsync-prompt').addEventListener('click', () => {
+    coreAuthenticateAsyncPrompt();
+});
+
+document.getElementById('core-authenticateAsync-register').addEventListener('click', () => {
+    coreAuthenticateAsyncRegister();
+});
+
+document.getElementById('core-authenticateAsync-login').addEventListener('click', () => {
+    coreAuthenticateAsyncLogin();
+});
+
+document.getElementById('core-authenticateAsync-reset').addEventListener('click', () => {
+    coreAuthenticateAsyncReset();
 });
 
 document.getElementById('core-linkGameAsync').addEventListener('click', () => {

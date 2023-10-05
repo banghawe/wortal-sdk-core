@@ -7,6 +7,7 @@ export const PLATFORM_DOMAINS = {
     "facebook": ["facebook.com", "www.facebook.com", "apps.fbsbx.com"],
     "crazygames": ["crazygames.com", "www.crazygames.com", "developer.crazygames.com"],
     "gamepix": ["gamepix.com", "my.gamepix.com", "test.builds.gamepix.com"],
+    "idev": ["idev.games"],
 }
 
 /** @hidden */
@@ -27,12 +28,19 @@ export const APIEndpoints = {
     ADS: "https://html5gameportal.com/api/v1/fig/ads/",
     VIBER: "https://html5gameportal.com/api/v1/viber/",
     NOTIFICATIONS: "https://html5gameportal.com/api/v1/notification/",
+    IDEV_GET: "https://idev.games/api/get/",
+    IDEV_POST: "https://idev.games/api/post/",
 }
 
 /**
  * Status of the authentication process.
  */
 export type AuthStatus = "success" | "error" | "cancel";
+
+/**
+ * Action for the authentication process.
+ */
+export type AuthAction = "login" | "logout" | "register" | "reset";
 
 /** @hidden */
 export type ShareTo = "facebook" | "twitter"

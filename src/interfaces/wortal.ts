@@ -1,4 +1,4 @@
-import { AuthStatus } from "../types/wortal";
+import { AuthAction, AuthStatus } from "../types/wortal";
 
 /**
  * Error that is thrown by the SDK. Some messages are re-thrown from platform SDKs.
@@ -26,7 +26,10 @@ export interface ErrorMessage {
  * Payload for the authentication process.
  */
 export interface AuthPayload {
-
+    action: AuthAction;
+    email: string;
+    username?: string;
+    password?: string;
 }
 
 /**

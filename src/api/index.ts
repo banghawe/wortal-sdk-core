@@ -20,7 +20,7 @@ import {
     rethrowError_CrazyGames,
     rethrowError_Facebook_Rakuten
 } from "../utils/error-handler";
-import { isValidNumber, isValidString } from "../utils/validators";
+import { isValidAuthPayload_iDev, isValidNumber, isValidString } from "../utils/validators";
 import {
     onPauseFunctions,
     addGameEndEventListener,
@@ -32,7 +32,7 @@ import {
     addGDCallback,
     delayUntilConditionMet,
     isSupportedOnCurrentPlatform,
-    addPauseListener
+    addPauseListener, iDevPostRequestAsync
 } from "../utils/wortal-utils";
 
 /**
@@ -197,8 +197,40 @@ export async function startGameAsync(): Promise<void> {
 
 /**
  * Starts the authentication process for the player. If the current platform has its own authentication prompt then
- * this will be displayed.
+ * this will be displayed. Otherwise, the AuthPayload will determine which authentication action is taken.
+ *
+ * PLATFORM NOTE: CrazyGames uses its own authentication prompt and does not accept a payload.
+ *
+ * PLATFORM NOTE: iDev Games requires an AuthPayload.
  * @example
+ * // Register new user
+ * const payload = {
+ *     action: "register",
+ *     email: "boss@gmails.com",
+ *     username: "boss",
+ *     password: "password123",
+ * };
+ * Wortal.authenticateAsync(payload)
+ * .then(response => console.log(response));
+ *
+ * // Login existing user
+ * const payload = {
+ *    action: "login",
+ *    email: "boss@gmails.com",
+ *    password: "password123",
+ * };
+ * Wortal.authenticateAsync(payload)
+ * .then(response => console.log(response));
+ *
+ * // Request password reset
+ * const payload = {
+ *   action: "reset",
+ *   email: "boss@gmails.com"
+ * };
+ * Wortal.authenticateAsync(payload)
+ * .then(response => console.log(response));
+ *
+ * // Show authentication prompt
  * Wortal.authenticateAsync()
  * .then(response => console.log(response));
  * @param {AuthPayload} payload Optional payload for the authentication process.
@@ -240,6 +272,50 @@ export function authenticateAsync(payload?: AuthPayload): Promise<AuthResponse |
                     }
                 };
                 config.platformSDK.user.showAuthPrompt(callback);
+            });
+        }
+
+        if (platform === "idev") {
+            if (!payload || !isValidAuthPayload_iDev(payload)) {
+                throw invalidParams(undefined, WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC);
+            }
+
+            let endPoint = "";
+            switch (payload.action) {
+                case "register":
+                    endPoint = "user/create";
+                    break;
+                case "login":
+                    endPoint = "user/auth";
+                    break;
+                case "reset":
+                    endPoint = "user/reset";
+                    break;
+                default:
+                    throw invalidParams(undefined, WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC);
+            }
+
+            const params: Record<string, string> = {
+                email: payload.email,
+                ...(payload.username && { username: payload.username }),
+                ...(payload.password && { password: payload.password }),
+            };
+
+            return iDevPostRequestAsync(endPoint, params).then((response: unknown) => {
+                if (typeof response === "string") {
+                    // If this was a login request then the response is the authToken, otherwise it's just "Successful".
+                    if (payload.action === "login") {
+                        config.player.authToken = response;
+                    }
+
+                    // We can assume success here because we would get an error if the request failed.
+                    const authResponse: AuthResponse = {
+                        status: "success",
+                    };
+                    return authResponse;
+                }
+            }).catch((error) => {
+                throw operationFailed(error.message, WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC);
             });
         }
     });
@@ -476,6 +552,8 @@ function _initializePlatform(): Promise<void> {
             return _initializePlatform_CrazyGames();
         case "gamepix":
             return _initializePlatform_GamePix();
+        case "idev":
+            return _initializePlatform_iDev();
         case "debug":
             return _initializePlatform_Debug();
         default:
@@ -786,6 +864,29 @@ function _initializePlatform_GamePix(): Promise<void> {
 }
 
 /**
+ * Initializes the iDev platform. iDev does not use an SDK, it relies entirely on API calls.
+ * @returns {Promise<void>} Promise that resolve when the iDev platform has been initialized.
+ * @hidden
+ * @private
+ */
+function _initializePlatform_iDev(): Promise<void> {
+    // There's no SDK to initialize for the iDev platform, so we just make a test call to their API to ensure
+    // we can access it.
+    const functionName = "_initializePlatform_iDev()";
+    return Promise.resolve().then(() => {
+        return fetch(APIEndpoints.IDEV_GET + "test", {
+            method: "GET",
+        }).then((response) => {
+            if (response.ok) {
+                debug("iDev platform SDK loaded.");
+            } else {
+                throw initializationError("Failed to load iDev SDK.", functionName);
+            }
+        });
+    });
+}
+
+/**
  * Initializes the debugging platform. This is used when the game is running in a local or dev environment.
  * This will mock the platform SDK and allow the game to run without any platform dependencies, returning mock data
  * for all platform APIs. All APIs will be available, but some may not function exactly as they would on the platform.
@@ -842,20 +943,40 @@ function _initializeSDK(): Promise<void> {
     switch (platform) {
         case "wortal":
             return _initializeSDK_Wortal();
-        case "gd":
-            return _initializeSDK_GD();
         case "link":
         case "viber":
         case "facebook":
             return _initializeSDK_RakutenFacebook();
+        case "gd":
         case "crazygames":
-            return _initializeSDK_CrazyGames();
         case "gamepix":
-            return _initializeSDK_GamePix();
+        case "idev":
         case "debug":
         default:
-            return _initializeSDK_Debug();
+            return _initializeSDK_Default();
     }
+}
+
+/**
+ * Default SDK initialization process. This is used when there is no platform-specific initialization process for
+ * the SDK. This will call config.lateInitialize() and check if IAP should be enabled.
+ * @hidden
+ * @private
+ */
+function _initializeSDK_Default(): Promise<void> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        return config.lateInitialize().then(() => {
+            config.adConfig.setPrerollShown(true);
+            tryEnableIAP();
+            removeLoadingCover();
+            debug(`SDK initialized for ${platform} platform.`);
+        }).catch((error: any) => {
+            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, `_initializeSDK_${platform}()`);
+        });
+    }).catch((error: any) => {
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, `_initializeSDK_${platform}()`);
+    });
 }
 
 /**
@@ -920,88 +1041,6 @@ function _initializeSDK_Wortal(): Promise<void> {
                 config.adConfig.adShown();
                 removeLoadingCover();
             });
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the GD platform. GD shows a pre-roll ad when the player presses the play button then
- * loads the iframe with the game.
- * @hidden
- * @private
- */
-function _initializeSDK_GD(): Promise<void> {
-    const functionName = "_initializeSDK_GD()";
-    return Promise.resolve().then(() => {
-        // We don't need to await this because as of v1.6.8 Wortal and GD do not have any async operations that
-        // occur in lateInitialize.
-        config.lateInitialize();
-
-        // In production GD calls for the pre-roll when the player presses the play button, so we don't need to call
-        // for one here.
-        config.adConfig.setPrerollShown(true);
-
-        tryEnableIAP();
-        removeLoadingCover();
-
-        debug(`SDK initialized for ${config.session.platform} platform.`);
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the CrazyGames platform. CrazyGames does not support pre-roll ads and does not require
- * us to add a loading cover.
- * @hidden
- * @private
- */
-function _initializeSDK_CrazyGames(): Promise<void> {
-    const functionName = "_initializeSDK_CrazyGames()";
-    return Promise.resolve().then(() => {
-        return config.lateInitialize().then(() => {
-            tryEnableIAP();
-            debug(`SDK initialized for ${config.session.platform} platform.`);
-        }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, functionName);
-        });
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the GamePix platform.
- * @hidden
- * @private
- */
-function _initializeSDK_GamePix(): Promise<void> {
-    const functionName = "_initializeSDK_GamePix()";
-    return Promise.resolve().then(() => {
-        return config.lateInitialize().then(() => {
-            tryEnableIAP();
-            debug(`SDK initialized for ${config.session.platform} platform.`);
-        }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, functionName);
-        });
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the debugging.
- * @hidden
- * @private
- */
-function _initializeSDK_Debug(): Promise<void> {
-    const functionName = "_initializeSDK_Debug()";
-    return Promise.resolve().then(() => {
-        config.lateInitialize();
-        tryEnableIAP();
-        removeLoadingCover();
-        debug("SDK initialized for debugging session.");
     }).catch((error: any) => {
         throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
     });

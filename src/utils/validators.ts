@@ -1,3 +1,4 @@
+import { AuthPayload } from "../interfaces/wortal";
 import { PlacementType } from "../types/ads";
 import { ShareTo } from "../types/wortal";
 
@@ -50,4 +51,23 @@ export function isValidPurchaseConfig(obj: any): boolean {
 /** @hidden */
 export function isValidShareDestination(value: any): value is ShareTo {
     return ['facebook', 'twitter'].includes(value);
+}
+
+/** @hidden */
+export function isValidEmail(email: string): boolean {
+    const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
+    return emailRegex.test(email);
+}
+
+/** @hidden */
+export function isValidAuthPayload_iDev(payload: AuthPayload): boolean {
+    if (payload.action === "login") {
+        return isValidString(payload.email) && isValidEmail(payload.email) && isValidString(payload.password);
+    } else if (payload.action === "register") {
+        return isValidString(payload.email) && isValidEmail(payload.email) && isValidString(payload.username) && isValidString(payload.password);
+    } else if (payload.action === "reset") {
+        return isValidString(payload.email) && isValidEmail(payload.email);
+    } else {
+        return false;
+    }
 }
