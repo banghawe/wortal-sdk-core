@@ -2,7 +2,7 @@ import { Tournament } from "../classes/tournament";
 import { CreateTournamentPayload, ShareTournamentPayload } from "../interfaces/tournament";
 import { Error_Facebook_Rakuten } from "../interfaces/wortal";
 import { API_URL, WORTAL_API } from "../utils/config";
-import { facebookTournamentToWortal } from "../utils/converters";
+import { convertFacebookTournamentToWortal } from "../utils/converters";
 import {
     invalidOperation,
     invalidParams,
@@ -118,7 +118,7 @@ export function getAllAsync(): Promise<Tournament[]> {
             return config.platformSDK.tournament.getTournamentsAsync()
                 .then((tournaments: any) => {
                     return tournaments.map((tournament: any) => {
-                        return facebookTournamentToWortal(tournament);
+                        return convertFacebookTournamentToWortal(tournament);
                     });
                 })
                 .catch((error: Error_Facebook_Rakuten) => {
@@ -216,7 +216,7 @@ export function createAsync(payload: CreateTournamentPayload): Promise<Tournamen
         if (platform === "facebook") {
             return config.platformSDK.tournament.createAsync(payload)
                 .then((tournament: any) => {
-                    return facebookTournamentToWortal(tournament);
+                    return convertFacebookTournamentToWortal(tournament);
                 })
                 .catch((error: Error_Facebook_Rakuten) => {
                     throw rethrowError_Facebook_Rakuten(error, WORTAL_API.TOURNAMENT_CREATE_ASYNC, API_URL.TOURNAMENT_CREATE_ASYNC);
