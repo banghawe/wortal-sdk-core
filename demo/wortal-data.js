@@ -1,0 +1,1 @@
+window.wortalGameID = 145

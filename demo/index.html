@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wortal SDK Test Bundle</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="debugConsole.css">
+    <script src="wortal-data.js"></script>
     <script src="wortal-core.js" data-manual-init="true"></script>
 </head>
 <body>
@@ -139,6 +141,13 @@
 
     <label for="text-output"></label><textarea id="text-output" readonly></textarea>
 
+    <button id="toggleButton">Show Console</button>
+    <div id="consoleContainer">
+        <div id="consoleContent">
+            <label for="consoleTextArea"></label><textarea id="consoleTextArea"></textarea>
+        </div>
+    </div>
+
     <audio controls loop id="audioPlayer">
         <source src="assets/bgm.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
@@ -157,5 +166,6 @@
     <script src="api/tournament.js"></script>
     <script src="buttonHandlers.js"></script>
     <script src="utils.js"></script>
+    <script src="debugConsole.js"></script>
 </body>
 </html>
