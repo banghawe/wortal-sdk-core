@@ -77,6 +77,76 @@ export function getAllQueryParameters(): Record<string, string> {
 }
 
 /**
+ * Generates a random ID. This can be used for a player or session ID.
+ * @returns {string} Randomly generated ID.
+ * @hidden
+ */
+export function generateRandomID(): string {
+    const generateSegment = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    };
+
+    const segments = [
+        generateSegment(),
+        generateSegment(),
+        generateSegment(),
+        generateSegment(),
+        generateSegment() + generateSegment() + generateSegment()
+    ];
+
+    return segments.join('-');
+}
+
+/**
+ * Gets the size of a string in bytes. This is used to split JSON strings into chunks if they are too large to send
+ * in one request.
+ * @param str String to get the size of.
+ * @returns {number} Size of the string in bytes.
+ * @hidden
+ */
+export function getStringSizeInBytes(str: string): number {
+    const encoder = new TextEncoder();
+    const encodedString = encoder.encode(str);
+    return encodedString.length;
+}
+
+/**
+ * Splits a JSON string into chunks of a specified size. This is used to split large JSON strings into chunks that
+ * can be sent in multiple requests.
+ * @param jsonString JSON string to split into chunks.
+ * @param chunkSizeInBytes Size of each chunk in bytes. Defaults to 8KB.
+ * @returns {string[]} Array of JSON strings that are each smaller than the specified chunk size.
+ * @hidden
+ */
+export function splitJSONStringIntoChunks(jsonString: string, chunkSizeInBytes: number = 8000): string[] {
+    const chunks: string[] = [];
+    let currentChunk = "";
+    let currentChunkSize = 0;
+
+    for (let i = 0; i < jsonString.length; i++) {
+        const char: string = jsonString[i];
+        const charSize: number = getStringSizeInBytes(char);
+
+        if (currentChunkSize + charSize > chunkSizeInBytes) {
+            chunks.push(currentChunk);
+            currentChunk = "";
+            currentChunkSize = 0;
+        }
+
+        currentChunk += char;
+        currentChunkSize += charSize;
+    }
+
+    if (currentChunk !== "") {
+        chunks.push(currentChunk);
+    }
+
+    return chunks;
+}
+
+/**
  * Tries to enable IAP for the current platform. This is only supported on some platforms and takes some time to
  * initialize. Once the platform SDK signals that the IAP is ready, the SDK will enable the IAP API. If this fails
  * for any reason, the IAP API will not be enabled.
@@ -207,6 +277,35 @@ export function gdEventTrigger(value: string): void {
     } else {
         exception("GD event triggered, but GDCallbacks is undefined. This is a fatal error that should have been caught during initialization.");
     }
+}
+
+/**
+ * Awaits a callback from the Telegram SDK. Removes the listener after the callback is triggered or after a timeout.
+ * @param eventName Name of the event to wait for.
+ * @returns {Promise<any>} Promise that resolves when the event is triggered. Contains the data from the event, if any exists.
+ * @hidden
+ */
+export function waitForTelegramCallback(eventName: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+        let timeoutID: any = null;
+
+        const eventHandler = ({ data }: any) => {
+            const playdeck = data?.playdeck;
+            if (playdeck?.method === eventName) {
+                debug(`Telegram event callback. Event: ${eventName}`, playdeck?.value);
+                window.removeEventListener("message", eventHandler);
+                clearTimeout(timeoutID);
+                resolve(playdeck?.value);
+            }
+        }
+
+        window.addEventListener("message", eventHandler);
+
+        timeoutID = setTimeout(() => {
+            window.removeEventListener("message", eventHandler);
+            reject(new Error(`Timeout: '${eventName}' event not triggered within the timeout range.`));
+        }, 5000);
+    });
 }
 
 /**

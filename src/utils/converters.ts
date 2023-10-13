@@ -1,9 +1,11 @@
 import { Leaderboard, LeaderboardEntry } from "../classes/leaderboard";
 import { Tournament } from "../classes/tournament";
 import { InvitePayload, LinkMessagePayload, SharePayload, UpdatePayload } from "../interfaces/context";
+import { TelegramLeaderboardEntry } from "../interfaces/leaderboard";
 import { ContextFilter, InviteFilter } from "../types/context";
 import Wortal from "../index";
 import { warn } from "./logger";
+import { generateRandomID } from "./wortal-utils";
 
 /** @hidden */
 export function convertToLinkMessagePayload(payload: SharePayload | UpdatePayload): LinkMessagePayload {
@@ -64,14 +66,14 @@ export function convertToViberSharePayload(payload: InvitePayload): SharePayload
 }
 
 /** @hidden */
-export function rakutenLeaderboardToWortal(leaderboard: any): Leaderboard {
+export function convertRakutenLeaderboardToWortal(leaderboard: any): Leaderboard {
     return new Leaderboard(
         leaderboard.$leaderboard.id, leaderboard.$leaderboard.name, leaderboard.$leaderboard.contextId
     );
 }
 
 /** @hidden */
-export function rakutenLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
+export function convertRakutenLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
     return new LeaderboardEntry({
         formattedScore: entry.$leaderboardEntry.formattedScore,
         player: {
@@ -89,14 +91,14 @@ export function rakutenLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
 }
 
 /** @hidden */
-export function facebookLeaderboardToWortal(leaderboard: any): Leaderboard {
+export function convertFacebookLeaderboardToWortal(leaderboard: any): Leaderboard {
     return new Leaderboard(
         leaderboard.getName(), leaderboard.getName(), leaderboard.getContextID()
     );
 }
 
 /** @hidden */
-export function facebookLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
+export function convertFacebookLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
     return new LeaderboardEntry({
         formattedScore: entry.getFormattedScore(),
         player: {
@@ -114,7 +116,22 @@ export function facebookLeaderboardEntryToWortal(entry: any): LeaderboardEntry {
 }
 
 /** @hidden */
-export function facebookTournamentToWortal(tournament: any): Tournament {
+export function convertTelegramLeaderboardEntryToWortal(entry: TelegramLeaderboardEntry): LeaderboardEntry {
+    return new LeaderboardEntry({
+        rank: entry.position,
+        score: entry.score,
+        player: {
+            id: generateRandomID(),
+            name: entry.username || "Telegram Player",
+            photo: "https://storage.googleapis.com/html5gameportal.com/images/avatar.jpg",
+            isFirstPlay: false,
+            daysSinceFirstPlay: 0,
+        }
+    });
+}
+
+/** @hidden */
+export function convertFacebookTournamentToWortal(tournament: any): Tournament {
     return new Tournament(
         tournament.getID(), tournament.getContextID(), tournament.getEndTime(), tournament.getTitle(), tournament.getPayload()
     );

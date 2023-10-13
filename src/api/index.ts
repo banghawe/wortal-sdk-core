@@ -7,7 +7,7 @@ import * as _notifications from './notifications';
 import * as _player from './player';
 import * as _session from './session';
 import * as _tournament from './tournament';
-import { APIEndpoints, Error_CrazyGames, GD_EVENTS } from "../types/wortal";
+import { APIEndpoints, Error_CrazyGames, GD_EVENTS, TELEGRAM_API } from "../types/wortal";
 import { AuthPayload, AuthResponse, AuthResponse_CrazyGames, Error_Facebook_Rakuten } from "../interfaces/wortal";
 import { InitializationOptions } from "../interfaces/session";
 import SDKConfig, { API_URL, SDK_SRC, WORTAL_API } from "../utils/config";
@@ -32,7 +32,7 @@ import {
     addGDCallback,
     delayUntilConditionMet,
     isSupportedOnCurrentPlatform,
-    addPauseListener
+    addPauseListener, waitForTelegramCallback
 } from "../utils/wortal-utils";
 
 /**
@@ -317,6 +317,10 @@ export function setLoadingProgress(value: number): void {
             config.platformSDK.setLoadingProgress(value);
         }
     }
+
+    if (platform === "telegram") {
+        window.parent.postMessage({ playdeck: { method: "loading", value: value } }, "*");
+    }
 }
 
 /**
@@ -459,7 +463,7 @@ export async function _initializeInternal(options: InitializationOptions): Promi
  */
 function _initializePlatform(): Promise<void> {
     const platform = config.session.platform;
-    debug(`Initializing platform SDK for ${platform} platform.`);
+    debug(`Starting platform initialization..`);
 
     switch (platform) {
         case "wortal":
@@ -476,6 +480,8 @@ function _initializePlatform(): Promise<void> {
             return _initializePlatform_CrazyGames();
         case "gamepix":
             return _initializePlatform_GamePix();
+        case "telegram":
+            return _initalizePlatform_Telegram();
         case "debug":
             return _initializePlatform_Debug();
         default:
@@ -786,6 +792,31 @@ function _initializePlatform_GamePix(): Promise<void> {
 }
 
 /**
+ * Initializes the Telegram platform. The PlayDeck SDK exists within the wrapper the game is launched in, so we
+ * don't need to manage it ourselves.
+ * @returns {Promise<void>} Promise that resolve when the PlayDeck (Telegram) SDK has been initialized.
+ * @hidden
+ * @private
+ */
+function _initalizePlatform_Telegram(): Promise<void> {
+    return Promise.resolve().then(() => {
+        // This is just to check if we can successfully communicate with the Telegram SDK as it exists in the wrapper
+        // the game is rendered in.
+        // Also, getLocale requires a callback on Telegram and session.getLocale is synchronous,
+        // so we can grab it here and cache it for later use as it likely won't change during the session.
+        window.parent.postMessage({ playdeck: { method: TELEGRAM_API.GET_LOCALE } }, "*");
+        return waitForTelegramCallback(TELEGRAM_API.GET_LOCALE).then((locale: string) => {
+            //TODO: remove this when Telegram ads are implemented
+            config.adConfig.setAdBlocked(true);
+            config.session.locale = locale;
+            debug("Telegram platform SDK loaded.");
+        }).catch((error) => {
+            exception("Failed to fetch user locale.", error);
+        });
+    });
+}
+
+/**
  * Initializes the debugging platform. This is used when the game is running in a local or dev environment.
  * This will mock the platform SDK and allow the game to run without any platform dependencies, returning mock data
  * for all platform APIs. All APIs will be available, but some may not function exactly as they would on the platform.
@@ -837,25 +868,45 @@ function _initializePlatform_Debug(): Promise<void> {
  */
 function _initializeSDK(): Promise<void> {
     const platform = config.session.platform;
-    debug(`Initializing SDK for ${platform} platform.`);
+    debug(`Starting SDK initialization..`);
 
     switch (platform) {
         case "wortal":
             return _initializeSDK_Wortal();
-        case "gd":
-            return _initializeSDK_GD();
         case "link":
         case "viber":
         case "facebook":
             return _initializeSDK_RakutenFacebook();
+        case "gd":
         case "crazygames":
-            return _initializeSDK_CrazyGames();
         case "gamepix":
-            return _initializeSDK_GamePix();
+        case "telegram":
         case "debug":
         default:
-            return _initializeSDK_Debug();
+            return _initializeSDK_Default();
     }
+}
+
+/**
+ * Default SDK initialization process. This is used when there is no platform-specific initialization process for
+ * the SDK. This will call config.lateInitialize() and check if IAP should be enabled.
+ * @hidden
+ * @private
+ */
+function _initializeSDK_Default(): Promise<void> {
+    const platform = config.session.platform;
+    return Promise.resolve().then(() => {
+        return config.lateInitialize().then(() => {
+            config.adConfig.setPrerollShown(true);
+            tryEnableIAP();
+            removeLoadingCover();
+            debug(`SDK initialized for ${platform} platform.`);
+        }).catch((error: any) => {
+            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, `_initializeSDK_${platform}()`);
+        });
+    }).catch((error: any) => {
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, `_initializeSDK_${platform}()`);
+    });
 }
 
 /**
@@ -869,7 +920,6 @@ function _initializeSDK(): Promise<void> {
  * @private
  */
 function _initializeSDK_RakutenFacebook(): Promise<void> {
-    const functionName = "_initializeSDK_RakutenFacebook()";
     return config.platformSDK.initializeAsync().then(() => {
         return config.lateInitialize().then(() => {
             tryEnableIAP();
@@ -877,16 +927,13 @@ function _initializeSDK_RakutenFacebook(): Promise<void> {
             return config.platformSDK.startGameAsync().then(() => {
                 analytics._logTrafficSource();
             }).catch((error: Error_Facebook_Rakuten) => {
-                throw initializationError(`Failed to initialize SDK during platformSDK.startGameAsync: ${error.message}`,
-                    functionName);
+                throw initializationError(`Failed to initialize SDK during platformSDK.startGameAsync: ${error.message}`, `_initializeSDK_RakutenFacebook()`);
             });
         }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`,
-                functionName);
+            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, `_initializeSDK_RakutenFacebook()`);
         });
     }).catch((error: Error_Facebook_Rakuten) => {
-        throw initializationError(`Failed to initialize SDK during platformSDK.initializeAsync: ${error.message}`,
-            functionName);
+        throw initializationError(`Failed to initialize SDK during platformSDK.initializeAsync: ${error.message}`, `_initializeSDK_RakutenFacebook()`);
     });
 }
 
@@ -896,7 +943,6 @@ function _initializeSDK_RakutenFacebook(): Promise<void> {
  * @private
  */
 function _initializeSDK_Wortal(): Promise<void> {
-    const functionName = "_initializeSDK_Wortal()";
     return Promise.resolve().then(() => {
         // We don't need to await this because as of v1.6.8 Wortal does not have any async operations that
         // occur in lateInitialize.
@@ -921,89 +967,7 @@ function _initializeSDK_Wortal(): Promise<void> {
                 removeLoadingCover();
             });
     }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the GD platform. GD shows a pre-roll ad when the player presses the play button then
- * loads the iframe with the game.
- * @hidden
- * @private
- */
-function _initializeSDK_GD(): Promise<void> {
-    const functionName = "_initializeSDK_GD()";
-    return Promise.resolve().then(() => {
-        // We don't need to await this because as of v1.6.8 Wortal and GD do not have any async operations that
-        // occur in lateInitialize.
-        config.lateInitialize();
-
-        // In production GD calls for the pre-roll when the player presses the play button, so we don't need to call
-        // for one here.
-        config.adConfig.setPrerollShown(true);
-
-        tryEnableIAP();
-        removeLoadingCover();
-
-        debug(`SDK initialized for ${config.session.platform} platform.`);
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the CrazyGames platform. CrazyGames does not support pre-roll ads and does not require
- * us to add a loading cover.
- * @hidden
- * @private
- */
-function _initializeSDK_CrazyGames(): Promise<void> {
-    const functionName = "_initializeSDK_CrazyGames()";
-    return Promise.resolve().then(() => {
-        return config.lateInitialize().then(() => {
-            tryEnableIAP();
-            debug(`SDK initialized for ${config.session.platform} platform.`);
-        }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, functionName);
-        });
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the GamePix platform.
- * @hidden
- * @private
- */
-function _initializeSDK_GamePix(): Promise<void> {
-    const functionName = "_initializeSDK_GamePix()";
-    return Promise.resolve().then(() => {
-        return config.lateInitialize().then(() => {
-            tryEnableIAP();
-            debug(`SDK initialized for ${config.session.platform} platform.`);
-        }).catch((error: any) => {
-            throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, functionName);
-        });
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
-    });
-}
-
-/**
- * Initializes the SDK for the debugging.
- * @hidden
- * @private
- */
-function _initializeSDK_Debug(): Promise<void> {
-    const functionName = "_initializeSDK_Debug()";
-    return Promise.resolve().then(() => {
-        config.lateInitialize();
-        tryEnableIAP();
-        removeLoadingCover();
-        debug("SDK initialized for debugging session.");
-    }).catch((error: any) => {
-        throw initializationError(`Failed to initialize SDK: ${error.message}`, functionName);
+        throw initializationError(`Failed to initialize SDK: ${error.message}`, `_initializeSDK_Wortal()`);
     });
 }
 

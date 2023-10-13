@@ -1,7 +1,7 @@
 import { ConnectedPlayer } from "../classes/player";
 import { ConnectedPlayerPayload, PlayerData, SignedASID } from "../interfaces/player";
 import { Error_Facebook_Rakuten } from "../interfaces/wortal";
-import { Error_CrazyGames } from "../types/wortal";
+import { Error_CrazyGames, TELEGRAM_API } from "../types/wortal";
 import { API_URL, WORTAL_API } from "../utils/config";
 import {
     invalidParams,
@@ -11,7 +11,14 @@ import {
     rethrowError_Facebook_Rakuten
 } from "../utils/error-handler";
 import { debug } from "../utils/logger";
-import { isSupportedOnCurrentPlatform } from "../utils/wortal-utils";
+import { isValidString } from "../utils/validators";
+import {
+    delayUntilConditionMet,
+    getStringSizeInBytes,
+    isSupportedOnCurrentPlatform,
+    splitJSONStringIntoChunks,
+    waitForTelegramCallback
+} from "../utils/wortal-utils";
 import { config } from "./index";
 
 /**
@@ -143,12 +150,102 @@ export function getDataAsync(keys: string[]): Promise<any> {
                     throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_GET_DATA_ASYNC, API_URL.PLAYER_GET_DATA_ASYNC);
                 });
         }
+
+        // Telegram has a 10kb limit on the size of data that can be stored in a single kvp. To work around this,
+        // we split the data into chunks and store each chunk in a separate kvp. We also store the number of chunks
+        // in a separate kvp so that we know how many chunks to retrieve when we want to get the data.
+        // We build a JSON string from the chunks, parse it, then return the requested keys from the resulting object.
+        if (platform === "telegram") {
+            let chunkCount: number = 0;
+            let chunks: string[] = [];
+
+            const requestData = (key: string) => {
+                window.parent.postMessage({
+                    playdeck: {
+                        method: TELEGRAM_API.GET_DATA,
+                        key,
+                    }
+                }, "*");
+            }
+
+            const getDataCallback = ({ data }: any) => {
+                if (data?.playdeck?.method === TELEGRAM_API.GET_DATA) {
+                    // Key is: ${config.session.gameId}-save-data-${i}
+                    const index: number = parseInt(data.playdeck.key.split("-").pop() as string);
+                    if (isNaN(index)) {
+                        throw operationFailed("Error parsing chunk index.", WORTAL_API.PLAYER_GET_DATA_ASYNC);
+                    }
+                    chunks[index] = data.playdeck.value.data;
+                }
+            }
+
+            const fetchAndBuildData = async () => {
+                // First get the chunkCount so that we know how many chunks to retrieve.
+                requestData(`${config.session.gameId}-save-data-chunkCount`);
+                const chunkCountData = await waitForTelegramCallback(TELEGRAM_API.GET_DATA);
+                if (typeof chunkCountData === "undefined") {
+                    throw operationFailed("Error getting chunkCount from storage.", WORTAL_API.PLAYER_GET_DATA_ASYNC);
+                }
+
+                // Now get each chunk and store it in an array to build the data string with.
+                chunkCount = parseInt(chunkCountData.data);
+                if (isNaN(chunkCount)) {
+                    throw operationFailed("Error parsing chunkCount.", WORTAL_API.PLAYER_GET_DATA_ASYNC);
+                }
+
+                chunks = Array(chunkCount).fill("");
+                window.addEventListener("message", getDataCallback);
+
+                for (let i = 0; i < chunkCount; i++) {
+                    requestData(`${config.session.gameId}-save-data-${i}`);
+                }
+
+                // Wait for all chunks to be retrieved then clear the listener.
+                await delayUntilConditionMet(() =>
+                    chunks.every((chunk: string) => {
+                        // debug("Checking chunk length: ", chunk.length);
+                        return isValidString(chunk);
+                    }),
+                    "Waiting for chunks to be retrieved from storage.");
+
+                window.removeEventListener("message", getDataCallback);
+
+                // Now build the data string from the chunks and parse it.
+                const dataString = chunks.join("");
+                let dataObj = JSON.parse(dataString);
+
+                // If the data is a string, parse it again. This is necessary because the data is stringified twice
+                // so the extra escape characters keep the data from being parsed into an object the first time.
+                if (typeof dataObj === "string") {
+                    dataObj = JSON.parse(dataObj);
+                    // If we still don't have an object then something went wrong.
+                    if (typeof dataObj !== "object") {
+                        throw operationFailed("Error parsing data chunks.", WORTAL_API.PLAYER_GET_DATA_ASYNC);
+                    }
+                }
+
+                // Return the requested keys from the data object.
+                const result: any = {};
+                keys.forEach((key) => {
+                    result[key] = dataObj[key];
+                });
+
+                return result;
+            }
+
+            return fetchAndBuildData().catch((error: any) => {
+                throw operationFailed(`Error getting object from storage: ${error.message}`, WORTAL_API.PLAYER_GET_DATA_ASYNC);
+            });
+        }
     });
 }
 
 /**
- * Set data to be saved to the designated cloud storage of the current player. The game can store up to 1MB of data
- * for each unique player.
+ * Set data to be saved to the designated cloud storage of the current player.
+ *
+ * PLATFORM NOTE: Facebook/Link allow storage up to 1MB of data for each unique player.
+ *
+ * PLATFORM NOTE: Viber allows storage up to 1000 characters when stringified.
  * @example
  * Wortal.player.setDataAsync({
  *     items: {
@@ -183,6 +280,8 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
         if (platform === "debug") {
             try {
                 localStorage.setItem("wortal-data", JSON.stringify(data));
+                debug("Saved data to localStorage.");
+                return;
             } catch (error: any) {
                 throw operationFailed(`Error saving object to localStorage: ${error.message}`, WORTAL_API.PLAYER_SET_DATA_ASYNC);
             }
@@ -192,15 +291,18 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
             try {
                 localStorage.setItem(`${config.session.gameId}-save-data`, JSON.stringify(data));
                 debug("Saved data to localStorage.");
+                return;
             } catch (error: any) {
                 throw operationFailed(`Error saving object to localStorage: ${error.message}`, WORTAL_API.PLAYER_SET_DATA_ASYNC);
             }
         }
 
+        // Gamepix still uses localStorage, but they have a wrapper for it in their SDK, so we'll use that.
         if (platform === "gamepix") {
             try {
                 config.platformSDK.localStorage.setItem(`${config.session.gameId}-save-data`, JSON.stringify(data));
                 debug("Saved data to localStorage.");
+                return;
             } catch (error: any) {
                 throw operationFailed(`Error saving object to localStorage: ${error.message}`, WORTAL_API.PLAYER_SET_DATA_ASYNC);
             }
@@ -208,9 +310,43 @@ export function setDataAsync(data: Record<string, unknown>): Promise<void> {
 
         if (platform === "link" || platform === "viber" || platform === "facebook") {
             return config.platformSDK.player.setDataAsync(data)
+                .then(() => {
+                    debug("Saved data to cloud storage.");
+                })
                 .catch((error: Error_Facebook_Rakuten) => {
                     throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
                 });
+        }
+
+        if (platform === "telegram") {
+            // Telegram has a 10kb limit on the size of data that can be stored in a single kvp. To work around this,
+            // we split the data into chunks and store each chunk in a separate kvp. We also store the number of chunks
+            // in a separate kvp so that we know how many chunks to retrieve when we want to get the data.
+            const setData = (key: string, value: string) => {
+                window.parent.postMessage({
+                    playdeck: {
+                        method: TELEGRAM_API.SET_DATA,
+                        key,
+                        value,
+                    }
+                }, "*");
+            }
+
+            // We have to account for the escape characters that get added in the PlayDeck SDK after sending the data,
+            // so we'll split the data into 8kb chunks instead of 10.
+            let dataString = JSON.stringify(data);
+            if (getStringSizeInBytes(dataString) > 8000) {
+                const chunks: string[] = splitJSONStringIntoChunks(dataString);
+                setData(`${config.session.gameId}-save-data-chunkCount`, chunks.length.toString());
+                chunks.forEach((chunk: string, index: number) => {
+                    setData(`${config.session.gameId}-save-data-${index}`, chunk);
+                });
+            } else {
+                setData(`${config.session.gameId}-save-data-chunkCount`, "1");
+                setData(`${config.session.gameId}-save-data-0`, dataString);
+            }
+
+            debug("Saved data to Telegram storage.");
         }
     });
 }
