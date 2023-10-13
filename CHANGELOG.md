@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.14] - 2023-10-13
+### Added
+- Core
+  - Support for Telegram platform
+
+### Changed
+- Player
+  - Default avatar is now returned if player has no photo
+
 ## [1.6.13] - 2023-09-22
 ### Added
 - Core
