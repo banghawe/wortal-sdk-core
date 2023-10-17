@@ -1,6 +1,6 @@
-import { InterstitialAd, RewardedAd } from "../classes/ads";
+import { BannerAd, InterstitialAd, RewardedAd } from "../classes/ads";
 import { AdInstanceData } from "../interfaces/ads";
-import { PlacementType } from "../types/ads";
+import { BannerPosition, PlacementType } from "../types/ads";
 import { API_URL, WORTAL_API } from "../utils/config";
 import { invalidParams } from "../utils/error-handler";
 import { debug, warn } from "../utils/logger";
@@ -92,14 +92,9 @@ export function showInterstitial(placement: PlacementType, description: string,
     // Validate the ad unit IDs. Non-existent IDs can cause the ad call to hang indefinitely.
     if ((platform === "link" || platform === "viber" || platform === "facebook")
         && !isValidString(config.adConfig.interstitialId)) {
-        if (platform === "viber" && isValidString(config.adConfig.rewardedId)) {
-            // As of v1.6.4 Viber does not support interstitial ads, so we won't have an ID for it. But we still want to
-            // check if the game is in production or not, which should be the case if we have a rewarded ID.
-            // We can still attempt to show the ad here because we can backfill it.
-        } else {
-            warn("Ad Unit IDs not found. Please contact your Wortal representative to have the ad unit IDs configured.");
-            return;
-        }
+        warn("Ad Unit IDs not found. Please contact your Wortal representative to have the ad unit IDs configured.");
+        noFill();
+        return;
     }
 
     // Don't bother calling for an ad if the ads are blocked.
@@ -180,7 +175,15 @@ export function showRewarded(description: string, beforeAd: () => void, afterAd:
     if ((platform === "link" || platform === "viber" || platform === "facebook")
         && !isValidString(config.adConfig.rewardedId)) {
         warn("Ad Unit IDs not found. Please contact your Wortal representative to have the ad unit IDs configured.");
+        adDismissed();
+        noFill();
         return;
+    }
+
+    if (platform === "gamemonetize") {
+        warn(`Rewarded ads are not supported on ${platform} platform.`);
+        adDismissed();
+        noFill();
     }
 
     // Don't bother calling if the ads are blocked.
@@ -206,4 +209,25 @@ export function showRewarded(description: string, beforeAd: () => void, afterAd:
 
     const ad = new RewardedAd(data);
     ad.show();
+}
+
+/**
+ * Shows a banner ad. These are small ads that are shown at the top or bottom of the screen. They are typically used
+ * on menus or other non-gameplay screens. They can be shown or hidden at any time.
+ * @param shouldShow Whether the banner should be shown or hidden. Default is show.
+ * @param position Where the banner should be shown. Top or bottom of the screen. Default is the bottom.
+ */
+export function showBanner(shouldShow: boolean = true, position: BannerPosition = "bottom"): void {
+    const platform = config.session.platform;
+    if (platform === "facebook" && !isValidString(config.adConfig.bannerId)) {
+        warn("Ad Unit IDs not found. Please contact your Wortal representative to have the ad unit IDs configured.");
+        return;
+    }
+
+    const ad = new BannerAd();
+    if (shouldShow) {
+        ad.show(position);
+    } else {
+        ad.hide();
+    }
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.15] - 2023-10-17
+### Added
+- Core
+  - Support for GameMonetize platform
+
+- Ads
+  - Banner ads
+
+### Fixed
+- Ads
+  - Missing ad unit IDs no longer cause ad calls to hang
+
 ## [1.6.14] - 2023-10-13
 ### Added
 - Core

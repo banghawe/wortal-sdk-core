@@ -43,6 +43,7 @@ export interface AdConfigData {
     hasPrerollShown: boolean;
     interstitialId: string;
     rewardedId: string;
+    bannerId: string;
     adsCalled: number;
     adsShown: number;
 }
@@ -63,9 +64,4 @@ export interface FacebookAdUnitsResponse {
 export interface FacebookAdUnit {
     display_format: string;
     placement_id: string;
-}
-
-/** @hidden */
-export interface GDCallbacks {
-    [key: string]: () => void;
 }

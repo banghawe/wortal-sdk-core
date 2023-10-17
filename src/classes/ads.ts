@@ -6,18 +6,17 @@ import {
     AdData,
     AdInstanceData, AdSenseConfig,
     FacebookAdUnitsResponse,
-    GDCallbacks,
     IAdInstance
 } from "../interfaces/ads";
 import { AdCallEventData, AnalyticsEventData } from "../interfaces/analytics";
 import { Error_Facebook_Rakuten } from "../interfaces/wortal";
-import { PlacementType } from "../types/ads";
-import { APIEndpoints, GD_EVENTS } from "../types/wortal";
+import { BannerPosition, PlacementType } from "../types/ads";
+import { APIEndpoints, EXTERNAL_EVENTS_GD_GameMonetize } from "../types/wortal";
 import { API_URL, WORTAL_API } from "../utils/config";
 import { initializationError, operationFailed, rethrowError_Facebook_Rakuten } from "../utils/error-handler";
 import { debug, exception, warn } from "../utils/logger";
-import { isValidPlacementType } from "../utils/validators";
-import { addGDCallback } from "../utils/wortal-utils";
+import { isValidPlacementType, isValidString } from "../utils/validators";
+import { addExternalCallback } from "../utils/wortal-utils";
 import { AnalyticsEvent } from "./analytics";
 
 /** @hidden */
@@ -242,12 +241,60 @@ export class RewardedAd extends AdInstance {
 }
 
 /** @hidden */
+export class BannerAd {
+    logEvent = (success: boolean) => {
+        const analyticsData: AdCallEventData = {
+            format: "banner",
+            placement: "pause",
+            success: success,
+            platform: config.session.platform,
+            playerID: config.player.id,
+            gameID: config.session.gameId,
+            playTimeAtCall: config.game.gameTimer,
+        };
+
+        const eventData: AnalyticsEventData = {
+            name: "AdCall",
+            features: analyticsData,
+        };
+
+        const event = new AnalyticsEvent(eventData);
+        event.send();
+    }
+
+    show(position: BannerPosition): void {
+        const platform = config.session.platform;
+        if (platform === "facebook") {
+            config.platformSDK.loadBannerAdAsync(config.adConfig.bannerId, position)
+                .then(() => {
+                    this.logEvent(true);
+                })
+                .catch((error: Error_Facebook_Rakuten) => {
+                    exception("Banner ad failed to load.", error);
+                    this.logEvent(false);
+                });
+        }
+    }
+
+    hide(): void {
+        const platform = config.session.platform;
+        if (platform === "facebook") {
+            config.platformSDK.hideBannerAdAsync()
+                .catch((error: Error_Facebook_Rakuten) => {
+                    exception("Banner ad failed to hide.", error);
+                });
+        }
+    }
+}
+
+/** @hidden */
 export class AdConfig {
     private _current: AdConfigData = {
         isAdBlocked: false,
         hasPrerollShown: false,
         interstitialId: "",
         rewardedId: "",
+        bannerId: "",
         adsCalled: 0,
         adsShown: 0,
     };
@@ -258,10 +305,6 @@ export class AdConfig {
         hostID: ""
     };
 
-    // GD uses events to communicate the ad instance state rather than callbacks, so we need to store the callbacks
-    // and call them when the events are triggered.
-    private readonly _gdCallbacks: GDCallbacks | undefined;
-
     constructor() {
         debug("Initializing AdConfig..");
         const platform = config.session.platform;
@@ -271,8 +314,6 @@ export class AdConfig {
             window.adBreak = window.adConfig = function (o: any) {
                 window.adsbygoogle.push(o);
             };
-        } else if (platform === "gd") {
-            this._gdCallbacks = {};
         }
     }
 
@@ -318,6 +359,10 @@ export class AdConfig {
         return this._current.rewardedId;
     }
 
+    get bannerId(): string {
+        return this._current.bannerId;
+    }
+
     get clientID(): string {
         return this._adSense.clientID;
     }
@@ -356,10 +401,6 @@ export class AdConfig {
 
     adShown(): void {
         this._current.adsShown++;
-    }
-
-    get gdCallbacks(): GDCallbacks | undefined {
-        return this._gdCallbacks;
     }
 
     /**
@@ -434,9 +475,23 @@ export class AdConfig {
 
                 for (let i = 0; i < adUnits.ads.length; i++) {
                     if (adUnits.ads[i].display_format === "interstitial") {
+                        if (isValidString(this._current.interstitialId)) {
+                            warn("Multiple interstitial ad units found. Using the first one.");
+                            return;
+                        }
                         this._current.interstitialId = adUnits.ads[i].placement_id;
                     } else if (adUnits.ads[i].display_format === "rewarded_video") {
+                        if (isValidString(this._current.rewardedId)) {
+                            warn("Multiple rewarded ad units found. Using the first one.");
+                            return;
+                        }
                         this._current.rewardedId = adUnits.ads[i].placement_id;
+                    } else if (adUnits.ads[i].display_format === "banner") {
+                        if (isValidString(this._current.bannerId)) {
+                            warn("Multiple banner ad units found. Using the first one.");
+                            return;
+                        }
+                        this._current.bannerId = adUnits.ads[i].placement_id;
                     }
                 }
             }).catch((error: any) => {
@@ -465,13 +520,14 @@ function _showAd(placementType: PlacementType, placementId: string, description:
         case "facebook":
             return _showAd_Facebook_Rakuten(placementType, placementId, callbacks);
         case "gd":
-            return _showAd_GD(placementType, callbacks);
+        case "gamemonetize":
+            return _showAd_GD_GameMonetize(placementType, callbacks);
         case "crazygames":
             return _showAd_CrazyGames(placementType, callbacks);
         case "gamepix":
             return _showAd_GamePix(placementType, callbacks);
         case "telegram":
-            //TODO: implement Telegram ads when available.
+        //TODO: implement Telegram ads when available.
         default:
             // Ensure we don't cause the game to get stuck waiting for callbacks if we reached this point.
             exception(`Unsupported platform for ads: ${config.session.platform}`);
@@ -599,16 +655,16 @@ function _showAd_Facebook_Rakuten(placementType: PlacementType, placementId: str
  * See: https://gamedistribution.com/sdk/html5
  * @hidden
  */
-function _showAd_GD(placementType: PlacementType, callbacks: AdCallbacks): void {
+function _showAd_GD_GameMonetize(placementType: PlacementType, callbacks: AdCallbacks): void {
     if (typeof config.platformSDK === "undefined") {
         exception("Platform SDK not initialized. This is a fatal error that should have been caught during initialization.");
         return;
     }
 
     if (placementType === "reward") {
-        return _showRewarded_GD(callbacks);
+        return _showRewarded_GD_GameMonetize(callbacks);
     } else {
-        return _showInterstitial_GD(placementType, callbacks);
+        return _showInterstitial_GD_GameMonetize(callbacks);
     }
 }
 
@@ -679,14 +735,19 @@ function _showInterstitial_Facebook_Rakuten(placementId: string, callbacks: AdCa
 }
 
 /** @hidden */
-function _showInterstitial_GD(placementType: PlacementType, callbacks: AdCallbacks): void {
+function _showInterstitial_GD_GameMonetize(callbacks: AdCallbacks): void {
     debug("Attempting to show interstitial ad..");
-    addGDCallback(GD_EVENTS.BEFORE_AD, callbacks.beforeAd);
-    addGDCallback(GD_EVENTS.AFTER_AD, callbacks.afterAd);
-    addGDCallback(GD_EVENTS.NO_FILL, callbacks.noFill);
+    addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.BEFORE_AD, callbacks.beforeAd);
+    addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.AFTER_AD, callbacks.afterAd);
+    addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.NO_FILL, callbacks.noFill);
 
     if (typeof config.platformSDK !== "undefined" && config.platformSDK.showAd !== "undefined") {
-        config.platformSDK.showAd("interstitial");
+        if (config.session.platform === "gd") {
+            config.platformSDK.showAd("interstitial");
+        } else {
+            // GameMonetize uses the showBanner API even though it is an interstitial.
+            config.platformSDK.showBanner();
+        }
     }
 }
 
@@ -756,18 +817,18 @@ function _showRewarded_Facebook_Rakuten(placementId: string, callbacks: AdCallba
 }
 
 /** @hidden */
-function _showRewarded_GD(callbacks: AdCallbacks): void {
+function _showRewarded_GD_GameMonetize(callbacks: AdCallbacks): void {
     debug("Attempting to show rewarded video..");
-    addGDCallback(GD_EVENTS.BEFORE_AD, callbacks.beforeAd);
-    addGDCallback(GD_EVENTS.AFTER_AD, callbacks.afterAd);
-    addGDCallback(GD_EVENTS.NO_FILL, callbacks.noFill);
+    addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.BEFORE_AD, callbacks.beforeAd);
+    addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.AFTER_AD, callbacks.afterAd);
+    addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.NO_FILL, callbacks.noFill);
     if (callbacks.adDismissed) {
-        addGDCallback(GD_EVENTS.AD_DISMISSED, callbacks.adDismissed);
+        addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.AD_DISMISSED, callbacks.adDismissed);
     } else {
-        addGDCallback(GD_EVENTS.AD_DISMISSED, () => debug("No adDismissed callback provided."));
+        addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.AD_DISMISSED, () => debug("No adDismissed callback provided."));
     }
     if (callbacks.adViewed) {
-        addGDCallback(GD_EVENTS.AD_VIEWED, callbacks.adViewed);
+        addExternalCallback(EXTERNAL_EVENTS_GD_GameMonetize.AD_VIEWED, callbacks.adViewed);
     } else {
         exception("No adViewed callback provided. This is required for rewarded ads.");
         return;
