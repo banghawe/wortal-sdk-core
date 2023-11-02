@@ -364,6 +364,7 @@ export class CoreAPI {
 
     async _loadChunksAsync(platform: Platform): Promise<void> {
         internalCall("_loadChunksAsync");
+
         const baseURL: string = "https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v1/";
         const chunks: string[] = [];
         const promises: Promise<void>[] = [];
@@ -400,6 +401,10 @@ export class CoreAPI {
         const {AnalyticsWombat} = await import(/* webpackChunkName: "analytics" */ "../analytics/impl/analytics-wombat");
         const {AnalyticsDisabled} = await import(/* webpackChunkName: "analytics" */ "../analytics/impl/analytics-disabled");
 
+        // This is a big ugly mess. We should probably refactor this to be more dynamic and less repetitive, but
+        // we don't want to break the dynamic import and chunking, so we'll leave it for now until we have a
+        // better idea of how to do it. -Tim
+        //TODO: find a better way to do this without breaking the dynamic import and chunking
         switch (platform) {
             case "addictinggames": {
                 const {CoreAddictingGames} = await import(/* webpackChunkName: "addictinggames" */ "./impl/core-addictinggames");
