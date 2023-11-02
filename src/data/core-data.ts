@@ -14,6 +14,7 @@ export const PLATFORM_DOMAINS: PlatformDomains = {
     // This is just added here for completeness.
     "telegram": ["playdeck.io"],
     "gamemonetize": ["gamemonetize.com", "gamemonetize.co", "gamemonetize.games"],
+    "addictinggames": ["addictinggames.com", "shockwave.com"],
 }
 
 /**
@@ -39,6 +40,8 @@ export const SDK_SRC = {
     CRAZY_GAMES: "https://sdk.crazygames.com/crazygames-sdk-v2.js",
     GAME_PIX: "https://integration.gamepix.com/sdk/v3/gamepix.sdk.js",
     GAME_MONETIZE: "https://api.gamemonetize.com/sdk.js",
+    ADDICTING_GAMES_SDK: "https://swagapi.shockwave.com/dist/swag-api.js",
+    ADDICTING_GAMES_CSS: "https://swagapi.shockwave.com/dist/swag-api.css",
 }
 
 /**

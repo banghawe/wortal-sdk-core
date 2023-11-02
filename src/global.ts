@@ -6,9 +6,10 @@ declare global {
     const LinkGame: any;
     const ViberPlay: any;
     const FBInstant: any;
-    const gdsdk: any;
+    const gdsdk: any; // GameDistribution SDK
     const GamePix: any;
-    const sdk: any;
+    const sdk: any; // GameMonetize SDK
+    const SWAGAPI: any; // AddictingGames SDK
 
     interface Window {
         /**
