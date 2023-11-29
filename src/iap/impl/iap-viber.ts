@@ -14,10 +14,6 @@ import { Subscription } from "../interfaces/subscription";
  * @hidden
  */
 export class IAPViber extends IAPBase {
-    constructor() {
-        super();
-    }
-
     protected cancelSubscriptionAsyncImpl(purchaseToken: string): Promise<void> {
         return Promise.reject(notSupported(undefined, WORTAL_API.IAP_CANCEL_SUBSCRIPTION_ASYNC, API_URL.IAP_CANCEL_SUBSCRIPTION_ASYNC));
     }
@@ -73,6 +69,14 @@ export class IAPViber extends IAPBase {
 
     protected purchaseSubscriptionAsyncImpl(productID: string): Promise<Subscription> {
         return Promise.reject(notSupported(undefined, WORTAL_API.IAP_PURCHASE_SUBSCRIPTION_ASYNC, API_URL.IAP_PURCHASE_SUBSCRIPTION_ASYNC));
+    }
+
+    protected _tryEnableIAPImpl(): void {
+        this._isIAPEnabled = false;
+        Wortal._internalPlatformSDK.payments.onReady(() => {
+            this._isIAPEnabled = true;
+            Wortal._log.debug(`IAP initialized for ${Wortal._internalPlatform} platform.`);
+        });
     }
 
 }

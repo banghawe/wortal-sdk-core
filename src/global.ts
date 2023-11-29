@@ -1,26 +1,46 @@
+import { CoreAPI } from "./core/core-api";
+import { AddictingGamesSDK } from "./core/interfaces/addictinggames-sdk";
+import { FacebookSDK } from "./core/interfaces/facebook-sdk";
+import { GameMonetizeSDK } from "./core/interfaces/gamemonetize-sdk";
+import { GamePixSDK } from "./core/interfaces/gamepix-sdk";
+import { GDSDK } from "./core/interfaces/gd-sdk";
+import { LinkSDK } from "./core/interfaces/link-sdk";
+import { PokiSDK } from "./core/interfaces/poki-sdk";
+import { ViberSDK } from "./core/interfaces/viber-sdk";
+import { YandexSDK } from "./core/interfaces/yandex-sdk";
 import { ShareTo } from "./utils/wortal-utils";
+import type { Platform } from "./session/types/session-types";
 
 declare global {
     const __VERSION__: string;
 
-    const LinkGame: any;
-    const ViberPlay: any;
-    const FBInstant: any;
-    const gdsdk: any;
-    const GamePix: any;
-    const sdk: any;
+    const LinkGame: LinkSDK;
+    const ViberPlay: ViberSDK;
+    const FBInstant: FacebookSDK;
+    const gdsdk: GDSDK;
+    const GamePix: GamePixSDK;
+    const sdk: GameMonetizeSDK;
+    const PokiSDK: PokiSDK;
+    const SWAGAPI: AddictingGamesSDK;
+    const waves: WavesSDK;
+    const YaGames: YandexSDK;
 
     interface Window {
         /**
          * Wortal SDK
          * @hidden
          */
-        Wortal: any;
+        Wortal: CoreAPI;
         /**
          * ID of the game as set by wortal-data.js. This is used to identify the game on the Wortal backend.
          * @hidden
          */
         wortalGameID: string;
+        /**
+         * ID of the game as set by AddictingGames. This is included in wortal-data.js.
+         * @hidden
+         */
+        addictingGamesID: string;
         /**
          * This is set by the Wortal backend and is used to identify a Wortal player via session.
          * @hidden
@@ -62,6 +82,11 @@ declare global {
          */
         CrazyGames: CrazyGamesSDK;
         /**
+         * Yandex SDK
+         * @hidden
+         */
+        ysdk: YandexSDK;
+        /**
          * Shares the game on the specified platform. This is only supported on Wortal and was ported over from the now
          * deprecated wortal.js. It is not recommended to use this function, as it is called from the page
          * displaying the game.
@@ -72,6 +97,33 @@ declare global {
 
     interface CrazyGamesSDK {
         SDK: any;
+    }
+
+
+    interface WavesInitializationOptions {
+        baseUrl?: string;
+        platform?: Platform;
+        gameId?: number;
+        authToken?: string;
+    }
+
+    interface WavesSDK {
+        init(options: WavesInitializationOptions): void;
+        /**
+         * authenticate will check if there is no authToken it will open a dialog
+         * to prompt the user to login and save the auth token
+         * @param forceDialog if true, will always prompt the user to login
+         */
+        authenticate(forceDialog?: boolean): Promise<void>;
+        get authToken(): string | undefined;
+        set authToken(token: string | undefined);
+        saveData<T = any>(gameData: T): Promise<{
+            message: string;
+        }>;
+        savePartialData<T = any>(gameData: Partial<T>): Promise<{
+            message: string;
+        }>;
+        getData<T = any>(): Promise<T>;
     }
 }
 

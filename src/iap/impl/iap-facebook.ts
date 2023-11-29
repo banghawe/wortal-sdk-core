@@ -14,10 +14,6 @@ import { Subscription } from "../interfaces/subscription";
  * @hidden
  */
 export class IAPFacebook extends IAPBase {
-    constructor() {
-        super();
-    }
-
     protected cancelSubscriptionAsyncImpl(purchaseToken: string): Promise<void> {
         return Wortal._internalPlatformSDK.payments.cancelSubscriptionAsync(purchaseToken)
             .catch((error: ErrorMessage_Facebook) => {
@@ -94,6 +90,14 @@ export class IAPFacebook extends IAPBase {
             .catch((error: ErrorMessage_Facebook) => {
                 throw rethrowError_Facebook_Rakuten(error, WORTAL_API.IAP_PURCHASE_SUBSCRIPTION_ASYNC, API_URL.IAP_PURCHASE_SUBSCRIPTION_ASYNC);
             });
+    }
+
+    protected _tryEnableIAPImpl(): void {
+        this._isIAPEnabled = false;
+        Wortal._internalPlatformSDK.payments.onReady(() => {
+            this._isIAPEnabled = true;
+            Wortal._log.debug(`IAP initialized for ${Wortal._internalPlatform} platform.`);
+        });
     }
 
 }

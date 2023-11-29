@@ -5,6 +5,10 @@ document.getElementById('core').addEventListener('click', () => {
     showGrid('grid-core');
 });
 
+document.getElementById('achievements').addEventListener('click', () => {
+    showGrid('grid-achievements');
+});
+
 document.getElementById('ads').addEventListener('click', () => {
     showGrid('grid-ads');
 });
@@ -37,8 +41,23 @@ document.getElementById('session').addEventListener('click', () => {
     showGrid('grid-session');
 });
 
+document.getElementById('stats').addEventListener('click', () => {
+    showGrid('grid-stats');
+});
+
 document.getElementById('tournament').addEventListener('click', () => {
     showGrid('grid-tournament');
+});
+
+////////////////////////////////////
+// Achievements
+////////////////////////////////////
+document.getElementById('achievements-getAchievementsAsync').addEventListener('click', () => {
+    achievementsGetAchievementsAsync();
+});
+
+document.getElementById('achievements-unlockAchievementAsync').addEventListener('click', () => {
+    achievementsUnlockAchievementAsync();
 });
 
 ////////////////////////////////////
@@ -354,6 +373,17 @@ document.getElementById('session-gameLoadingStart').addEventListener('click', ()
 
 document.getElementById('session-gameLoadingStop').addEventListener('click', () => {
     sessionGameLoadingStop();
+});
+
+////////////////////////////////////
+// Stats
+////////////////////////////////////
+document.getElementById('stats-getStatsAsync').addEventListener('click', () => {
+    statsGetStatsAsync();
+});
+
+document.getElementById('stats-postStatsAsync').addEventListener('click', () => {
+    statsPostStatsAsync();
 });
 
 ////////////////////////////////////

@@ -2,7 +2,6 @@ import { AuthPayload } from "../../auth/interfaces/auth-payload";
 import { AuthResponse } from "../../auth/interfaces/auth-response";
 import { initializationError, notSupported } from "../../errors/error-handler";
 import Wortal from "../../index";
-import { debug } from "../../utils/logger";
 import { addExternalCallback, externalSDKEventTrigger, onPauseFunctions } from "../../utils/wortal-utils";
 import { CoreBase } from "../core-base";
 import { API_URL, GD_GAME_MONETIZE_API, SDK_SRC, WORTAL_API } from "../../data/core-data";
@@ -12,10 +11,6 @@ import { API_URL, GD_GAME_MONETIZE_API, SDK_SRC, WORTAL_API } from "../../data/c
  * @hidden
  */
 export class CoreGameMonetize extends CoreBase {
-    constructor() {
-        super();
-    }
-
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
         return Promise.reject(notSupported(undefined, WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC));
     }
@@ -50,7 +45,7 @@ export class CoreGameMonetize extends CoreBase {
         const id = "gamemonetize-sdk";
         return new Promise((resolve, reject) => {
             window.SDK_OPTIONS = {
-                gameId: Wortal.session._internalSession.gameID,
+                gameId: this._getPlatformGameID(),
                 onEvent: (event: () => void) => {
                     externalSDKEventTrigger(event.name);
                 },
@@ -64,7 +59,7 @@ export class CoreGameMonetize extends CoreBase {
                     reject(initializationError("Failed to load GameMonetize SDK.", "_initializePlatformAsyncImpl"));
                 }
 
-                debug("GameMonetize platform SDK initialized.");
+                Wortal._log.debug("GameMonetize platform SDK initialized.");
                 Wortal._internalPlatformSDK = sdk;
                 resolve();
             } else {
@@ -80,7 +75,7 @@ export class CoreGameMonetize extends CoreBase {
 
                     Wortal._internalPlatformSDK = sdk;
                     addExternalCallback(GD_GAME_MONETIZE_API.SDK_READY, () => {
-                        debug("GameMonetize platform SDK initialized.");
+                        Wortal._log.debug("GameMonetize platform SDK initialized.");
                         resolve();
                     });
                 }
@@ -119,5 +114,19 @@ export class CoreGameMonetize extends CoreBase {
         WORTAL_API.SESSION_GAME_LOADING_START,
         WORTAL_API.SESSION_GAME_LOADING_STOP,
     ];
+
+    private _getPlatformGameID(): string {
+        // Example URL: https://gamemonetize.com/trash-factory
+        // ID: trash-factory
+        // If this is embedded into another site then the ID will be different but the URL structure will be the same.
+        // Ex: https://html5.gamemonetize.co/5lmq5m1n60ijd3xm2pnkgfzm0mtz10to/
+        // ID: 5lmq5m1n60ijd3xm2pnkgfzm0mtz10to
+        // Ex: https://html5.gamemonetize.games/5lmq5m1n60ijd3xm2pnkgfzm0mtz10to/
+        // ID: 5lmq5m1n60ijd3xm2pnkgfzm0mtz10to
+        const url = document.URL.split("/");
+        const id = url[3];
+        Wortal._log.debug("Initializing GameMonetize SDK with game ID: " + id);
+        return id;
+    }
 
 }

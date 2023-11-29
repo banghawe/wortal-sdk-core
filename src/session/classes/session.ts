@@ -1,6 +1,5 @@
 import { ExternalCallbacks } from "../../core/interfaces/external-callbacks";
 import Wortal from "../../index";
-import { debug } from "../../utils/logger";
 import { SessionData } from "../interfaces/session-data";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -24,14 +23,14 @@ export class Session {
     private readonly _externalCallbacks: ExternalCallbacks | undefined;
 
     constructor() {
-        debug("Initializing session...");
+        Wortal._log.debug("Initializing session...");
         this._data.country = this._setCountry();
         this._data.gameID = this._setGameID();
         this._data.browser = navigator.userAgent;
         if (Wortal._internalPlatform === "gd" || Wortal._internalPlatform === "gamemonetize") {
             this._externalCallbacks = {};
         }
-        debug("Session initialized: ", this._data);
+        Wortal._log.debug("Session initialized: ", this._data);
     }
 
     get gameID(): string {
@@ -59,18 +58,23 @@ export class Session {
     }
 
     private _setGameID(): string {
-        const platform = Wortal._internalPlatform;
         let id: string = window.wortalGameID;
-        // Always use the URL parsing method for GD and Gamemonetize as we need their IDs to initialize the SDK.
-        if (id === undefined || (platform === "gd" || platform === "gamemonetize")) {
-            debug("Game ID not found in window.wortalGameID, trying to get it from the URL...");
+        if (id == undefined) {
+            // As of v1.7.0 we should always be using window.wortalGameID. Any games uploaded after this version was
+            // released should have a valid wortalGameID in wortal-data.js, so this represents an error state.
+            //TODO: does this work with Waves?
+            Wortal._log.exception("Game ID not found in window.wortalGameID, attempting to fetch the platform ID from the URL.");
+
             // We keep this in for backwards compatibility. As of v1.6.13 Wortal will automatically add the game ID to
             // wortal-data.js when uploading a revision, but some games have not (and may never) be updated, so we
             // need a fallback for getting the gameID.
             let url: string[] = [];
             let subdomain: string[] = [];
 
-            switch (platform) {
+            switch (Wortal._internalPlatform) {
+                // Do we need fallbacks for the newer platforms? Any games that are being deployed on them should
+                // have been updated recently enough to have a wortalGameID in wortal-data.js.
+                //TODO: add handlers for other platforms
                 case "wortal":
                     // Example URL: https://gameportal.digitalwill.co.jp/games/cactus-bowling/19/
                     // ID: 19
@@ -137,7 +141,7 @@ export class Session {
             }
         }
 
-        debug("Game ID: " + id);
+        Wortal._log.debug("Game ID: " + id);
         return id;
     }
 
@@ -146,7 +150,7 @@ export class Session {
         // without using geolocation.
         const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (typeof zone === "undefined") {
-            debug("Could not get time zone, defaulting to unknown.");
+            Wortal._log.debug("Could not get time zone, defaulting to unknown.");
             return "unknown";
         }
         const arr = zone.split("/");

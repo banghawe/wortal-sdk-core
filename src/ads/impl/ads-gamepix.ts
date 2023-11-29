@@ -1,10 +1,7 @@
 import { API_URL, WORTAL_API } from "../../data/core-data";
 import { notSupported } from "../../errors/error-handler";
 import Wortal from "../../index";
-import { debug, warn } from "../../utils/logger";
 import { AdsBase } from "../ads-base";
-import { AdConfig } from "../classes/ad-config";
-import { AdConfigNull } from "../classes/ad-config-null";
 import { AdInstanceData } from "../interfaces/ad-data";
 import { AdResult_GamePix } from "../interfaces/gamepix-ads";
 import { BannerPosition } from "../types/banner-position";
@@ -14,13 +11,6 @@ import { BannerPosition } from "../types/banner-position";
  * @hidden
  */
 export class AdsGamePix extends AdsBase {
-    protected _adConfig: AdConfig;
-
-    constructor() {
-        super();
-        this._adConfig = new AdConfigNull();
-    }
-
     protected showBannerImpl(shouldShow: boolean, position: BannerPosition): void {
         throw notSupported(undefined, WORTAL_API.ADS_SHOW_BANNER, API_URL.ADS_SHOW_BANNER);
     }
@@ -33,17 +23,17 @@ export class AdsGamePix extends AdsBase {
                 // the ad showing successfully.
                 if (result) {
                     ad.callbacks.afterAd();
-                    this.logAdCall("interstitial", ad.placementType, true);
+                    Wortal.analytics._logAdCall("interstitial", ad.placementType, true);
                 } else {
-                    warn("Ad instance encountered an error or was not filled.");
+                    Wortal._log.warn("Ad instance encountered an error or was not filled.");
                     ad.callbacks.noFill();
-                    this.logAdCall("interstitial", ad.placementType, false);
+                    Wortal.analytics._logAdCall("interstitial", ad.placementType, false);
                 }
             })
             .catch((error: any) => {
-                warn("Ad instance encountered an error or was not filled.", error);
+                Wortal._log.warn("Ad instance encountered an error or was not filled.", error);
                 ad.callbacks.noFill();
-                this.logAdCall("interstitial", ad.placementType, false);
+                Wortal.analytics._logAdCall("interstitial", ad.placementType, false);
             });
     }
 
@@ -51,30 +41,30 @@ export class AdsGamePix extends AdsBase {
         ad.callbacks.beforeAd();
         Wortal._internalPlatformSDK.rewardAd()
             .then((result: AdResult_GamePix) => {
-                debug("Rewarded ad result", result);
+                Wortal._log.debug("Rewarded ad result", result);
                 if (result.success) {
                     ad.callbacks.adViewed?.();
                     ad.callbacks.afterAd();
-                    this.logAdCall("rewarded", ad.placementType, true, true);
+                    Wortal.analytics._logAdCall("rewarded", ad.placementType, true, true);
                 } else {
                     // A message property is added when there was an error, if undefined it indicates the player dismissed the ad.
                     if (typeof result.message !== "undefined") {
-                        warn("Ad instance encountered an error or was not filled.", result.message);
+                        Wortal._log.warn("Ad instance encountered an error or was not filled.", result.message);
                         ad.callbacks.noFill();
-                        this.logAdCall("rewarded", ad.placementType, false, false);
+                        Wortal.analytics._logAdCall("rewarded", ad.placementType, false, false);
                     } else {
-                        debug("Rewarded ad dismissed by player.");
+                        Wortal._log.debug("Rewarded ad dismissed by player.");
                         ad.callbacks.adDismissed?.();
                         ad.callbacks.afterAd();
-                        this.logAdCall("rewarded", ad.placementType, true, false);
+                        Wortal.analytics._logAdCall("rewarded", ad.placementType, true, false);
                     }
                 }
             })
             .catch((error: any) => {
-                warn("Ad instance encountered an error or was not filled.", error);
+                Wortal._log.warn("Ad instance encountered an error or was not filled.", error);
                 ad.callbacks.adDismissed?.();
                 ad.callbacks.noFill();
-                this.logAdCall("rewarded", ad.placementType, false, false);
+                Wortal.analytics._logAdCall("rewarded", ad.placementType, false, false);
             });
     }
 

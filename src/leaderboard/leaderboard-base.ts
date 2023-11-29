@@ -1,7 +1,7 @@
 import { API_URL, WORTAL_API } from "../data/core-data";
-import { invalidParams } from "../errors/error-handler";
+import { implementationError, invalidParams, notInitialized } from "../errors/error-handler";
 import { ValidationResult } from "../errors/interfaces/validation-result";
-import { apiCall } from "../utils/logger";
+import Wortal from "../index";
 import { isValidString } from "../utils/validators";
 import { Leaderboard } from "./classes/leaderboard";
 import { LeaderboardEntry } from "./classes/leaderboard-entry";
@@ -10,14 +10,11 @@ import { LeaderboardEntry } from "./classes/leaderboard-entry";
  * Base class for the Leaderboard API. Extend this class to implement the Leaderboard API for a specific platform.
  * @hidden
  */
-export abstract class LeaderboardBase {
-    constructor() {
-    }
-
+export class LeaderboardBase {
 //#region Public API
 
     public getConnectedPlayersEntriesAsync(name: string, count: number, offset: number): Promise<LeaderboardEntry[]> {
-        apiCall(WORTAL_API.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC);
 
         const validationResult = this.validateGetConnectedPlayersEntriesAsync(name, count, offset);
         if (!validationResult.valid) {
@@ -28,7 +25,7 @@ export abstract class LeaderboardBase {
     }
 
     public getEntriesAsync(name: string, count: number, offset: number = 0): Promise<LeaderboardEntry[]> {
-        apiCall(WORTAL_API.LEADERBOARD_GET_ENTRIES_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LEADERBOARD_GET_ENTRIES_ASYNC);
 
         const validationResult = this.validateGetEntriesAsync(name, count, offset);
         if (!validationResult.valid) {
@@ -39,7 +36,7 @@ export abstract class LeaderboardBase {
     }
 
     public getEntryCountAsync(name: string): Promise<number> {
-        apiCall(WORTAL_API.LEADERBOARD_GET_ENTRY_COUNT_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LEADERBOARD_GET_ENTRY_COUNT_ASYNC);
 
         const validationResult = this.validateGetEntryCountAsync(name);
         if (!validationResult.valid) {
@@ -50,7 +47,7 @@ export abstract class LeaderboardBase {
     }
 
     public getLeaderboardAsync(name: string): Promise<Leaderboard> {
-        apiCall(WORTAL_API.LEADERBOARD_GET_LEADERBOARD_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LEADERBOARD_GET_LEADERBOARD_ASYNC);
 
         const validationResult = this.validateGetLeaderboardAsync(name);
         if (!validationResult.valid) {
@@ -61,7 +58,7 @@ export abstract class LeaderboardBase {
     }
 
     public getPlayerEntryAsync(name: string): Promise<LeaderboardEntry> {
-        apiCall(WORTAL_API.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC);
 
         const validationResult = this.validateGetPlayerEntryAsync(name);
         if (!validationResult.valid) {
@@ -72,7 +69,7 @@ export abstract class LeaderboardBase {
     }
 
     public sendEntryAsync(name: string, score: number, details: string = ""): Promise<LeaderboardEntry> {
-        apiCall(WORTAL_API.LEADERBOARD_SEND_ENTRY_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LEADERBOARD_SEND_ENTRY_ASYNC);
 
         const validationResult = this.validateSendEntryAsync(name, score, details);
         if (!validationResult.valid) {
@@ -85,12 +82,12 @@ export abstract class LeaderboardBase {
 //#endregion
 //#region Implementation interface
 
-    protected abstract getConnectedPlayersEntriesAsyncImpl(name: string, count: number, offset: number): Promise<LeaderboardEntry[]>;
-    protected abstract getEntriesAsyncImpl(name: string, count: number, offset: number): Promise<LeaderboardEntry[]>;
-    protected abstract getEntryCountAsyncImpl(name: string): Promise<number>;
-    protected abstract getLeaderboardAsyncImpl(name: string): Promise<Leaderboard>;
-    protected abstract getPlayerEntryAsyncImpl(name: string): Promise<LeaderboardEntry>;
-    protected abstract sendEntryAsyncImpl(name: string, score: number, details: string): Promise<LeaderboardEntry>;
+    protected getConnectedPlayersEntriesAsyncImpl(name: string, count: number, offset: number): Promise<LeaderboardEntry[]> { throw implementationError(); }
+    protected getEntriesAsyncImpl(name: string, count: number, offset: number): Promise<LeaderboardEntry[]> { throw implementationError(); }
+    protected getEntryCountAsyncImpl(name: string): Promise<number> { throw implementationError(); }
+    protected getLeaderboardAsyncImpl(name: string): Promise<Leaderboard> { throw implementationError(); }
+    protected getPlayerEntryAsyncImpl(name: string): Promise<LeaderboardEntry> { throw implementationError(); }
+    protected sendEntryAsyncImpl(name: string, score: number, details: string): Promise<LeaderboardEntry> { throw implementationError(); }
 
 //#endregion
 //#region Validation
@@ -99,7 +96,18 @@ export abstract class LeaderboardBase {
         if (!isValidString(name)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC, API_URL.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC)
+                error: invalidParams(undefined,
+                    WORTAL_API.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC,
+                    API_URL.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC)
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC,
+                    API_URL.LEADERBOARD_GET_CONNECTED_PLAYER_ENTRIES_ASYNC)
             }
         }
 
@@ -110,7 +118,18 @@ export abstract class LeaderboardBase {
         if (!isValidString(name)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.LEADERBOARD_GET_ENTRIES_ASYNC, API_URL.LEADERBOARD_GET_ENTRIES_ASYNC)
+                error: invalidParams(undefined,
+                    WORTAL_API.LEADERBOARD_GET_ENTRIES_ASYNC,
+                    API_URL.LEADERBOARD_GET_ENTRIES_ASYNC)
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.LEADERBOARD_GET_ENTRIES_ASYNC,
+                    API_URL.LEADERBOARD_GET_ENTRIES_ASYNC)
             }
         }
 
@@ -121,7 +140,18 @@ export abstract class LeaderboardBase {
         if (!isValidString(name)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.LEADERBOARD_GET_ENTRY_COUNT_ASYNC, API_URL.LEADERBOARD_GET_ENTRY_COUNT_ASYNC)
+                error: invalidParams(undefined,
+                    WORTAL_API.LEADERBOARD_GET_ENTRY_COUNT_ASYNC,
+                    API_URL.LEADERBOARD_GET_ENTRY_COUNT_ASYNC)
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.LEADERBOARD_GET_ENTRY_COUNT_ASYNC,
+                    API_URL.LEADERBOARD_GET_ENTRY_COUNT_ASYNC)
             }
         }
 
@@ -132,7 +162,18 @@ export abstract class LeaderboardBase {
         if (!isValidString(name)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.LEADERBOARD_GET_LEADERBOARD_ASYNC, API_URL.LEADERBOARD_GET_LEADERBOARD_ASYNC)
+                error: invalidParams(undefined,
+                    WORTAL_API.LEADERBOARD_GET_LEADERBOARD_ASYNC,
+                    API_URL.LEADERBOARD_GET_LEADERBOARD_ASYNC)
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.LEADERBOARD_GET_LEADERBOARD_ASYNC,
+                    API_URL.LEADERBOARD_GET_LEADERBOARD_ASYNC)
             }
         }
 
@@ -143,7 +184,18 @@ export abstract class LeaderboardBase {
         if (!isValidString(name)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC, API_URL.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC)
+                error: invalidParams(undefined,
+                    WORTAL_API.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC,
+                    API_URL.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC)
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC,
+                    API_URL.LEADERBOARD_GET_PLAYER_ENTRY_ASYNC)
             }
         }
 
@@ -154,7 +206,18 @@ export abstract class LeaderboardBase {
         if (!isValidString(name)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.LEADERBOARD_SEND_ENTRY_ASYNC, API_URL.LEADERBOARD_SEND_ENTRY_ASYNC)
+                error: invalidParams(undefined,
+                    WORTAL_API.LEADERBOARD_SEND_ENTRY_ASYNC,
+                    API_URL.LEADERBOARD_SEND_ENTRY_ASYNC)
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.LEADERBOARD_SEND_ENTRY_ASYNC,
+                    API_URL.LEADERBOARD_SEND_ENTRY_ASYNC)
             }
         }
 

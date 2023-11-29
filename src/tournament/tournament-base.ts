@@ -1,7 +1,7 @@
 import { API_URL, WORTAL_API } from "../data/core-data";
-import { invalidParams } from "../errors/error-handler";
+import { implementationError, invalidParams, notInitialized } from "../errors/error-handler";
 import { ValidationResult } from "../errors/interfaces/validation-result";
-import { apiCall } from "../utils/logger";
+import Wortal from "../index";
 import { isValidNumber, isValidString } from "../utils/validators";
 import { Tournament } from "./classes/tournament";
 import { CreateTournamentPayload } from "./interfaces/create-tournament-payload";
@@ -11,16 +11,13 @@ import { ShareTournamentPayload } from "./interfaces/share-tournament-payload";
  * Base class for the Tournament API. Extend this class to implement the Tournament API for a specific platform.
  * @hidden
  */
-export abstract class TournamentBase {
-    constructor() {
-    }
-
+export class TournamentBase {
 //#region Public API
 
     public createAsync(payload: CreateTournamentPayload): Promise<Tournament> {
-        apiCall(WORTAL_API.TOURNAMENT_CREATE_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.TOURNAMENT_CREATE_ASYNC);
 
-        const validationResult = this.validateCreatePayload(payload);
+        const validationResult = this.validateCreateAsync(payload);
         if (!validationResult.valid) {
             return Promise.reject(validationResult.error);
         }
@@ -29,21 +26,31 @@ export abstract class TournamentBase {
     }
 
     public getAllAsync(): Promise<Tournament[]> {
-        apiCall(WORTAL_API.TOURNAMENT_GET_ALL_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.TOURNAMENT_GET_ALL_ASYNC);
+
+        const validationResult = this.validateGetAllAsync();
+        if (!validationResult.valid) {
+            return Promise.reject(validationResult.error);
+        }
 
         return this.getAllAsyncImpl();
     }
 
     public getCurrentAsync(): Promise<Tournament> {
-        apiCall(WORTAL_API.TOURNAMENT_GET_CURRENT_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.TOURNAMENT_GET_CURRENT_ASYNC);
+
+        const validationResult = this.validateGetCurrentAsync();
+        if (!validationResult.valid) {
+            return Promise.reject(validationResult.error);
+        }
 
         return this.getCurrentAsyncImpl();
     }
 
     public joinAsync(tournamentID: string): Promise<void> {
-        apiCall(WORTAL_API.TOURNAMENT_JOIN_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.TOURNAMENT_JOIN_ASYNC);
 
-        const validationResult = this.validateJoinPayload(tournamentID);
+        const validationResult = this.validateJoinAsync(tournamentID);
         if (!validationResult.valid) {
             return Promise.reject(validationResult.error);
         }
@@ -52,9 +59,9 @@ export abstract class TournamentBase {
     }
 
     public postScoreAsync(score: number): Promise<void> {
-        apiCall(WORTAL_API.TOURNAMENT_POST_SCORE_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.TOURNAMENT_POST_SCORE_ASYNC);
 
-        const validationResult = this.validatePostScore(score);
+        const validationResult = this.validatePostScoreAsync(score);
         if (!validationResult.valid) {
             return Promise.reject(validationResult.error);
         }
@@ -63,9 +70,9 @@ export abstract class TournamentBase {
     }
 
     public shareAsync(payload: ShareTournamentPayload): Promise<void> {
-        apiCall(WORTAL_API.TOURNAMENT_SHARE_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.TOURNAMENT_SHARE_ASYNC);
 
-        const validationResult = this.validateSharePayload(payload);
+        const validationResult = this.validateShareAsync(payload);
         if (!validationResult.valid) {
             return Promise.reject(validationResult.error);
         }
@@ -76,54 +83,124 @@ export abstract class TournamentBase {
 //#endregion
 //#region Implementation interface
 
-    protected abstract createAsyncImpl(payload: CreateTournamentPayload): Promise<Tournament>;
-    protected abstract getAllAsyncImpl(): Promise<Tournament[]>;
-    protected abstract getCurrentAsyncImpl(): Promise<Tournament>;
-    protected abstract joinAsyncImpl(tournamentID: string): Promise<void>;
-    protected abstract postScoreAsyncImpl(score: number): Promise<void>;
-    protected abstract shareAsyncImpl(payload: ShareTournamentPayload): Promise<void>;
+    protected createAsyncImpl(payload: CreateTournamentPayload): Promise<Tournament> { throw implementationError(); }
+    protected getAllAsyncImpl(): Promise<Tournament[]> { throw implementationError(); }
+    protected getCurrentAsyncImpl(): Promise<Tournament> { throw implementationError(); }
+    protected joinAsyncImpl(tournamentID: string): Promise<void> { throw implementationError(); }
+    protected postScoreAsyncImpl(score: number): Promise<void> { throw implementationError(); }
+    protected shareAsyncImpl(payload: ShareTournamentPayload): Promise<void> { throw implementationError(); }
 
 //#endregion
 //#region Validation
 
-    protected validateCreatePayload(payload: CreateTournamentPayload): ValidationResult {
+    protected validateCreateAsync(payload: CreateTournamentPayload): ValidationResult {
         if (!isValidNumber(payload.initialScore)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.TOURNAMENT_CREATE_ASYNC, API_URL.TOURNAMENT_CREATE_ASYNC),
+                error: invalidParams(undefined,
+                    WORTAL_API.TOURNAMENT_CREATE_ASYNC,
+                    API_URL.TOURNAMENT_CREATE_ASYNC),
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.TOURNAMENT_CREATE_ASYNC,
+                    API_URL.TOURNAMENT_CREATE_ASYNC),
             }
         }
 
         return { valid: true }
     }
 
-    protected validateJoinPayload(tournamentID: string): ValidationResult {
+    protected validateGetAllAsync(): ValidationResult {
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.TOURNAMENT_GET_ALL_ASYNC,
+                    API_URL.TOURNAMENT_GET_ALL_ASYNC),
+            }
+        }
+
+        return { valid: true }
+    }
+
+    protected validateGetCurrentAsync(): ValidationResult {
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.TOURNAMENT_GET_CURRENT_ASYNC,
+                    API_URL.TOURNAMENT_GET_CURRENT_ASYNC),
+            }
+        }
+
+        return { valid: true }
+    }
+
+    protected validateJoinAsync(tournamentID: string): ValidationResult {
         if (!isValidString(tournamentID)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.TOURNAMENT_JOIN_ASYNC, API_URL.TOURNAMENT_JOIN_ASYNC),
+                error: invalidParams(undefined,
+                    WORTAL_API.TOURNAMENT_JOIN_ASYNC,
+                    API_URL.TOURNAMENT_JOIN_ASYNC),
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.TOURNAMENT_JOIN_ASYNC,
+                    API_URL.TOURNAMENT_JOIN_ASYNC),
             }
         }
 
         return { valid: true }
     }
 
-    protected validatePostScore(score: number): ValidationResult {
+    protected validatePostScoreAsync(score: number): ValidationResult {
         if (!isValidNumber(score)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.TOURNAMENT_POST_SCORE_ASYNC, API_URL.TOURNAMENT_POST_SCORE_ASYNC),
+                error: invalidParams(undefined,
+                    WORTAL_API.TOURNAMENT_POST_SCORE_ASYNC,
+                    API_URL.TOURNAMENT_POST_SCORE_ASYNC),
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.TOURNAMENT_POST_SCORE_ASYNC,
+                    API_URL.TOURNAMENT_POST_SCORE_ASYNC),
             }
         }
 
         return { valid: true }
     }
 
-    protected validateSharePayload(payload: ShareTournamentPayload): ValidationResult {
+    protected validateShareAsync(payload: ShareTournamentPayload): ValidationResult {
         if (!isValidNumber(payload.score)) {
             return {
                 valid: false,
-                error: invalidParams(undefined, WORTAL_API.TOURNAMENT_SHARE_ASYNC, API_URL.TOURNAMENT_SHARE_ASYNC),
+                error: invalidParams(undefined,
+                    WORTAL_API.TOURNAMENT_SHARE_ASYNC,
+                    API_URL.TOURNAMENT_SHARE_ASYNC),
+            }
+        }
+
+        if (!Wortal.isInitialized) {
+            return {
+                valid: false,
+                error: notInitialized(undefined,
+                    WORTAL_API.TOURNAMENT_SHARE_ASYNC,
+                    API_URL.TOURNAMENT_SHARE_ASYNC),
             }
         }
 

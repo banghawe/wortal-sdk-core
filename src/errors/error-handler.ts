@@ -1,4 +1,5 @@
-import { exception } from "../utils/logger";
+import Wortal from "../index";
+import { ErrorMessage_AddictingGames } from "./interfaces/addictinggames-error";
 import { ErrorMessage } from "./interfaces/error-message";
 import { ErrorMessage_Facebook } from "./interfaces/facebook-error";
 import { ErrorMessage_Link } from "./interfaces/link-error";
@@ -19,7 +20,7 @@ export function rethrowError_Facebook_Rakuten(original: ErrorMessage_Facebook | 
         url: url,
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -36,7 +37,42 @@ export function rethrowError_CrazyGames(original: Error_CrazyGames, context: str
         url: url,
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
+    return error;
+}
+
+/**
+ * Rethrows an error from the AddictingGames SDK as a Wortal error. Use this in the error callback when calling the
+ * AddictingGames SDK to catch its errors and convert them to Wortal errors for consistent error handling.
+ * @hidden
+ */
+export function rethrowError_AddictingGames(original: ErrorMessage_AddictingGames, context: string, url?: string): ErrorMessage {
+    const error: ErrorMessage = {
+        code: original.status.toString(),
+        message: original.message || "No message provided by the platform SDK.",
+        context: context,
+        url: url,
+    }
+
+    Wortal._log.exception(error.code, error);
+    return error;
+}
+
+/**
+ * Rethrows an error from the Yandex SDK as a Wortal error. Use this in the error callback when calling the
+ * Yandex SDK to catch its errors and convert them to Wortal errors for consistent error handling.
+ * @hidden
+ */
+export function rethrowError_Yandex(original: string, context: string, url?: string): ErrorMessage {
+    //TODO: create interface for Yandex errors
+    const error: ErrorMessage = {
+        code: ErrorMessages_Yandex[original] || "UNKNOWN",
+        message: ErrorMessages[ErrorMessages_Yandex[original]] || "No message provided by the platform SDK.",
+        context: context,
+        url: url,
+    }
+
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -52,7 +88,7 @@ export function invalidParams(message: string = "", context: string, url?: strin
         url: url,
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -70,7 +106,7 @@ export function invalidOperation(message: string, context: string, url?: string)
         url: url,
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -86,7 +122,7 @@ export function notSupported(message: string = "", context: string, url?: string
         url: url || "https://sdk.html5gameportal.com/api/wortal/#getsupportedapis",
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -103,7 +139,7 @@ export function operationFailed(message: string, context: string, url?: string):
         url: url,
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -121,7 +157,40 @@ export function initializationError(message: string, context: string, url?: stri
         url: url || "https://sdk.html5gameportal.com/wortal-html5/#initialization",
     }
 
-    exception(error.code, error);
+    Wortal._log.exception(error.code, error);
+    return error;
+}
+
+/**
+ * Throw this to indicate the SDK has not been initialized yet. This can occur if the game attempts to call an SDK
+ * function before the SDK has been initialized.
+ * @hidden
+ */
+export function notInitialized(message: string = "", context: string, url?: string): ErrorMessage {
+    const error: ErrorMessage = {
+        code: "NOT_INITIALIZED",
+        message: message || ErrorMessages["NOT_INITIALIZED"],
+        context: context,
+        url: url,
+    }
+
+    Wortal._log.exception(error.code, error);
+    return error;
+}
+
+/**
+ * Throw this to indicate the SDK attempted to call an implementation function from the base layer. This should never happen.
+ * @hidden
+ */
+export function implementationError(message: string = "", context: string = "", url?: string): ErrorMessage {
+    const error: ErrorMessage = {
+        code: "IMPLEMENTATION_ERROR",
+        message: "Called implementation function from the base layer.",
+        context: context,
+        url: url,
+    }
+
+    Wortal._log.exception(error.code, error);
     return error;
 }
 
@@ -130,6 +199,7 @@ export function initializationError(message: string, context: string, url?: stri
  * @hidden
  */
 const ErrorMessages: Record<string, string> = {
+    ACHIEVEMENT_NOT_FOUND: "No achievement with the requested name was found. Either the achievement does not exist yet, or the name did not match any registered achievement configuration for the game.",
     AUTH_IN_PROGRESS: "The game attempted to show an authentication prompt, but a prompt to authenticate is already in progress.",
     AUTH_NOT_ENABLED: "The game attempted to perform an operation that requires authentication, but the game has not enabled authentication.",
     CLIENT_UNSUPPORTED_OPERATION: "The client does not support the current operation. This may be due to lack of support on the client version or platform, or because the operation is not allowed for the game or player.",
@@ -140,6 +210,7 @@ const ErrorMessages: Record<string, string> = {
     LEADERBOARD_WRONG_CONTEXT: "Attempted to write to a leaderboard that's associated with a context other than the one the game is currently being played in.",
     LINK_IN_PROGRESS: "The game attempted to show an account linking prompt, but a prompt to link accounts is already in progress.",
     NETWORK_FAILURE: "The client experienced an issue with a network request. This is likely due to a transient issue, such as the player's internet connection dropping.",
+    NOT_INITIALIZED: "The SDK has not been initialized yet. This can occur if the game attempts to call an SDK function before the SDK has been initialized. Check Wortal.isInitialized or wait for Wortal.initializeAsync to complete before calling other SDK functions.",
     NOT_SUPPORTED: "Function or feature is not currently supported on the platform currently being played on.",
     OPERATION_FAILED: "The operation failed, this is typically thrown during a failed web request and the message may include additional details about the failure.",
     PAYMENTS_NOT_INITIALIZED: "The client has not completed setting up payments or is not accepting payments API calls.",
@@ -166,4 +237,12 @@ const ErrorMessages_CrazyGames: Record<string, string> = {
     userCancelled: "USER_INPUT",
     showAccountLinkPromptInProgress: "LINK_IN_PROGRESS",
     unexpectedError: "UNKNOWN",
+}
+
+/**
+ * Maps Yandex error codes to Wortal error codes.
+ * @hidden
+ */
+const ErrorMessages_Yandex: Record<string, string> = {
+    USER_NOT_AUTHORIZED: "The game attempted to perform an operation that requires authentication, but the user is not authenticated.",
 }

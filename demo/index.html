@@ -7,11 +7,24 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="debugConsole.css">
     <script src="wortal-data.js"></script>
-    <script src="wortal-core.js" data-manual-init="true"></script>
+	<script src="wortal-common.js"></script>
+	<script src="analytics.js"></script>
+    <script src="addictinggames.js"></script>
+    <script src="crazygames.js"></script>
+    <script src="debug.js"></script>
+    <script src="facebook.js"></script>
+    <script src="gamemonetize.js"></script>
+    <script src="gamepix.js"></script>
+    <script src="gd.js"></script>
+    <script src="link.js"></script>
+    <script src="viber.js"></script>
+    <script src="wortal.js"></script>
+    <script src="wortal-core.js" data-manual-init="true" data-debug-mode="true"></script>
 </head>
 <body>
     <div class="button-container" id="main-grid">
         <button class="output-button" id="core">Core</button>
+        <button class="output-button" id="achievements">Achievements</button>
         <button class="output-button" id="ads">Ads</button>
         <button class="output-button" id="analytics">Analytics</button>
         <button class="output-button" id="context">Context</button>
@@ -20,6 +33,7 @@
         <button class="output-button" id="notifications">Notifications</button>
         <button class="output-button" id="player">Player</button>
         <button class="output-button" id="session">Session</button>
+        <button class="output-button" id="stats">Stats</button>
         <button class="output-button" id="tournament">Tournament</button>
     </div>
 
@@ -29,6 +43,12 @@
         <button class="output-button" id="core-onPause">onPause</button>
         <button class="output-button" id="core-performHapticFeedbackAsync">performHapticFeedbackAsync</button>
         <button class="output-button" id="core-getSupportedAPIs">getSupportedAPIs</button>
+        <button class="output-button back-button">Back</button>
+    </div>
+
+    <div class="secondary-grid" id="grid-achievements">
+        <button class="output-button" id="achievements-getAchievementsAsync">getAchievementsAsync</button>
+        <button class="output-button" id="achievements-unlockAchievementAsync">unlockAchievementAsync</button>
         <button class="output-button back-button">Back</button>
     </div>
 
@@ -131,6 +151,12 @@
         <button class="output-button back-button">Back</button>
     </div>
 
+    <div class="secondary-grid" id="grid-stats">
+        <button class="output-button" id="stats-getStatsAsync">getStatsAsync</button>
+        <button class="output-button" id="stats-postStatsAsync">postStatsAsync</button>
+        <button class="output-button back-button">Back</button>
+    </div>
+
     <div class="secondary-grid" id="grid-tournament">
         <button class="output-button" id="tournament-getCurrentAsync">getCurrentAsync</button>
         <button class="output-button" id="tournament-getAllAsync">getAllAsync</button>
@@ -156,6 +182,7 @@
     </audio>
 
     <script src="index.js"></script>
+    <script src="api/achievements.js"></script>
     <script src="api/ads.js"></script>
     <script src="api/analytics.js"></script>
     <script src="api/context.js"></script>
@@ -165,6 +192,7 @@
     <script src="api/notifications.js"></script>
     <script src="api/player.js"></script>
     <script src="api/session.js"></script>
+    <script src="api/stats.js"></script>
     <script src="api/tournament.js"></script>
     <script src="buttonHandlers.js"></script>
     <script src="utils.js"></script>

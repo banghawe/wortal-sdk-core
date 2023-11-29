@@ -1,3 +1,5 @@
+import { PlacementType } from "../../ads/types/ad-sense-types";
+import { AdType } from "../../ads/types/ad-type";
 import { AnalyticsBase } from "../analytics-base";
 
 /**
@@ -6,9 +8,6 @@ import { AnalyticsBase } from "../analytics-base";
  * @hidden
  */
 export class AnalyticsDisabled extends AnalyticsBase {
-    constructor() {
-        super();
-    }
 
     protected logGameChoiceImpl(decision: string, choice: string): void {
     }
@@ -50,6 +49,9 @@ export class AnalyticsDisabled extends AnalyticsBase {
     }
 
     protected _logTrafficSourceImpl(): void {
+    }
+
+    protected _logAdCallImpl(format: AdType, placement: PlacementType, success: boolean, viewedReward?: boolean) {
     }
 
 }

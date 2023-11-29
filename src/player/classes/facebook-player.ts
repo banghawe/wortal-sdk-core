@@ -1,5 +1,4 @@
 import Wortal from "../../index";
-import { debug, exception } from "../../utils/logger";
 import { Player } from "./player";
 
 /**
@@ -7,19 +6,15 @@ import { Player } from "./player";
  * @hidden
  */
 export class FacebookPlayer extends Player {
-    constructor() {
-        super();
-    }
-
-    protected async initializeImpl(): Promise<void> {
-        debug("Fetching ASID...");
+    public override async initialize(): Promise<void> {
+        Wortal._log.debug("Fetching ASID...");
         await Wortal.player.getASIDAsync()
             .then((asid: string) => {
                 this._data.asid = asid;
-                debug("ASID fetched: ", asid);
+                Wortal._log.debug("ASID fetched: ", asid);
             })
             .catch((error: any) => {
-                exception("Error fetching ASID: ", error);
+                Wortal._log.exception("Error fetching ASID: ", error);
             });
 
         this._data.id = Wortal._internalPlatformSDK.player.getID();
@@ -27,7 +22,7 @@ export class FacebookPlayer extends Player {
         this._data.photo = Wortal._internalPlatformSDK.player.getPhoto();
         this._data.isFirstPlay = false;
 
-        debug("Player initialized: ", this._data);
+        Wortal._log.debug("Player initialized: ", this._data);
         return Promise.resolve();
     }
 }

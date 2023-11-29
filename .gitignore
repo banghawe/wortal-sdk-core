@@ -11,8 +11,15 @@
 /docs
 
 ### Demo
-demo/*.zip
-demo/wortal-core*.js
+demo/*
+!demo/api
+!demo/assets
+!demo/buttonHandlers.js
+!demo/index.js
+!demo/index.html
+!demo/style.css
+!demo/utils.js
+!demo/wortal-data.js
 
 ### Node template
 # Logs

@@ -2,10 +2,7 @@ import { API_URL, WORTAL_API } from "../../data/core-data";
 import { notSupported, rethrowError_Facebook_Rakuten } from "../../errors/error-handler";
 import { ErrorMessage_Facebook } from "../../errors/interfaces/facebook-error";
 import Wortal from "../../index";
-import { debug } from "../../utils/logger";
 import { ConnectedPlayer } from "../classes/connected-player";
-import { FacebookPlayer } from "../classes/facebook-player";
-import { Player } from "../classes/player";
 import { ConnectedPlayerPayload } from "../interfaces/connected-player-payload";
 import {
     ConnectedPlayer_Facebook,
@@ -22,13 +19,6 @@ import { PlayerBase } from "../player-base";
  * @hidden
  */
 export class PlayerFacebook extends PlayerBase {
-    protected _player: Player;
-
-    constructor() {
-        super();
-        this._player = new FacebookPlayer();
-    }
-
     protected canSubscribeBotAsyncImpl(): Promise<boolean> {
         return Wortal._internalPlatformSDK.player.canSubscribeBotAsync()
             .then((canSubscribe: boolean) => {
@@ -119,7 +109,7 @@ export class PlayerFacebook extends PlayerBase {
     protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
         return Wortal._internalPlatformSDK.player.setDataAsync(data)
             .then(() => {
-                debug("Saved data to cloud storage.");
+                Wortal._log.debug("Saved data to cloud storage.");
             })
             .catch((error: ErrorMessage_Facebook) => {
                 throw rethrowError_Facebook_Rakuten(error, WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);

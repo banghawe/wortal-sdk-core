@@ -1,7 +1,6 @@
 import { API_URL, TELEGRAM_API, WORTAL_API } from "../../data/core-data";
 import { notSupported, operationFailed } from "../../errors/error-handler";
 import Wortal from "../../index";
-import { debug } from "../../utils/logger";
 import { isValidString } from "../../utils/validators";
 import { delayUntilConditionMet, waitForTelegramCallback } from "../../utils/wortal-utils";
 import { ConnectedPlayer } from "../classes/connected-player";
@@ -19,8 +18,10 @@ import { PlayerBase } from "../player-base";
 export class PlayerTelegram extends PlayerBase {
     protected _player: Player;
 
-    constructor() {
-        super();
+    constructor(player: Player) {
+        super(player);
+        // We can't inject the TelegramPlayer in core-api because some of the code will cause the demo
+        // project upload to be blocked on Facebook.
         this._player = new TelegramPlayer();
     }
 
@@ -163,7 +164,7 @@ export class PlayerTelegram extends PlayerBase {
             setData(`${Wortal.session._internalSession.gameID}-save-data-0`, dataString);
         }
 
-        debug("Saved data to Telegram storage.");
+        Wortal._log.debug("Saved data to Telegram storage.");
         return Promise.resolve();
     }
 

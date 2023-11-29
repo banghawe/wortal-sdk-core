@@ -1,9 +1,8 @@
 import { API_URL, WORTAL_API } from "../../data/core-data";
 import { notSupported } from "../../errors/error-handler";
-import { debug } from "../../utils/logger";
+import Wortal from "../../index";
 import { AdsBase } from "../ads-base";
 import { AdConfig } from "../classes/ad-config";
-import { AdConfigNull } from "../classes/ad-config-null";
 import { AdInstanceData } from "../interfaces/ad-data";
 import { AdSense_AdBreakParams, AdSense_PlacementInfo } from "../interfaces/ad-sense";
 import { BannerPosition } from "../types/banner-position";
@@ -14,11 +13,8 @@ import { BannerPosition } from "../types/banner-position";
  * @hidden
  */
 export class AdsDebug extends AdsBase {
-   protected _adConfig: AdConfig;
-
-    constructor() {
-        super();
-        this._adConfig = new AdConfigNull();
+    constructor(config: AdConfig) {
+        super(config);
 
         // This is the global function that the AdSense SDK uses to register ad breaks.
         // https://developers.google.com/ad-placement/docs/html5-game-structure
@@ -33,7 +29,7 @@ export class AdsDebug extends AdsBase {
     }
 
     protected showInterstitialImpl(ad: AdInstanceData): void {
-        debug(`Attempting to show placement: ${ad.placementType} // ${ad.description}`);
+        Wortal._log.debug(`Attempting to show placement: ${ad.placementType} // ${ad.description}`);
         this._adConfig.adCalled();
 
         // Params are what we pass into the adBreak function, which is a global function provided by the AdSense SDK.
@@ -41,7 +37,7 @@ export class AdsDebug extends AdsBase {
             type: ad.placementType,
             name: ad.description,
             adBreakDone: (placementInfo: AdSense_PlacementInfo) => {
-                debug(`Ad break done: ${ad.placementType}.`, placementInfo);
+                Wortal._log.debug(`Ad break done: ${ad.placementType}.`, placementInfo);
                 ad.callbacks.adBreakDone?.(placementInfo);
 
                 // Preroll ads don't have an afterAd callback, so we'll call it here.
@@ -67,7 +63,7 @@ export class AdsDebug extends AdsBase {
     }
 
     protected showRewardedImpl(ad: AdInstanceData): void {
-        debug(`Attempting to show placement: ${ad.placementType} // ${ad.description}`);
+        Wortal._log.debug(`Attempting to show placement: ${ad.placementType} // ${ad.description}`);
 
         // Params are what we pass into the adBreak function.
         const params: AdSense_AdBreakParams = {
@@ -83,7 +79,7 @@ export class AdsDebug extends AdsBase {
                 showAdFn();
             },
             adBreakDone: (placementInfo: AdSense_PlacementInfo) => {
-                debug(`Ad break done: ${ad.placementType}.`, placementInfo);
+                Wortal._log.debug(`Ad break done: ${ad.placementType}.`, placementInfo);
                 ad.callbacks.adBreakDone?.(placementInfo);
             }
         }

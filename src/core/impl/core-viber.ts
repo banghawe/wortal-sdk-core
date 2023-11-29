@@ -3,7 +3,6 @@ import { AuthResponse } from "../../auth/interfaces/auth-response";
 import { initializationError, notSupported } from "../../errors/error-handler";
 import { ErrorMessage_Viber } from "../../errors/interfaces/viber-error";
 import Wortal from "../../index";
-import { debug, info } from "../../utils/logger";
 import { CoreBase } from "../core-base";
 import { API_URL, SDK_SRC, WORTAL_API } from "../../data/core-data";
 
@@ -12,16 +11,12 @@ import { API_URL, SDK_SRC, WORTAL_API } from "../../data/core-data";
  * @hidden
  */
 export class CoreViber extends CoreBase {
-    constructor() {
-        super();
-    }
-
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
         return Promise.reject(notSupported(undefined, WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC));
     }
 
     protected initializeAsyncImpl(): Promise<void> {
-        debug("Initializing SDK for Viber platform.");
+        Wortal._log.debug("Initializing SDK for Viber platform.");
         return Wortal._internalPlatformSDK.initializeAsync()
             .then(() => {
                 Wortal.iap._internalTryEnableIAP();
@@ -29,7 +24,7 @@ export class CoreViber extends CoreBase {
                     .then(() => {
                         Wortal.isInitialized = true;
                         window.dispatchEvent(new Event("wortal-sdk-initialized"));
-                        info("SDK initialization complete.");
+                        Wortal._log.info("SDK initialization complete.");
                     })
                     .catch((error: any) => {
                         throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`,
@@ -50,7 +45,7 @@ export class CoreViber extends CoreBase {
 
     protected onPauseImpl(callback: () => void): void {
         Wortal._internalPlatformSDK.onPause(() => {
-            debug("onPause callback invoked.");
+            Wortal._log.debug("onPause callback invoked.");
             callback();
         });
     }
@@ -87,7 +82,7 @@ export class CoreViber extends CoreBase {
                     reject(initializationError("Failed to load Viber SDK.", "_initializePlatformAsyncImpl"));
                 }
 
-                debug("Viber platform SDK initialized.");
+                Wortal._log.debug("Viber platform SDK initialized.");
                 Wortal._internalPlatformSDK = ViberPlay;
                 resolve();
             }
@@ -106,7 +101,7 @@ export class CoreViber extends CoreBase {
                 return Promise.all([Wortal.ads._internalAdConfig.initialize(), Wortal.player._internalPlayer.initialize()])
                     .then(() => {
                         Wortal.iap._internalTryEnableIAP();
-                        debug(`SDK initialized for ${Wortal._internalPlatform} platform.`);
+                        Wortal._log.debug(`SDK initialized for ${Wortal._internalPlatform} platform.`);
                         return Wortal._internalPlatformSDK.startGameAsync()
                             .then(() => {
                                 Wortal.analytics._logTrafficSource();

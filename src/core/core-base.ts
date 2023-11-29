@@ -1,10 +1,8 @@
 import { AuthPayload } from "../auth/interfaces/auth-payload";
 import { AuthResponse } from "../auth/interfaces/auth-response";
-import { initializationError, invalidParams } from "../errors/error-handler";
-import { ErrorMessage } from "../errors/interfaces/error-message";
+import { implementationError, initializationError, invalidParams, operationFailed } from "../errors/error-handler";
 import { ValidationResult } from "../errors/interfaces/validation-result";
 import Wortal from "../index";
-import { apiCall, debug, info, internalCall } from "../utils/logger";
 import { isValidNumber } from "../utils/validators";
 import { delayUntilConditionMet, removeLoadingCover } from "../utils/wortal-utils";
 import { API_URL, WORTAL_API } from "../data/core-data";
@@ -13,19 +11,16 @@ import { API_URL, WORTAL_API } from "../data/core-data";
  * Base class for implementations of the Wortal SDK core functionality. Extend this class to implement the core functionality.
  * @hidden
  */
-export abstract class CoreBase {
-    protected abstract _supportedAPIs: string[];
-
-    constructor() {
-    }
-
+export class CoreBase {
+    protected _supportedAPIs: string[] = [];
+    
 //#region Public API
 
     public async initializeAsync(): Promise<void> {
-        apiCall(WORTAL_API.INITIALIZE_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.INITIALIZE_ASYNC);
 
         if (!Wortal._internalIsPlatformInitialized) {
-            debug("Platform not initialized yet, awaiting platform initialization..");
+            Wortal._log.debug("Platform not initialized yet, awaiting platform initialization..");
             await delayUntilConditionMet(() => Wortal._internalIsPlatformInitialized,
                 "Platform not initialized yet, awaiting platform initialization..");
         }
@@ -39,7 +34,7 @@ export abstract class CoreBase {
     }
 
     public async startGameAsync(): Promise<void> {
-        apiCall(WORTAL_API.START_GAME_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.START_GAME_ASYNC);
 
         const validationResult: ValidationResult = this.validateStartGameAsync();
         if (!validationResult.valid) {
@@ -50,13 +45,15 @@ export abstract class CoreBase {
     }
 
     public authenticateAsync(payload?: AuthPayload): Promise<AuthResponse> {
-        apiCall(WORTAL_API.AUTHENTICATE_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.AUTHENTICATE_ASYNC);
+
         //TODO: validate auth payload
+
         return this.authenticateAsyncImpl(payload);
     }
 
     public linkAccountAsync(): Promise<boolean> {
-        apiCall(WORTAL_API.LINK_ACCOUNT_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.LINK_ACCOUNT_ASYNC);
 
         return this.linkAccountAsyncImpl();
     }
@@ -74,7 +71,7 @@ export abstract class CoreBase {
     }
 
     public onPause(callback: () => void): void {
-        apiCall(WORTAL_API.ON_PAUSE);
+        Wortal._log.apiCall(WORTAL_API.ON_PAUSE);
 
         const validationResult: ValidationResult = this.validateOnPause(callback);
         if (!validationResult.valid) {
@@ -85,13 +82,13 @@ export abstract class CoreBase {
     }
 
     public performHapticFeedbackAsync(): Promise<void> {
-        apiCall(WORTAL_API.PERFORM_HAPTIC_FEEDBACK_ASYNC);
+        Wortal._log.apiCall(WORTAL_API.PERFORM_HAPTIC_FEEDBACK_ASYNC);
 
         return this.performHapticFeedbackAsyncImpl();
     }
 
     public getSupportedAPIs(): string[] {
-        apiCall(WORTAL_API.GET_SUPPORTED_APIS);
+        Wortal._log.apiCall(WORTAL_API.GET_SUPPORTED_APIS);
 
         return this._supportedAPIs;
     }
@@ -107,7 +104,7 @@ export abstract class CoreBase {
      * @hidden
      */
     _initializePlatformAsync(): Promise<void> {
-        internalCall("_initializePlatformAsync");
+        Wortal._log.internalCall("_initializePlatformAsync");
 
         return this._initializePlatformAsyncImpl();
     }
@@ -119,7 +116,7 @@ export abstract class CoreBase {
      * @hidden
      */
     _initializeSDKAsync(): Promise<void> {
-        internalCall("_initializeSDKAsync");
+        Wortal._log.internalCall("_initializeSDKAsync");
 
         return this._initializeSDKAsyncImpl();
     }
@@ -127,23 +124,22 @@ export abstract class CoreBase {
 //#endregion
 //#region Implementation interface
 
-    protected abstract initializeAsyncImpl(): Promise<void>;
-    protected abstract startGameAsyncImpl(): Promise<void>;
-    protected abstract authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse>;
-    protected abstract linkAccountAsyncImpl(): Promise<boolean>;
-    protected abstract setLoadingProgressImpl(progress: number): void;
-    protected abstract onPauseImpl(callback: () => void): void;
-    protected abstract performHapticFeedbackAsyncImpl(): Promise<void>;
-    protected abstract _initializePlatformAsyncImpl(): Promise<void>;
-    protected abstract _initializeSDKAsyncImpl(): Promise<void>;
+    protected initializeAsyncImpl(): Promise<void> { throw implementationError(); }
+    protected startGameAsyncImpl(): Promise<void> { throw implementationError(); }
+    protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> { throw implementationError(); }
+    protected linkAccountAsyncImpl(): Promise<boolean> { throw implementationError(); }
+    protected setLoadingProgressImpl(progress: number): void { throw implementationError(); }
+    protected onPauseImpl(callback: () => void): void { throw implementationError(); }
+    protected performHapticFeedbackAsyncImpl(): Promise<void> { throw implementationError(); }
+    protected _initializePlatformAsyncImpl(): Promise<void> { throw implementationError(); }
+    protected _initializeSDKAsyncImpl(): Promise<void> { throw implementationError(); }
 
     protected defaultInitializeAsyncImpl(): Promise<void> {
         return this._initializeSDKAsyncImpl()
             .then(() => {
-                Wortal.analytics._logGameStart();
                 Wortal.isInitialized = true;
                 window.dispatchEvent(new Event("wortal-sdk-initialized"));
-                info("SDK initialization complete.");
+                Wortal._log.info("SDK initialization complete.");
             })
             .catch((error: any) => {
                 throw initializationError(`Failed to initialize SDK during _initializeSDK: ${error.message}`,
@@ -164,11 +160,33 @@ export abstract class CoreBase {
                 Wortal.ads._internalAdConfig.setPrerollShown(true);
                 Wortal.iap._internalTryEnableIAP();
                 removeLoadingCover();
-                debug(`SDK initialized for ${Wortal._internalPlatform} platform.`);
+                Wortal._log.debug(`SDK initialized for ${Wortal._internalPlatform} platform.`);
             })
             .catch((error: any) => {
                 throw initializationError(`Failed to initialize SDK during config.lateInitialize: ${error.message}`, `_initializeSDKAsyncGenericImpl`);
             });
+    }
+
+    protected async defaultAuthenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
+        return new Promise((resolve, reject) => {
+            // This is not an error state. It just means that Waves is not enabled, so we cannot authenticate.
+            if (!Wortal._internalIsWavesEnabled) {
+                resolve({status: "error"});
+            }
+
+            //TODO: add support for developer-provided login dialog
+            waves.authenticate()
+                .then(() => {
+                    resolve({
+                        // If there's no token then the player cancelled the login or did not receive the OTP.
+                        status: (waves.authToken) ? "success" : "cancel"
+                    });
+                })
+                .catch((error: any) => {
+                    reject(operationFailed(`Failed to authenticate player: ${error.message}`,
+                        WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC));
+                });
+        });
     }
 
 //#endregion

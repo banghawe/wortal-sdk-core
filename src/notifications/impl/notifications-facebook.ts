@@ -1,7 +1,6 @@
 import { API_URL, API_ENDPOINTS, WORTAL_API } from "../../data/core-data";
 import { operationFailed } from "../../errors/error-handler";
 import Wortal from "../../index";
-import { debug } from "../../utils/logger";
 import { ScheduledNotification } from "../classes/scheduled-notification";
 import { NotificationPayload } from "../interfaces/notification-payload";
 import { NotificationScheduleResult } from "../interfaces/notification-schedule-result";
@@ -12,10 +11,6 @@ import { NotificationsBase } from "../notifications-base";
  * @hidden
  */
 export class NotificationsFacebook extends NotificationsBase {
-    constructor() {
-        super();
-    }
-
     protected cancelAllAsyncImpl(label?: string): Promise<boolean> {
         const url = this._getCancelAllURL();
         if (url === undefined) {
@@ -33,7 +28,7 @@ export class NotificationsFacebook extends NotificationsBase {
                 body: typeof label !== "undefined" ? JSON.stringify({label: label}) : undefined,
             })
                 .then(async (response: Response) => {
-                    debug(`cancelAllAsync response: ${response.status}`);
+                    Wortal._log.debug(`cancelAllAsync response: ${response.status}`);
                     if (response.ok) {
                         return response.json();
                     } else {
@@ -44,7 +39,7 @@ export class NotificationsFacebook extends NotificationsBase {
                     }
                 })
                 .then((data: any) => {
-                    debug(`cancelAllAsync data: ${JSON.stringify(data)}`);
+                    Wortal._log.debug(`cancelAllAsync data: ${JSON.stringify(data)}`);
                     resolve(data.success);
                 })
                 .catch((error: any) => {
@@ -72,7 +67,7 @@ export class NotificationsFacebook extends NotificationsBase {
                 body: JSON.stringify({notification_id: id}),
             })
                 .then(async (response: Response) => {
-                    debug(`cancelAsync response: ${response.status}`);
+                    Wortal._log.debug(`cancelAsync response: ${response.status}`);
                     if (response.ok) {
                         return response.json();
                     } else {
@@ -83,7 +78,7 @@ export class NotificationsFacebook extends NotificationsBase {
                     }
                 })
                 .then((data: any) => {
-                    debug(`cancelAsync data: ${JSON.stringify(data)}`);
+                    Wortal._log.debug(`cancelAsync data: ${JSON.stringify(data)}`);
                     resolve(data.success)
                 })
                 .catch((error: any) => {
@@ -110,7 +105,7 @@ export class NotificationsFacebook extends NotificationsBase {
                 },
             })
                 .then(async (response: Response) => {
-                    debug(`getHistoryAsync response: ${response.status}`);
+                    Wortal._log.debug(`getHistoryAsync response: ${response.status}`);
                     if (response.ok) {
                         return response.json();
                     } else {
@@ -121,7 +116,7 @@ export class NotificationsFacebook extends NotificationsBase {
                     }
                 })
                 .then((data: any) => {
-                    debug(`getHistoryAsync data: ${JSON.stringify(data)}`);
+                    Wortal._log.debug(`getHistoryAsync data: ${JSON.stringify(data)}`);
                     const notifications = data["data"].map((notification: any) => {
                         return new ScheduledNotification({
                             id: notification["notification_id"],
@@ -147,7 +142,7 @@ export class NotificationsFacebook extends NotificationsBase {
 
         const url: string | undefined = this._getScheduleURL();
         const body: string = this._buildSchedulePayload(payload);
-        debug("Notification created with payload:", payload);
+        Wortal._log.debug("Notification created with payload:", payload);
 
         if (typeof url === "undefined") {
             return Promise.reject(operationFailed("Failed to schedule notification. ASID is not defined. This can occur if this API is called before the SDK has finished initializing.",
@@ -164,7 +159,7 @@ export class NotificationsFacebook extends NotificationsBase {
                 body: body,
             })
                 .then(async (response: Response) => {
-                    debug("Notification response:", response);
+                    Wortal._log.debug("Notification response:", response);
                     if (response.ok) {
                         return response.json();
                     } else {
@@ -175,7 +170,7 @@ export class NotificationsFacebook extends NotificationsBase {
                     }
                 })
                 .then((data: any) => {
-                    debug("Notification response JSON:", data);
+                    Wortal._log.debug("Notification response JSON:", data);
                     resolve({
                         id: data.notification_id,
                         success: data.success,

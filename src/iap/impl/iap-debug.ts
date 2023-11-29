@@ -1,3 +1,4 @@
+import Wortal from "../../index";
 import { IAPBase } from "../iap-base";
 import { Product } from "../interfaces/product";
 import { Purchase } from "../interfaces/purchase";
@@ -11,10 +12,6 @@ import { SubscriptionTerm } from "../types/subscription-types";
  * @hidden
  */
 export class IAPDebug extends IAPBase {
-    constructor() {
-        super();
-    }
-
     protected cancelSubscriptionAsyncImpl(purchaseToken: string): Promise<void> {
         return Promise.resolve();
     }
@@ -49,6 +46,11 @@ export class IAPDebug extends IAPBase {
 
     protected purchaseSubscriptionAsyncImpl(productID: string): Promise<Subscription> {
         return Promise.resolve(this._getMockSubscription());
+    }
+
+    protected _tryEnableIAPImpl(): void {
+        this._isIAPEnabled = true;
+        Wortal._log.debug("IAP initialized for debugging.");
     }
 
     private _getMockProduct(): Product {

@@ -2,7 +2,6 @@ import { AuthPayload } from "../../auth/interfaces/auth-payload";
 import { AuthResponse } from "../../auth/interfaces/auth-response";
 import { initializationError, notSupported } from "../../errors/error-handler";
 import Wortal from "../../index";
-import { debug } from "../../utils/logger";
 import { addExternalCallback, externalSDKEventTrigger, onPauseFunctions } from "../../utils/wortal-utils";
 import { CoreBase } from "../core-base";
 import { API_URL, GD_GAME_MONETIZE_API, SDK_SRC, WORTAL_API } from "../../data/core-data";
@@ -12,10 +11,6 @@ import { API_URL, GD_GAME_MONETIZE_API, SDK_SRC, WORTAL_API } from "../../data/c
  * @hidden
  */
 export class CoreGD extends CoreBase {
-    constructor() {
-        super();
-    }
-
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
         return Promise.reject(notSupported(undefined, WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC));
     }
@@ -51,7 +46,7 @@ export class CoreGD extends CoreBase {
 
         return new Promise((resolve, reject) => {
             window.GD_OPTIONS = {
-                gameId: Wortal.session._internalSession.gameID,
+                gameId: this._getPlatformGameID(),
                 onEvent: (event: () => void) => {
                     externalSDKEventTrigger(event.name);
                 },
@@ -65,7 +60,7 @@ export class CoreGD extends CoreBase {
                     reject(initializationError("Failed to load Game Distribution SDK.", "_initializePlatformAsyncImpl"));
                 }
 
-                debug("Game Distribution platform SDK initialized.");
+                Wortal._log.debug("Game Distribution platform SDK initialized.");
                 Wortal._internalPlatformSDK = gdsdk;
                 resolve();
             } else {
@@ -81,7 +76,7 @@ export class CoreGD extends CoreBase {
 
                     Wortal._internalPlatformSDK = gdsdk;
                     addExternalCallback(GD_GAME_MONETIZE_API.SDK_READY, () => {
-                        debug("Game Distribution platform SDK initialized.");
+                        Wortal._log.debug("Game Distribution platform SDK initialized.");
                         resolve();
                     });
                 }
@@ -120,5 +115,14 @@ export class CoreGD extends CoreBase {
         WORTAL_API.SESSION_GAME_LOADING_START,
         WORTAL_API.SESSION_GAME_LOADING_STOP,
     ];
+
+    private _getPlatformGameID(): string {
+        // Example URL: https://revision.gamedistribution.com/b712105e1fff4bceb87667522d798f97
+        // ID: b712105e1fff4bceb87667522d798f97
+        const url = document.URL.split("/");
+        const id = url[3];
+        Wortal._log.debug("Initializing Game Distribution SDK with game ID: " + id);
+        return id;
+    }
 
 }
