@@ -44,7 +44,7 @@ export class PlayerDebug extends PlayerBase {
     }
 
     protected getTokenAsyncImpl(): Promise<string> {
-        return Promise.resolve("debug.token");
+        return this.defaultGetTokenAsyncImpl();
     }
 
     protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {

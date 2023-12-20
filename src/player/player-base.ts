@@ -7,6 +7,8 @@ import { Player } from "./classes/player";
 import { ConnectedPlayerPayload } from "./interfaces/connected-player-payload";
 import { SignedASID } from "./interfaces/facebook-player";
 import { SignedPlayerInfo } from "./interfaces/signed-player-info";
+import { fetchSaveData, patchSaveData } from "../utils/waves-api";
+import { getXsollaToken } from "../auth/xsolla";
 
 /**
  * Base class for the Player API. Extend this class to implement the Player API for a specific platform.
@@ -217,7 +219,9 @@ export class PlayerBase {
         try {
             let dataObj: Record<string, any> = {};
 
+            // getting localStorage save data along with the timestamp
             const data = localStorage.getItem(`${Wortal.session._internalSession.gameID}-save-data`);
+            const timestamp = Number(localStorage.getItem(`${Wortal.session._internalSession.gameID}-save-data-timestamp`));
             if (data) {
                 try {
                     const localSaveData = JSON.parse(data);
@@ -229,14 +233,20 @@ export class PlayerBase {
                 }
             }
 
-            if (Wortal._internalIsWavesEnabled && waves.authToken) {
+            // if Xsolla is enabled, we try to fetch the data from waves
+            if (Wortal._internalIsXsollaEnabled) {
                 try {
-                    const wavesData = await waves.getData();
-                    if (wavesData) {
-                        dataObj = {...dataObj, ...wavesData};
+                    const token = await this.getTokenAsyncImpl();
+                    if (token) {
+                        const wavesData = await fetchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID));
+                        if (wavesData.timestamp >= timestamp) {
+                            // if the data is newer than the local data, we update the local data
+                            dataObj = {...dataObj, ...wavesData.save_data};
+                            localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(dataObj));
+                        }
                     }
                 } catch (error: any) {
-                    Wortal._log.exception(`Error loading object from waves: ${error.message}`);
+                    Wortal._log.exception("Error while fetching save data from waves.", error);
                 }
             }
 
@@ -253,32 +263,56 @@ export class PlayerBase {
         }
     }
 
-    protected defaultSetDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
-        return new Promise((resolve, reject) => {
-            try {
-                localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(data));
-                Wortal._log.debug("Saved data to localStorage.");
-            } catch (error: any) {
-                //TODO: do we need to reject here?
-                reject(operationFailed(`Error saving object to localStorage: ${error.message}`,
-                    WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC));
-            }
+    protected async defaultSetDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
+        let timestamp = Date.now();
+        let savedData = data;
 
-            if (Wortal._internalIsWavesEnabled && waves.authToken) {
-                waves.saveData(data)
-                    .then(() => {
-                        Wortal._log.debug("Saved data to Waves.");
-                        resolve();
-                    })
-                    .catch((error: any) => {
-                        // could be caused by user cancel or network error
-                        reject(operationFailed(`Error saving object to waves: ${error.message}`,
-                            WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC))
-                    });
-            } else {
-                resolve();
+        if (Wortal._internalIsXsollaEnabled) {
+            try {
+                const token = await this.getTokenAsyncImpl();
+                if (token) {
+                    const wavesData = await patchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID), data);
+                    savedData = wavesData.save_data;
+                    timestamp = wavesData.timestamp;
+                    Wortal._log.debug("Saved data to waves.");
+                }
+            } catch (error: any) {
+                Wortal._log.exception("Error while saving data to waves.", error);
             }
-        });
+        }
+
+        try {
+            localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(savedData));
+            localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data-timestamp`, JSON.stringify(timestamp));
+            Wortal._log.debug("Saved data to localStorage.");
+        } catch (error: any) {
+            //TODO: do we need to reject here?
+            throw operationFailed(`Error saving object to localStorage: ${error.message}`,
+                WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+        }
+
+        // if (Wortal._internalIsWavesEnabled && waves.authToken) {
+        //     waves.saveData(data)
+        //         .then(() => {
+        //             Wortal._log.debug("Saved data to Waves.");
+        //             resolve();
+        //         })
+        //         .catch((error: any) => {
+        //             // could be caused by user cancel or network error
+        //             reject(operationFailed(`Error saving object to waves: ${error.message}`,
+        //                 WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC))
+        //         });
+        // } else {
+        //     resolve();
+        // }
+    }
+
+    protected defaultGetTokenAsyncImpl(): Promise<string> {
+        const xsollaToken = getXsollaToken();
+        if (xsollaToken) {
+            return Promise.resolve(xsollaToken);
+        }
+        return Promise.resolve("");
     }
 
 //#endregion
