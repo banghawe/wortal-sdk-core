@@ -3,6 +3,10 @@ const XSOLLA_AUTH_DIV_ID = "c2fa61d4-fa24-4143-a565-9be77f319ea5";
 
 let xsollaWidget: any = null;
 
+/**
+ * Get the Xsolla Login SDK mount point or create it if it doesn't exist
+ * @returns HTMLDivElement
+ */
 function getXsollaAuthDiv(): HTMLDivElement {
     let el = document.getElementById(XSOLLA_AUTH_DIV_ID) as HTMLDivElement;
     if (!el) {
@@ -14,6 +18,10 @@ function getXsollaAuthDiv(): HTMLDivElement {
     return el
 }
 
+/**
+ * Get the Xsolla Login SDK widget object
+ * @returns XsollaLogin.Widget
+ */
 export function getXsollaWidget() {
     if (xsollaWidget) return xsollaWidget
     if (window.XsollaLogin && window.xsollaLoginProjectID) {
@@ -26,6 +34,9 @@ export function getXsollaWidget() {
     }
 }
 
+/**
+ * Open the Xsolla Login SDK widget dialog window
+ */
 export function xsollaLogin() {
     const xsollaWidget = getXsollaWidget();
     const el = getXsollaAuthDiv();
@@ -34,6 +45,10 @@ export function xsollaLogin() {
     xsollaWidget.open();
 }
 
+/**
+ * Get Xsolla JWT token from the URL query string
+ * @returns string Xsolla JWT token
+ */
 export function getXsollaToken(): string | null {
     const currentUrl = new URL(window.location.href);
     return currentUrl.searchParams.get('token');
@@ -64,11 +79,21 @@ export interface XsollaPayload {
     xsolla_login_project_id: string;
 }
 
+/**
+ * Parse Xsolla JWT token payload
+ * @param token Xsolla JWT token
+ * @returns parsed payload content
+ */
 export function parseXsollaToken(token: string): XsollaPayload {
     const payload = token.split('.')[1];
     return JSON.parse(atob(payload));
 }
 
+/**
+ * Checking if the Xsolla JWT token is expired
+ * @param payload parsed Xsolla JWT token payload
+ * @returns true if the token is expired
+ */
 export function isExpired(payload: XsollaPayload): boolean {
     return payload.exp < Date.now() / 1000;
 }

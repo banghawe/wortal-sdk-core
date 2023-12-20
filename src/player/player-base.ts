@@ -267,12 +267,14 @@ export class PlayerBase {
         let timestamp = Date.now();
         let savedData = data;
 
+        // if Xsolla is enabled, we try to save the data to waves
         if (Wortal._internalIsXsollaEnabled) {
             try {
                 const token = await this.getTokenAsyncImpl();
                 if (token) {
                     const wavesData = await patchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID), data);
                     savedData = wavesData.save_data;
+                    // we update the timestamp to use the timestamp values from waves server
                     timestamp = wavesData.timestamp;
                     Wortal._log.debug("Saved data to waves.");
                 }
@@ -282,6 +284,7 @@ export class PlayerBase {
         }
 
         try {
+            // save the data to localStorage
             localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(savedData));
             localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data-timestamp`, JSON.stringify(timestamp));
             Wortal._log.debug("Saved data to localStorage.");
@@ -290,21 +293,6 @@ export class PlayerBase {
             throw operationFailed(`Error saving object to localStorage: ${error.message}`,
                 WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
         }
-
-        // if (Wortal._internalIsWavesEnabled && waves.authToken) {
-        //     waves.saveData(data)
-        //         .then(() => {
-        //             Wortal._log.debug("Saved data to Waves.");
-        //             resolve();
-        //         })
-        //         .catch((error: any) => {
-        //             // could be caused by user cancel or network error
-        //             reject(operationFailed(`Error saving object to waves: ${error.message}`,
-        //                 WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC))
-        //         });
-        // } else {
-        //     resolve();
-        // }
     }
 
     protected defaultGetTokenAsyncImpl(): Promise<string> {
