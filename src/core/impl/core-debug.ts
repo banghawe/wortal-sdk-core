@@ -4,7 +4,6 @@ import { SDK_SRC } from "../../data/core-data";
 import Wortal from "../../index";
 import { onPauseFunctions } from "../../utils/wortal-utils";
 import { CoreBase } from "../core-base";
-import { xsollaLogin } from "../../auth/xsolla";
 
 /**
  * Debug implementation of the Wortal SDK core functionality.
@@ -12,15 +11,13 @@ import { xsollaLogin } from "../../auth/xsolla";
  */
 export class CoreDebug extends CoreBase {
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
-        // Xsolla integration is prioritized over Waves integration.
+        // Xsolla login for Waves integration.
         if (Wortal._internalIsXsollaEnabled) {
-            xsollaLogin();
-            return Promise.resolve({ status: "success"});
-        }
-        // Used for testing Waves integration locally. Requires bundling a built version of the Waves SDK with the
-        // demo project.
-        if (Wortal._internalIsWavesEnabled) {
-            return this.defaultAuthenticateAsyncImpl(payload);
+            return this.defaultAuthenticateAsyncImpl(payload)
+                .then((response) => {
+                    Wortal._log.debug("Player authenticated successfully. Payload:", payload);
+                    return Promise.resolve(response);
+                });
         }
 
         Wortal._log.debug("Player authenticated successfully. Payload:", payload);

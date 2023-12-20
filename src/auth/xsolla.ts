@@ -37,12 +37,19 @@ export function getXsollaWidget() {
 /**
  * Open the Xsolla Login SDK widget dialog window
  */
-export function xsollaLogin() {
+export function xsollaLogin(): Promise<void> {
     const xsollaWidget = getXsollaWidget();
     const el = getXsollaAuthDiv();
     xsollaWidget.mount(XSOLLA_AUTH_DIV_ID);
     el.style.display = 'block';
-    xsollaWidget.open();
+    return new Promise((resolve, reject) => {
+        xsollaWidget.on(xsollaWidget.events.Close, function () {
+            console.log('user has closed the widget');
+            el.style.display = 'none';
+            resolve();
+        });
+        xsollaWidget.open();
+    });
 }
 
 /**

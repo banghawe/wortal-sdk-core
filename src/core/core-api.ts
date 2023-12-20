@@ -62,7 +62,6 @@ export class CoreAPI {
     private _isInitialized: boolean = false;
     private _isAutoInit: boolean = true;
     private _isPlatformInitialized: boolean = false;
-    private _isWavesEnabled: boolean = false;
     private _isXsollaEnabled: boolean = false;
 
     private _platformSDK: AddictingGamesSDK | CrazyGamesSDK | FacebookSDK | GameMonetizeSDK | GamePixSDK | GDSDK |
@@ -122,15 +121,6 @@ export class CoreAPI {
      */
     get _internalIsAutoInit(): boolean {
         return this._isAutoInit;
-    }
-
-    /**
-     * Flag set to determine whether the Waves Client SDK is initialized
-     * This determines if the waves game save feature is enabled.
-     * @internal
-     */
-    get _internalIsWavesEnabled(): boolean {
-        return this._isWavesEnabled;
     }
 
     /**
