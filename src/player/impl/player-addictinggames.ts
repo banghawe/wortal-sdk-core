@@ -1,5 +1,7 @@
 import { API_URL, WORTAL_API } from "../../data/core-data";
-import { notSupported } from "../../errors/error-handler";
+import { notSupported, rethrowError_AddictingGames } from "../../errors/error-handler";
+import { ErrorMessage_AddictingGames } from "../../errors/interfaces/addictinggames-error";
+import Wortal from "../../index";
 import { ConnectedPlayer } from "../classes/connected-player";
 import { ConnectedPlayerPayload } from "../interfaces/connected-player-payload";
 import { SignedASID } from "../interfaces/facebook-player";
@@ -28,7 +30,21 @@ export class PlayerAddictingGames extends PlayerBase {
     }
 
     protected getDataAsyncImpl(keys: string[]): Promise<any> {
-        return this.defaultGetDataAsyncImpl(keys);
+        return Wortal._internalPlatformSDK.getUserDatastore()
+            .then((data: any) => {
+                const savedData = data.find((item: { key: string; }) => item.key === 'userData');
+
+                if (savedData && savedData.value) {
+                    try {
+                        return JSON.parse(savedData.value);
+                    } catch (error: any) {
+                        Wortal._log.exception(`Error loading object from cloud: ${error.message}`);
+                    }
+                }
+            })
+            .catch((error: ErrorMessage_AddictingGames) => {
+                throw rethrowError_AddictingGames(error, WORTAL_API.PLAYER_GET_DATA_ASYNC, API_URL.PLAYER_GET_DATA_ASYNC);
+            });
     }
 
     protected getSignedASIDAsyncImpl(): Promise<SignedASID> {
@@ -44,7 +60,13 @@ export class PlayerAddictingGames extends PlayerBase {
     }
 
     protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
-        return this.defaultSetDataAsyncImpl(data);
+        return Wortal._internalPlatformSDK.postDatastore("userData", JSON.stringify(data))
+            .then(() => {
+                Wortal._log.debug("Saved data to cloud storage.");
+            })
+            .catch((error: ErrorMessage_AddictingGames) => {
+                throw rethrowError_AddictingGames(error, WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+            });
     }
 
     protected subscribeBotAsyncImpl(): Promise<void> {
