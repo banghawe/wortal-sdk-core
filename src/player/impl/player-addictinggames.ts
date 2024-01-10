@@ -30,17 +30,27 @@ export class PlayerAddictingGames extends PlayerBase {
     }
 
     protected getDataAsyncImpl(keys: string[]): Promise<any> {
+        let dataObj: Record<string, any> = {};
+
         return Wortal._internalPlatformSDK.getUserDatastore()
             .then((data: any) => {
-                const savedData = data.find((item: { key: string; }) => item.key === 'userData');
+                const savedData = data.find((item: { key: string, value: any }) => item.key === 'userData');
 
                 if (savedData && savedData.value) {
                     try {
-                        return JSON.parse(savedData.value);
+                        const savedDataObj = JSON.parse(savedData.value);
+                        dataObj = {...dataObj, ...savedDataObj};
                     } catch (error: any) {
                         Wortal._log.exception(`Error loading object from cloud: ${error.message}`);
                     }
                 }
+
+                const result: Record<string, any> = {};
+                keys.forEach((key: string) => {
+                    result[key] = dataObj[key];
+                });
+
+                return result;
             })
             .catch((error: ErrorMessage_AddictingGames) => {
                 throw rethrowError_AddictingGames(error, WORTAL_API.PLAYER_GET_DATA_ASYNC, API_URL.PLAYER_GET_DATA_ASYNC);

@@ -12,11 +12,11 @@ import { Device } from "../types/session-types";
  */
 export class SessionAddictingGames extends SessionBase {
     protected gameplayStartImpl(): void {
-        return Wortal._internalPlatformSDK.game.gameplayStart();
+        return Wortal._internalPlatformSDK.startGame();
     }
 
     protected gameplayStopImpl(): void {
-        return Wortal._internalPlatformSDK.game.gameplayStop();
+        return Wortal._internalPlatformSDK.endGame();
     }
 
     protected getDeviceImpl(): Device {
