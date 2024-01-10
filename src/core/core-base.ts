@@ -6,6 +6,7 @@ import Wortal from "../index";
 import { isValidNumber } from "../utils/validators";
 import { delayUntilConditionMet, removeLoadingCover } from "../utils/wortal-utils";
 import { API_URL, WORTAL_API } from "../data/core-data";
+import { xsollaLogin } from "../auth/xsolla";
 
 /**
  * Base class for implementations of the Wortal SDK core functionality. Extend this class to implement the core functionality.
@@ -13,7 +14,7 @@ import { API_URL, WORTAL_API } from "../data/core-data";
  */
 export class CoreBase {
     protected _supportedAPIs: string[] = [];
-    
+
 //#region Public API
 
     public async initializeAsync(): Promise<void> {
@@ -169,23 +170,13 @@ export class CoreBase {
 
     protected async defaultAuthenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
         return new Promise((resolve, reject) => {
-            // This is not an error state. It just means that Waves is not enabled, so we cannot authenticate.
-            if (!Wortal._internalIsWavesEnabled) {
+            // Xsolla integration is prioritized over Waves integration.
+            if (Wortal._internalIsXsollaEnabled) {
+                xsollaLogin().then(() => resolve({ status: "success"}));
+            } else {
+                // This is not an error state. It just means that Xsolla is not enabled, so we cannot authenticate.
                 resolve({status: "error"});
             }
-
-            //TODO: add support for developer-provided login dialog
-            waves.authenticate()
-                .then(() => {
-                    resolve({
-                        // If there's no token then the player cancelled the login or did not receive the OTP.
-                        status: (waves.authToken) ? "success" : "cancel"
-                    });
-                })
-                .catch((error: any) => {
-                    reject(operationFailed(`Failed to authenticate player: ${error.message}`,
-                        WORTAL_API.AUTHENTICATE_ASYNC, API_URL.AUTHENTICATE_ASYNC));
-                });
         });
     }
 

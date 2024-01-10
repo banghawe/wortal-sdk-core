@@ -11,10 +11,13 @@ import { CoreBase } from "../core-base";
  */
 export class CoreDebug extends CoreBase {
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
-        // Used for testing Waves integration locally. Requires bundling a built version of the Waves SDK with the
-        // demo project.
-        if (Wortal._internalIsWavesEnabled) {
-            return this.defaultAuthenticateAsyncImpl(payload);
+        // Xsolla login for Waves integration.
+        if (Wortal._internalIsXsollaEnabled) {
+            return this.defaultAuthenticateAsyncImpl(payload)
+                .then((response) => {
+                    Wortal._log.debug("Player authenticated successfully. Payload:", payload);
+                    return Promise.resolve(response);
+                });
         }
 
         Wortal._log.debug("Player authenticated successfully. Payload:", payload);

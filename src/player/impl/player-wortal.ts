@@ -40,7 +40,7 @@ export class PlayerWortal extends PlayerBase {
     }
 
     protected getTokenAsyncImpl(): Promise<string> {
-        return Promise.reject(notSupported(undefined, WORTAL_API.PLAYER_GET_TOKEN_ASYNC, API_URL.PLAYER_GET_TOKEN_ASYNC));
+        return this.defaultGetTokenAsyncImpl();
     }
 
     protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {

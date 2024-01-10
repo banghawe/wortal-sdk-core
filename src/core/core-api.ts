@@ -13,6 +13,7 @@ import { LinkPlayer } from "../player/classes/link-player";
 import { Player } from "../player/classes/player";
 import { ViberPlayer } from "../player/classes/viber-player";
 import { YandexPlayer } from "../player/classes/yandex-player";
+import { XsollaPlayer } from "../player/classes/xsolla-player";
 import { GameState } from "../session/classes/game-state";
 import { Session } from "../session/classes/session";
 import { Platform } from "../session/types/session-types";
@@ -61,7 +62,7 @@ export class CoreAPI {
     private _isInitialized: boolean = false;
     private _isAutoInit: boolean = true;
     private _isPlatformInitialized: boolean = false;
-    private _isWavesEnabled: boolean = false;
+    private _isXsollaEnabled: boolean = false;
 
     private _platformSDK: AddictingGamesSDK | CrazyGamesSDK | FacebookSDK | GameMonetizeSDK | GamePixSDK | GDSDK |
         LinkSDK | PokiSDK | ViberSDK | YandexSDK | any;
@@ -123,12 +124,12 @@ export class CoreAPI {
     }
 
     /**
-     * Flag set to determine whether the Waves Client SDK is initialized
-     * This determines if the waves game save feature is enabled.
+     * Flag set to determine whether the Xsolla SDK is initialized
+     * This determines if the Xsolla feature is enabled.
      * @internal
      */
-    get _internalIsWavesEnabled(): boolean {
-        return this._isWavesEnabled;
+    get _internalIsXsollaEnabled(): boolean {
+        return this._isXsollaEnabled;
     }
 
     /**
@@ -481,28 +482,24 @@ export class CoreAPI {
         });
     }
 
-    protected _loadWavesClientDeps(platform: Platform): void {
-        this._log.internalCall("_loadWavesClientDeps");
+    protected _loadXsollaDeps(): void {
+        this._log.internalCall("_loadXsollaDeps");
 
-        // Not all platforms will allows us to use Waves, we need to check each platform's TOS to ensure
-        // we're playing by the rules.
-        //TODO: determine platform support for Waves
+        const xsollaSDK = document.createElement("script");
+        xsollaSDK.src = SDK_SRC.XSOLLA;
 
-        const wavesSDK = document.createElement("script");
-        wavesSDK.src = `${SDK_SRC.WAVES_BASE_URL}/waves.umd.js`;
-
-        wavesSDK.onload = () => {
-            this._log.debug("Waves SDK loaded.");
-            this._isWavesEnabled = true;
+        xsollaSDK.onload = () => {
+            this._log.debug("Xsolla SDK loaded.");
+            this._isXsollaEnabled = true;
         }
 
-        wavesSDK.onerror = () => {
+        xsollaSDK.onerror = () => {
             // Not fatal, but we should log it and disable Waves.
-            this._log.exception("Failed to load Waves SDK.");
-            this._isWavesEnabled = false;
+            this._log.exception("Failed to load Xsolla SDK.");
+            this._isXsollaEnabled = false;
         }
 
-        document.head.prepend(wavesSDK);
+        document.head.prepend(xsollaSDK);
     }
 
     // This is a big ugly mess. We should probably refactor this to be more elegant and less repetitive, but
@@ -515,8 +512,8 @@ export class CoreAPI {
         const {AnalyticsWombat} = await import(/* webpackChunkName: "analytics" */ "../analytics/impl/analytics-wombat");
         const {AnalyticsDisabled} = await import(/* webpackChunkName: "analytics" */ "../analytics/impl/analytics-disabled");
 
-        this._log.status("Loading Waves SDK...");
-        this._loadWavesClientDeps(platform);
+        this._log.status("Loading Xsolla SDK...");
+        this._loadXsollaDeps();
 
         switch (platform) {
             case "addictinggames": {
@@ -820,7 +817,8 @@ export class CoreAPI {
                 this.iap = new InAppPurchaseAPI(new IAPWortal());
                 this.leaderboard = new LeaderboardAPI(new LeaderboardWortal());
                 this.notifications = new NotificationsAPI(new NotificationsWortal());
-                this.player = new PlayerAPI(new PlayerWortal(new Player()));
+                // this.player = new PlayerAPI(new PlayerWortal(new Player()));
+                this.player = new PlayerAPI(new PlayerWortal(new XsollaPlayer()));
                 this.session = new SessionAPI(new SessionWortal(new GameState(), new Session()));
                 this.stats = new StatsAPI(new StatsWortal());
                 this.tournament = new TournamentAPI(new TournamentWortal());
@@ -876,7 +874,8 @@ export class CoreAPI {
                 this.iap = new InAppPurchaseAPI(new IAPDebug());
                 this.leaderboard = new LeaderboardAPI(new LeaderboardDebug());
                 this.notifications = new NotificationsAPI(new NotificationsDebug());
-                this.player = new PlayerAPI(new PlayerDebug(new Player()));
+                // this.player = new PlayerAPI(new PlayerDebug(new Player()));
+                this.player = new PlayerAPI(new PlayerDebug(new XsollaPlayer()));
                 this.session = new SessionAPI(new SessionDebug(new GameState(), new Session()));
                 this.stats = new StatsAPI(new StatsDebug());
                 this.tournament = new TournamentAPI(new TournamentDebug());
