@@ -451,7 +451,7 @@ export class CoreAPI {
             }
         }
 
-        const baseURL: string = "https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v1/";
+        const baseURL: string = "https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v1.9.0/";
         const chunks: string[] = [];
         const promises: Promise<void>[] = [];
 
