@@ -38,6 +38,7 @@ export const API_ENDPOINTS = {
     VIBER: "https://html5gameportal.com/api/v1/viber/",
     NOTIFICATIONS: "https://html5gameportal.com/api/v1/notification/",
     WAVES_API_BASE_URL: "https://html5gameportal.com/api/v1/waves/",
+    XSOLLA_STORE: 'https://store.xsolla.com/api',
 }
 
 /**

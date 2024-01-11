@@ -6,7 +6,8 @@ import Wortal from "../index";
 import { isValidNumber } from "../utils/validators";
 import { delayUntilConditionMet, removeLoadingCover } from "../utils/wortal-utils";
 import { API_URL, WORTAL_API } from "../data/core-data";
-import { xsollaLogin } from "../auth/xsolla";
+import { xsollaLogin, parseXsollaToken } from "../auth/xsolla";
+import { XsollaPlayer } from "../player/classes/xsolla-player";
 
 /**
  * Base class for implementations of the Wortal SDK core functionality. Extend this class to implement the core functionality.
@@ -172,7 +173,16 @@ export class CoreBase {
         return new Promise((resolve, reject) => {
             // Xsolla integration is prioritized over Waves integration.
             if (Wortal._internalIsXsollaEnabled) {
-                xsollaLogin().then(() => resolve({ status: "success"}));
+                xsollaLogin()
+                    .then((token: string) => {
+                        // TODO: we can use this if social login allows login without redirect
+                        // window.xsollaJwtToken = token;
+                        const auth = parseXsollaToken(token);
+                        Wortal._log.debug(`Player logged in: ${auth.name} (${auth.sub})`);
+                        Wortal.player._internalPlayer = new XsollaPlayer(auth);
+                        resolve({ status: "success"})
+                    })
+                    .catch((error: any) => resolve({ status: "cancel"}));
             } else {
                 // This is not an error state. It just means that Xsolla is not enabled, so we cannot authenticate.
                 resolve({status: "error"});

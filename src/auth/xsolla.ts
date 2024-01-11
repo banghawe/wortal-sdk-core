@@ -29,6 +29,9 @@ export function getXsollaWidget() {
             projectId: window.xsollaLoginProjectID,
             scope: 'offline',
             callbackUrl: window.location.href,
+            // set to `true` to use events to avoid redirect whenever possible
+            // but still not supported by social login
+            enablePostMessageLogin: false,
         });
         return xsollaWidget;
     }
@@ -37,16 +40,28 @@ export function getXsollaWidget() {
 /**
  * Open the Xsolla Login SDK widget dialog window
  */
-export function xsollaLogin(): Promise<void> {
+export function xsollaLogin(): Promise<string> {
     const xsollaWidget = getXsollaWidget();
     const el = getXsollaAuthDiv();
     xsollaWidget.mount(XSOLLA_AUTH_DIV_ID);
     el.style.display = 'block';
     return new Promise((resolve, reject) => {
-        xsollaWidget.on(xsollaWidget.events.Close, function () {
+        xsollaWidget.once(xsollaWidget.events.Close, function (e: any) {
             console.log('user has closed the widget');
             el.style.display = 'none';
-            resolve();
+            reject(e);
+        });
+        xsollaWidget.once(xsollaWidget.events.LoginSuccess, function (event: any) {
+            console.log('user logged in successfully');
+            el.style.display = 'none';
+            console.log({event});
+            resolve(event.params.token);
+        });
+        xsollaWidget.once(xsollaWidget.events.SignupSuccess, function (event: any) {
+            console.log('user signed up successfully');
+            el.style.display = 'none';
+            console.log({event});
+            resolve(event.params.token);
         });
         xsollaWidget.open();
     });
@@ -57,6 +72,7 @@ export function xsollaLogin(): Promise<void> {
  * @returns string Xsolla JWT token
  */
 export function getXsollaToken(): string | null {
+    if (window.xsollaJwtToken) return window.xsollaJwtToken;
     const currentUrl = new URL(window.location.href);
     return currentUrl.searchParams.get('token');
 }

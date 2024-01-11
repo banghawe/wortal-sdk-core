@@ -5,7 +5,7 @@ import { getXsollaToken, parseXsollaToken } from "../../auth/xsolla";
 import { generateRandomID } from "../../utils/wortal-utils";
 
 /**
- * Represents a CrazyGames player.
+ * Represents a Xsolla player.
  * @hidden
  */
 export class XsollaPlayer extends Player {
