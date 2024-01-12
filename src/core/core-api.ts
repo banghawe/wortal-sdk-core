@@ -451,7 +451,8 @@ export class CoreAPI {
             }
         }
 
-        const baseURL: string = "https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v1.9.0/";
+        // const baseURL: string = "https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v1.9.0/";
+        const baseURL: string = `https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v${__VERSION__}/`;
         const chunks: string[] = [];
         const promises: Promise<void>[] = [];
 
@@ -550,7 +551,7 @@ export class CoreAPI {
                 const {AdsCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../ads/impl/ads-crazygames");
                 const {ContextCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../context/impl/context-crazygames");
                 // const {IAPCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../iap/impl/iap-crazygames");
-                const {IAPXsolla} = await import(/* webpackChunkName: "iap" */ "../iap/impl/iap-xsolla");
+                const {IAPXsolla} = await import(/* webpackChunkName: "crazygames" */ "../iap/impl/iap-xsolla");
                 const {LeaderboardCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../leaderboard/impl/leaderboard-crazygames");
                 const {NotificationsCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../notifications/impl/notifications-crazygames");
                 const {PlayerCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../player/impl/player-crazygames");
@@ -804,7 +805,7 @@ export class CoreAPI {
                 const {AdsWortal} = await import(/* webpackChunkName: "wortal" */ "../ads/impl/ads-wortal");
                 const {ContextWortal} = await import(/* webpackChunkName: "wortal" */ "../context/impl/context-wortal");
                 // const {IAPWortal} = await import(/* webpackChunkName: "wortal" */ "../iap/impl/iap-wortal");
-                const {IAPXsolla} = await import(/* webpackChunkName: "iap" */ "../iap/impl/iap-xsolla");
+                const {IAPXsolla} = await import(/* webpackChunkName: "wortal" */ "../iap/impl/iap-xsolla");
                 const {LeaderboardWortal} = await import(/* webpackChunkName: "wortal" */ "../leaderboard/impl/leaderboard-wortal");
                 const {NotificationsWortal} = await import(/* webpackChunkName: "wortal" */ "../notifications/impl/notifications-wortal");
                 const {PlayerWortal} = await import(/* webpackChunkName: "wortal" */ "../player/impl/player-wortal");
@@ -863,7 +864,7 @@ export class CoreAPI {
                 const {AdsDebug} = await import(/* webpackChunkName: "debug" */ "../ads/impl/ads-debug");
                 const {ContextDebug} = await import(/* webpackChunkName: "debug" */ "../context/impl/context-debug");
                 // const {IAPDebug} = await import(/* webpackChunkName: "debug" */ "../iap/impl/iap-debug");
-                const {IAPXsolla} = await import(/* webpackChunkName: "iap" */ "../iap/impl/iap-xsolla");
+                const {IAPXsolla} = await import(/* webpackChunkName: "debug" */ "../iap/impl/iap-xsolla");
                 const {LeaderboardDebug} = await import(/* webpackChunkName: "debug" */ "../leaderboard/impl/leaderboard-debug");
                 const {NotificationsDebug} = await import(/* webpackChunkName: "debug" */ "../notifications/impl/notifications-debug");
                 const {PlayerDebug} = await import(/* webpackChunkName: "debug" */ "../player/impl/player-debug");

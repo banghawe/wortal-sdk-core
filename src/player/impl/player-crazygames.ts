@@ -8,6 +8,7 @@ import { SignedASID } from "../interfaces/facebook-player";
 import { SignedPlayerInfo } from "../interfaces/signed-player-info";
 import { PlayerBase } from "../player-base";
 import { fetchSaveData, patchSaveData } from "../../utils/waves-api";
+import { CrazyGamesSDK } from "../../core/interfaces/crazygames-sdk";
 
 
 /**
@@ -53,7 +54,7 @@ export class PlayerCrazyGames extends PlayerBase {
                 }
             };
 
-            Wortal._internalPlatformSDK.user.getUserToken(callback);
+            (Wortal._internalPlatformSDK as CrazyGamesSDK).user.getUserToken(callback);
         });
     }
 
@@ -62,17 +63,7 @@ export class PlayerCrazyGames extends PlayerBase {
     // }
 
     protected getXsollaUserTokenAsync(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            Wortal._internalPlatformSDK.user.getXsollaUserToken(
-                (error: Error_CrazyGames, token: string) => {
-                    if (error) {
-                        reject(rethrowError_CrazyGames(error, WORTAL_API.PLAYER_GET_TOKEN_ASYNC, API_URL.PLAYER_GET_TOKEN_ASYNC));
-                    } else {
-                        resolve(token);
-                    }
-                }
-            );
-        });
+        return (Wortal._internalPlatformSDK as CrazyGamesSDK).user.getXsollaUserToken() as Promise<string>;
     }
 
     protected async getDataAsyncImpl(keys: string[]): Promise<any> {
