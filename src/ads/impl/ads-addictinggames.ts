@@ -27,9 +27,17 @@ export class AdsAddictingGames extends AdsBase {
     }
 
     protected showRewardedImpl(ad: AdInstanceData): void {
-        // Trigger the callbacks so the game doesn't get stuck waiting indefinitely.
-        ad.callbacks.adDismissed?.();
-        ad.callbacks.noFill();
-        throw notSupported(undefined, WORTAL_API.ADS_SHOW_REWARDED, API_URL.ADS_SHOW_REWARDED);
+        ad.callbacks.beforeAd();
+        Wortal._internalPlatformSDK.showAd()
+            .then(() => {
+                ad.callbacks.adViewed?.();
+                ad.callbacks.afterAd();
+                Wortal.analytics._logAdCall("rewarded", ad.placementType, true);
+            })
+            .catch(() => {
+                ad.callbacks.adDismissed?.();
+                ad.callbacks.noFill();
+                Wortal.analytics._logAdCall("rewarded", ad.placementType, false);
+            });
     }
 }
