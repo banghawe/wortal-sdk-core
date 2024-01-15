@@ -57,7 +57,6 @@ export class IAPXsolla extends IAPBase {
     }
 
     protected async consumePurchaseAsyncImpl(sku: string): Promise<void> {
-        // return Promise.reject(notSupported(undefined, WORTAL_API.IAP_CONSUME_PURCHASE_ASYNC, API_URL.IAP_CONSUME_PURCHASE_ASYNC));
         const {projectId, token} = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_CONSUME_PURCHASE_ASYNC, API_URL.IAP_CONSUME_PURCHASE_ASYNC);
         await consumeItem({
             projectId,
@@ -68,7 +67,6 @@ export class IAPXsolla extends IAPBase {
     }
 
     protected async getCatalogAsyncImpl(): Promise<Product[]> {
-        // return Promise.reject(notSupported(undefined, WORTAL_API.IAP_GET_CATALOG_ASYNC, API_URL.IAP_GET_CATALOG_ASYNC));
         const {projectId, token} = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_GET_CATALOG_ASYNC, API_URL.IAP_GET_CATALOG_ASYNC);
 
         const items: VirtualItem[] = []
@@ -94,12 +92,10 @@ export class IAPXsolla extends IAPBase {
             price: `${item.price.amount} ${item.price.currency}`,
             priceCurrencyCode: item.price.currency,
             priceAmount: Number(item.price.amount),
-            // _internalData: item,
         }));
     }
 
     protected async getPurchasesAsyncImpl(): Promise<Purchase[]> {
-        // return Promise.reject(notSupported(undefined, WORTAL_API.IAP_GET_PURCHASES_ASYNC, API_URL.IAP_GET_PURCHASES_ASYNC));
         const {projectId, token} = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_GET_PURCHASES_ASYNC, API_URL.IAP_GET_PURCHASES_ASYNC);
 
         const items: InventoryItem[] = []
@@ -140,7 +136,6 @@ export class IAPXsolla extends IAPBase {
     }
 
     protected async makePurchaseAsyncImpl(purchase: PurchaseConfig): Promise<Purchase> {
-        // return Promise.reject(notSupported(undefined, WORTAL_API.IAP_MAKE_PURCHASE_ASYNC, API_URL.IAP_MAKE_PURCHASE_ASYNC));
         const {projectId, token} = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_MAKE_PURCHASE_ASYNC, API_URL.IAP_MAKE_PURCHASE_ASYNC);
         const sandbox = Wortal.session.getPlatform() === 'debug';
         const response = await createOrderWithItem({
@@ -182,9 +177,9 @@ const { XSOLLA_STORE } = API_ENDPOINTS;
 const STORE_BASE_URL = `${XSOLLA_STORE}/v2/project`;
 
 /**
- * fetchVirtualItems from xsolla store
- * @param param0
- * @returns
+ * fetch VirtualItems from xsolla store
+ * @param options which requires projectId, token, and optionally offset, limit, locale, country, promo_code
+ * @returns the list of item available in the store
  */
 async function fetchVirtualItems({ projectId, token, ...rest }: {
     projectId: string;
@@ -224,6 +219,11 @@ async function fetchVirtualItems({ projectId, token, ...rest }: {
     return await resp.json() as VirtualItemsList;
 }
 
+/**
+ * To fetch player inventory from Xsolla store
+ * @param options which requires projectId, token, and optionally offset, limit
+ * @returns the item list in the player inventory
+ */
 async function fetchUserInventory({ projectId, token, ...rest }: {
     projectId: string;
     token: string;
@@ -262,6 +262,7 @@ async function fetchUserInventory({ projectId, token, ...rest }: {
 /**
  * Create order with specified item
  * url: https://developers.xsolla.com/api/igs-bb/operation/create-order-with-item/
+ * @param options which requires projectId, token, sku of the item
  */
 async function createOrderWithItem({ projectId, token, sku, ...rest }: CreateOrderWithSpecifiedItemOptions): Promise<OrderResponse> {
     const url = `${STORE_BASE_URL}/${projectId}/payment/item/${sku}`
@@ -292,6 +293,7 @@ async function createOrderWithItem({ projectId, token, sku, ...rest }: CreateOrd
 /**
  * Consume item
  * url: https://developers.xsolla.com/api/igs-bb/operation/consume-item/
+ * @param options which requires projectId, token, sku of the item, quantity
  */
 async function consumeItem({ projectId, token, ...rest }: ConsumeItemOptions): Promise<void> {
     const query = new URLSearchParams({

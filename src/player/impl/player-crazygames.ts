@@ -32,10 +32,6 @@ export class PlayerCrazyGames extends PlayerBase {
         return Promise.reject(notSupported(undefined, WORTAL_API.PLAYER_GET_CONNECTED_PLAYERS_ASYNC, API_URL.PLAYER_GET_CONNECTED_PLAYERS_ASYNC));
     }
 
-    // protected getDataAsyncImpl(keys: string[]): Promise<any> {
-    //     return this.defaultGetDataAsyncImpl(keys);
-    // }
-
     protected getSignedASIDAsyncImpl(): Promise<SignedASID> {
         return Promise.reject(notSupported(undefined, WORTAL_API.PLAYER_GET_SIGNED_ASID_ASYNC, API_URL.PLAYER_GET_SIGNED_ASID_ASYNC));
     }
@@ -57,10 +53,6 @@ export class PlayerCrazyGames extends PlayerBase {
             (Wortal._internalPlatformSDK as CrazyGamesSDK).user.getUserToken(callback);
         });
     }
-
-    // protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
-    //     return this.defaultSetDataAsyncImpl(data);
-    // }
 
     protected getXsollaUserTokenAsync(): Promise<string> {
         return (Wortal._internalPlatformSDK as CrazyGamesSDK).user.getXsollaUserToken() as Promise<string>;

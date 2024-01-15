@@ -1,3 +1,5 @@
+import Wortal from "../index";
+
 // the mount point for xsolla authentication
 const XSOLLA_AUTH_DIV_ID = "c2fa61d4-fa24-4143-a565-9be77f319ea5";
 
@@ -47,20 +49,18 @@ export function xsollaLogin(): Promise<string> {
     el.style.display = 'block';
     return new Promise((resolve, reject) => {
         xsollaWidget.once(xsollaWidget.events.Close, function (e: any) {
-            console.log('user has closed the widget');
+            Wortal._log.debug('user has closed the widget');
             el.style.display = 'none';
             reject(e);
         });
         xsollaWidget.once(xsollaWidget.events.LoginSuccess, function (event: any) {
-            console.log('user logged in successfully');
+            Wortal._log.debug('user logged in successfully', {event});
             el.style.display = 'none';
-            console.log({event});
             resolve(event.params.token);
         });
         xsollaWidget.once(xsollaWidget.events.SignupSuccess, function (event: any) {
-            console.log('user signed up successfully');
+            Wortal._log.debug('user signed up successfully', {event});
             el.style.display = 'none';
-            console.log({event});
             resolve(event.params.token);
         });
         xsollaWidget.open();

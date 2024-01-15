@@ -451,7 +451,6 @@ export class CoreAPI {
             }
         }
 
-        // const baseURL: string = "https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v1.9.0/";
         const baseURL: string = `https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v${__VERSION__}/`;
         const chunks: string[] = [];
         const promises: Promise<void>[] = [];
@@ -550,7 +549,6 @@ export class CoreAPI {
                 const {AchievementsCrazyGames} = await import(/* webpackChunkName: "crazygames" */ "../achievements/impl/achievements-crazygames");
                 const {AdsCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../ads/impl/ads-crazygames");
                 const {ContextCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../context/impl/context-crazygames");
-                // const {IAPCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../iap/impl/iap-crazygames");
                 const {IAPXsolla} = await import(/* webpackChunkName: "crazygames" */ "../iap/impl/iap-xsolla");
                 const {LeaderboardCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../leaderboard/impl/leaderboard-crazygames");
                 const {NotificationsCrazyGames} = await import(/* webpackChunkName: "crazygames" */"../notifications/impl/notifications-crazygames");
@@ -564,7 +562,6 @@ export class CoreAPI {
                 this.ads = new AdsAPI(new AdsCrazyGames(new AdConfig()));
                 this.analytics = new AnalyticsAPI(new AnalyticsWombat());
                 this.context = new ContextAPI(new ContextCrazyGames());
-                // this.iap = new InAppPurchaseAPI(new IAPCrazyGames());
                 this.iap = new InAppPurchaseAPI(new IAPXsolla());
                 this.leaderboard = new LeaderboardAPI(new LeaderboardCrazyGames());
                 this.notifications = new NotificationsAPI(new NotificationsCrazyGames());
@@ -804,7 +801,6 @@ export class CoreAPI {
                 const {AchievementsWortal} = await import(/* webpackChunkName: "wortal" */ "../achievements/impl/achievements-wortal");
                 const {AdsWortal} = await import(/* webpackChunkName: "wortal" */ "../ads/impl/ads-wortal");
                 const {ContextWortal} = await import(/* webpackChunkName: "wortal" */ "../context/impl/context-wortal");
-                // const {IAPWortal} = await import(/* webpackChunkName: "wortal" */ "../iap/impl/iap-wortal");
                 const {IAPXsolla} = await import(/* webpackChunkName: "wortal" */ "../iap/impl/iap-xsolla");
                 const {LeaderboardWortal} = await import(/* webpackChunkName: "wortal" */ "../leaderboard/impl/leaderboard-wortal");
                 const {NotificationsWortal} = await import(/* webpackChunkName: "wortal" */ "../notifications/impl/notifications-wortal");
@@ -818,11 +814,9 @@ export class CoreAPI {
                 this.ads = new AdsAPI(new AdsWortal(new AdConfig()));
                 this.analytics = new AnalyticsAPI(new AnalyticsWombat());
                 this.context = new ContextAPI(new ContextWortal());
-                // this.iap = new InAppPurchaseAPI(new IAPWortal());
                 this.iap = new InAppPurchaseAPI(new IAPXsolla());
                 this.leaderboard = new LeaderboardAPI(new LeaderboardWortal());
                 this.notifications = new NotificationsAPI(new NotificationsWortal());
-                // this.player = new PlayerAPI(new PlayerWortal(new Player()));
                 this.player = new PlayerAPI(new PlayerWortal(new XsollaPlayer()));
                 this.session = new SessionAPI(new SessionWortal(new GameState(), new Session()));
                 this.stats = new StatsAPI(new StatsWortal());
@@ -863,7 +857,6 @@ export class CoreAPI {
                 const {AchievementsDebug} = await import(/* webpackChunkName: "debug" */ "../achievements/impl/achievements-debug");
                 const {AdsDebug} = await import(/* webpackChunkName: "debug" */ "../ads/impl/ads-debug");
                 const {ContextDebug} = await import(/* webpackChunkName: "debug" */ "../context/impl/context-debug");
-                // const {IAPDebug} = await import(/* webpackChunkName: "debug" */ "../iap/impl/iap-debug");
                 const {IAPXsolla} = await import(/* webpackChunkName: "debug" */ "../iap/impl/iap-xsolla");
                 const {LeaderboardDebug} = await import(/* webpackChunkName: "debug" */ "../leaderboard/impl/leaderboard-debug");
                 const {NotificationsDebug} = await import(/* webpackChunkName: "debug" */ "../notifications/impl/notifications-debug");
@@ -877,11 +870,9 @@ export class CoreAPI {
                 this.ads = new AdsAPI(new AdsDebug(new AdConfig()));
                 this.analytics = new AnalyticsAPI(new AnalyticsDisabled());
                 this.context = new ContextAPI(new ContextDebug());
-                // this.iap = new InAppPurchaseAPI(new IAPDebug());
                 this.iap = new InAppPurchaseAPI(new IAPXsolla());
                 this.leaderboard = new LeaderboardAPI(new LeaderboardDebug());
                 this.notifications = new NotificationsAPI(new NotificationsDebug());
-                // this.player = new PlayerAPI(new PlayerDebug(new Player()));
                 this.player = new PlayerAPI(new PlayerDebug(new XsollaPlayer()));
                 this.session = new SessionAPI(new SessionDebug(new GameState(), new Session()));
                 this.stats = new StatsAPI(new StatsDebug());
