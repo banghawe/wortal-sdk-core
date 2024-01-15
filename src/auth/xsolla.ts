@@ -31,9 +31,10 @@ export function getXsollaWidget() {
             projectId: window.xsollaLoginProjectID,
             scope: 'offline',
             callbackUrl: window.location.href,
-            // set to `true` to use events to avoid redirect whenever possible
-            // but still not supported by social login
-            enablePostMessageLogin: false,
+            // set enablePostMessageLogin to `true` to use events to avoid redirect whenever possible
+            // in order to support social login you must also set socialLoginFlow: "newTab"
+            enablePostMessageLogin: true,
+            socialLoginFlow: "newTab",
         });
         return xsollaWidget;
     }
