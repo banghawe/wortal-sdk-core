@@ -65,7 +65,7 @@ export interface OrderRequestBody {
 }
 
 export interface CreateOrderWithSpecifiedItemOptions extends OrderRequestBody {
-    projectId: string;
+    projectId: number;
     token: string;
     sku: string;
 }
@@ -81,7 +81,7 @@ export interface ConsumeRequestBody {
 }
 
 export interface ConsumeItemOptions extends ConsumeRequestBody {
-    projectId: string;
+    projectId: number;
     // platform: "xsolla";
     token: string;
 }

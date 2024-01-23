@@ -14,7 +14,7 @@ export interface SaveData<T> {
 export async function fetchSaveData<T=any>(token: string, gameId: number): Promise<SaveData<T>> {
     // GET /api/v1/waves/{gameId}
     const response = await fetch(
-        `${API_ENDPOINTS.WAVES_API_BASE_URL}${gameId}`,
+        `${API_ENDPOINTS.WAVES_API_BASE_URL}/${gameId}`,
         {
             method: "GET",
             headers: {
@@ -40,7 +40,7 @@ export async function fetchSaveData<T=any>(token: string, gameId: number): Promi
 export async function postSaveData<T=any>(token: string, gameId: number, payload: T): Promise<SaveData<T>> {
     // POST /api/v1/waves/{gameId}
     const response = await fetch(
-        `${API_ENDPOINTS.WAVES_API_BASE_URL}${gameId}`,
+        `${API_ENDPOINTS.WAVES_API_BASE_URL}/${gameId}`,
         {
             method: "POST",
             headers: {
@@ -68,7 +68,7 @@ export async function postSaveData<T=any>(token: string, gameId: number, payload
 export async function patchSaveData<T=any>(token: string, gameId: number, payload: Partial<T>): Promise<SaveData<T>> {
     // PATCH /api/v1/waves/{gameId}
     const response = await fetch(
-        `${API_ENDPOINTS.WAVES_API_BASE_URL}${gameId}`,
+        `${API_ENDPOINTS.WAVES_API_BASE_URL}/${gameId}`,
         {
             method: "PATCH",
             headers: {

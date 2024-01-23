@@ -20,8 +20,9 @@ export class IAPXsolla extends IAPBase {
      * @param url the same argument used in invalidOperation
      * @returns
      */
-    protected async validateXsollaProjectIDAndToken(context: string, url: string): Promise<{projectId: string, token: string}> {
-        if (!window.xsollaProjectID) {
+    protected async validateXsollaProjectIDAndToken(context: string, url: string): Promise<{projectId: number, token: string}> {
+        const sdkParameters = await Wortal.getSDKParameters();
+        if (!sdkParameters.xsollaProjectID) {
             throw invalidOperation('Xsolla project ID not set', context, url);
         }
 
@@ -47,7 +48,7 @@ export class IAPXsolla extends IAPBase {
         }
 
         return {
-            projectId: window.xsollaProjectID,
+            projectId: sdkParameters.xsollaProjectID,
             token,
         };
     }
@@ -182,7 +183,7 @@ const STORE_BASE_URL = `${XSOLLA_STORE}/v2/project`;
  * @returns the list of item available in the store
  */
 async function fetchVirtualItems({ projectId, token, ...rest }: {
-    projectId: string;
+    projectId: number;
     token: string;
     offset?: number;
     limit?: number;
@@ -225,7 +226,7 @@ async function fetchVirtualItems({ projectId, token, ...rest }: {
  * @returns the item list in the player inventory
  */
 async function fetchUserInventory({ projectId, token, ...rest }: {
-    projectId: string;
+    projectId: number;
     token: string;
     offset?: number;
     limit?: number;

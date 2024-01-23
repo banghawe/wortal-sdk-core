@@ -42,7 +42,7 @@ import { FacebookSDK } from "./interfaces/facebook-sdk";
 import { GameMonetizeSDK } from "./interfaces/gamemonetize-sdk";
 import { GamePixSDK } from "./interfaces/gamepix-sdk";
 import { GDSDK } from "./interfaces/gd-sdk";
-import { InitializationOptions } from "./interfaces/initialization-options";
+import { InitializationOptions, SDKParametersOptions } from "./interfaces/initialization-options";
 import { LinkSDK } from "./interfaces/link-sdk";
 import { PokiSDK } from "./interfaces/poki-sdk";
 import { ViberSDK } from "./interfaces/viber-sdk";
@@ -317,6 +317,15 @@ export class CoreAPI {
      */
     public getSupportedAPIs(): string[] {
         return this._core.getSupportedAPIs();
+    }
+
+    /**
+     * Get SDK Parameters for the current game and platform
+     * @param options optional to override wortalGameID and platform
+     * @returns SDKParameters containining wortalGameID, platform, xsollaProjectID, and xsollaLoginProjectID
+     */
+    public getSDKParameters(options?: SDKParametersOptions) {
+        return this._core.getSDKParameters(options);
     }
 
 //#endregion

@@ -13,7 +13,7 @@ import type { Platform } from "./session/types/session-types";
 
 declare global {
     const __VERSION__: string;
-    const __WAVES_API_BASE_URL__: string;
+    const __WORTAL_BASE_URL__: string;
 
     const LinkGame: LinkSDK;
     const ViberPlay: ViberSDK;
@@ -46,7 +46,7 @@ declare global {
          * Project ID of the game as set by Xsolla. This is included in wortal-data.js.
          * @hidden
          */
-        xsollaProjectID?: string;
+        xsollaProjectID?: number;
         /**
          * Login Project ID of the game as set by Xsolla. This is included in wortal-data.js.
          * @hidden

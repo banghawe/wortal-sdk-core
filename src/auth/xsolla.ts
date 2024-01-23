@@ -3,7 +3,18 @@ import Wortal from "../index";
 // the mount point for xsolla authentication
 const XSOLLA_AUTH_DIV_ID = "c2fa61d4-fa24-4143-a565-9be77f319ea5";
 
-let xsollaWidget: any = null;
+interface XsollaLoginWidget extends EventListener {
+    events: {
+        Close: string;
+        LoginSuccess: string;
+        SignupSuccess: string;
+    },
+    mount(elementId: string): void,
+    on(event: string, callback: (event: any) => void): void,
+    once(event: string, callback: (event: any) => void): void,
+    open(): void,
+}
+let xsollaWidget: XsollaLoginWidget | null = null;
 
 /**
  * Get the Xsolla Login SDK mount point or create it if it doesn't exist
@@ -24,27 +35,41 @@ function getXsollaAuthDiv(): HTMLDivElement {
  * Get the Xsolla Login SDK widget object
  * @returns XsollaLogin.Widget
  */
-export function getXsollaWidget() {
+export async function getXsollaWidget(): Promise<XsollaLoginWidget> {
     if (xsollaWidget) return xsollaWidget
-    if (window.XsollaLogin && window.xsollaLoginProjectID) {
-        xsollaWidget = new window.XsollaLogin.Widget({
-            projectId: window.xsollaLoginProjectID,
-            scope: 'offline',
-            callbackUrl: window.location.href,
-            // set enablePostMessageLogin to `true` to use events to avoid redirect whenever possible
-            // in order to support social login you must also set socialLoginFlow: "newTab"
-            enablePostMessageLogin: true,
-            socialLoginFlow: "newTab",
-        });
-        return xsollaWidget;
+
+    if (!window.XsollaLogin) {
+        throw new Error("Xsolla Login SDK is not loaded");
     }
+
+    // should not be on an iframe
+    if (window.location !== window.parent.location) {
+        throw new Error("Xsolla Login Widget cannot be loaded in an iframe");
+    }
+
+    const sdkParameters = await Wortal.getSDKParameters();
+    if (!sdkParameters.xsollaLoginProjectID) {
+        throw new Error("Xsolla Login Project ID is not set");
+    }
+    const callbackUrl = "https://login.xsolla.com/api/social/oauth2/callback";
+
+    xsollaWidget = new window.XsollaLogin.Widget({
+        projectId: sdkParameters.xsollaLoginProjectID,
+        // scope: 'offline',
+        callbackUrl,
+        // set enablePostMessageLogin to `true` to use events to avoid redirect whenever possible
+        // in order to support social login you must also set socialLoginFlow: "newTab"
+        enablePostMessageLogin: true,
+        socialLoginFlow: "newTab",
+    });
+    return xsollaWidget!;
 }
 
 /**
  * Open the Xsolla Login SDK widget dialog window
  */
-export function xsollaLogin(): Promise<string> {
-    const xsollaWidget = getXsollaWidget();
+export async function xsollaLogin(): Promise<string> {
+    const xsollaWidget = await getXsollaWidget();
     const el = getXsollaAuthDiv();
     xsollaWidget.mount(XSOLLA_AUTH_DIV_ID);
     el.style.display = 'block';
