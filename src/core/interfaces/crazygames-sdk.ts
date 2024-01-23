@@ -28,4 +28,6 @@ export interface CrazyGamesSDK {
         getUserToken(callback: (error: Error_CrazyGames, token: string) => void): void;
         getXsollaUserToken(callback?: (error: Error_CrazyGames, token: string) => void): void | Promise<string>;
     };
+    isQaTool(): Promise<boolean>;
+    getEnvironment(): Promise<string>;
 }
