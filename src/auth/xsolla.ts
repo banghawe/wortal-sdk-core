@@ -1,4 +1,5 @@
 import Wortal from "../index";
+import { MessageType } from "../top-login";
 
 // the mount point for xsolla authentication
 const XSOLLA_AUTH_DIV_ID = "c2fa61d4-fa24-4143-a565-9be77f319ea5";
@@ -43,7 +44,7 @@ export async function getXsollaWidget(): Promise<XsollaLoginWidget> {
     }
 
     // should not be on an iframe
-    if (window.location !== window.parent.location) {
+    if (!isInIframe()) {
         throw new Error("Xsolla Login Widget cannot be loaded in an iframe");
     }
 
@@ -69,6 +70,10 @@ export async function getXsollaWidget(): Promise<XsollaLoginWidget> {
  * Open the Xsolla Login SDK widget dialog window
  */
 export async function xsollaLogin(): Promise<string> {
+    // should not be on an iframe
+    if (!isInIframe()) {
+        throw new Error("Xsolla Login Widget cannot be loaded in an iframe");
+    }
     const xsollaWidget = await getXsollaWidget();
     const el = getXsollaAuthDiv();
     xsollaWidget.mount(XSOLLA_AUTH_DIV_ID);
@@ -91,6 +96,97 @@ export async function xsollaLogin(): Promise<string> {
         });
         xsollaWidget.open();
     });
+}
+
+export function isInIframe(): boolean {
+    return window.location !== window.parent.location;
+}
+
+export function nestedLoginAsync(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        if (!isInIframe()) {
+            throw new Error("Login Widget can only be loaded in an iframe");
+        }
+
+        const controller = new AbortController();
+        controller.signal.addEventListener('abort', (ev) => {
+            console.log('close listener', ev)
+        });
+
+        // listen for message from parent
+        window.addEventListener('message', (event) => {
+            console.log('nested message', event)
+            // if (event.origin !== origin) return;
+
+            if (event.data.success) {
+                resolve(event.data.token)
+            } else {
+                reject(event)
+            }
+            controller.abort();
+        }, {
+            signal: controller.signal,
+        });
+
+        // send message to parent
+        window.top!.postMessage({ type: MessageType.StartLogin });
+    });
+}
+
+function timeoutPromise<T>(ms: number, promise: Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error("timeout"));
+        }, ms);
+        promise.then(
+            (res) => {
+                clearTimeout(timeoutId);
+                resolve(res);
+            },
+            (err) => {
+                clearTimeout(timeoutId);
+                reject(err);
+            }
+        );
+    });
+}
+
+export function nestedParentStatus(): Promise<boolean> {
+    if (!isInIframe()) {
+        Promise.reject(new Error("nestedParentStatus should only be called in an iframe"));
+    }
+    const controller = new AbortController();
+    controller.signal.addEventListener('abort', (ev) => {
+        console.log('close listener', ev)
+    });
+
+    const statusPromise = new Promise<boolean>((resolve, reject) => {
+        // listen for message from parent
+        window.addEventListener('message', (event) => {
+            if (event.data.type !== MessageType.StatusResponse) return;
+            if (event.data.success) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+            controller.abort();
+        }, {
+            signal: controller.signal,
+        });
+
+        // send message to parent
+        window.top!.postMessage({ type: MessageType.Status });
+    });
+
+    return timeoutPromise(2000, statusPromise).catch((err) => { return false; });
+}
+
+export async function loginAsync(): Promise<string> {
+    if (isInIframe()) {
+        return await nestedLoginAsync();
+    } else {
+        return await xsollaLogin();
+    }
 }
 
 /**

@@ -47,6 +47,7 @@ import { LinkSDK } from "./interfaces/link-sdk";
 import { PokiSDK } from "./interfaces/poki-sdk";
 import { ViberSDK } from "./interfaces/viber-sdk";
 import { YandexSDK } from "./interfaces/yandex-sdk";
+import { isInIframe } from "../auth/xsolla";
 
 /**
  * Core module for the SDK. This is the main entry point for the SDK. It is responsible for initializing the SDK
@@ -460,7 +461,9 @@ export class CoreAPI {
             }
         }
 
-        const baseURL: string = `https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v${__VERSION__}/`;
+        const baseURL: string = (__WORTAL_BASE_URL__.includes("html5gameportal.dev")) ?
+            `https://storage.googleapis.com/html5gameportal.dev/wortal-sdk/v${__VERSION__}/` :
+            `https://storage.googleapis.com/html5gameportal.com/wortal-sdk/v${__VERSION__}/`;
         const chunks: string[] = [];
         const promises: Promise<void>[] = [];
 
@@ -521,8 +524,11 @@ export class CoreAPI {
         const {AnalyticsWombat} = await import(/* webpackChunkName: "analytics" */ "../analytics/impl/analytics-wombat");
         const {AnalyticsDisabled} = await import(/* webpackChunkName: "analytics" */ "../analytics/impl/analytics-disabled");
 
-        this._log.status("Loading Xsolla SDK...");
-        this._loadXsollaDeps();
+        if (!isInIframe()) {
+            // you can only use xsolla login widget if not in an iframe
+            this._log.status("Loading Xsolla SDK...");
+            this._loadXsollaDeps();
+        }
 
         switch (platform) {
             case "addictinggames": {

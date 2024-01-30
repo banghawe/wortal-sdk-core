@@ -6,7 +6,7 @@ import Wortal from "../index";
 import { isValidNumber } from "../utils/validators";
 import { delayUntilConditionMet, removeLoadingCover } from "../utils/wortal-utils";
 import { API_ENDPOINTS, API_URL, WORTAL_API } from "../data/core-data";
-import { xsollaLogin, parseXsollaToken } from "../auth/xsolla";
+import { loginAsync, parseXsollaToken } from "../auth/xsolla";
 import { XsollaPlayer } from "../player/classes/xsolla-player";
 import { SDKParameters, SDKParametersOptions } from "./interfaces/initialization-options";
 
@@ -223,24 +223,17 @@ export class CoreBase {
     }
 
     protected async defaultAuthenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
-        return new Promise((resolve, reject) => {
-            // Xsolla integration is prioritized over Waves integration.
-            if (Wortal._internalIsXsollaEnabled) {
-                xsollaLogin()
-                    .then((token: string) => {
-                        // TODO: we can use this if social login allows login without redirect
-                        window.xsollaJwtToken = token;
-                        const auth = parseXsollaToken(token);
-                        Wortal._log.debug(`Player logged in: ${auth.name} (${auth.sub})`);
-                        Wortal.player._internalPlayer = new XsollaPlayer(auth);
-                        resolve({ status: "success"})
-                    })
-                    .catch((error: any) => resolve({ status: "cancel"}));
-            } else {
-                // This is not an error state. It just means that Xsolla is not enabled, so we cannot authenticate.
-                resolve({status: "error"});
-            }
-        });
+        try {
+            const token = await loginAsync();
+            window.xsollaJwtToken = token;
+            const auth = parseXsollaToken(token);
+            Wortal._log.debug(`Player logged in: ${auth.name} (${auth.sub})`);
+            Wortal.player._internalPlayer = new XsollaPlayer(auth);
+            return { status: "success" };
+        } catch (error: any) {
+            Wortal._log.exception(`Login failed ${error.message}`, error);
+            return { status: "error" };
+        }
     }
 
 //#endregion

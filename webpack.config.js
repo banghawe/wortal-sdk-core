@@ -11,7 +11,8 @@ module.exports = (env, argv) => {
     return {
         mode: argv.mode,
         entry: {
-            sdk: path.resolve(__dirname, 'src/index.ts')
+            sdk: path.resolve(__dirname, 'src/index.ts'),
+            topLogin: { import: './src/top-login.ts', filename: 'top-login.js' },
         },
         output: {
             path: path.join(__dirname, 'dist'),

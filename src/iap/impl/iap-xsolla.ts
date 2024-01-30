@@ -209,7 +209,7 @@ async function fetchVirtualItems({ projectId, token, ...rest }: {
 
     if (resp.status !== 200) {
         throw operationFailed(
-            `Failed to fetch virtual items: ${resp.status} ${resp.statusText}`,
+            `Failed to fetch virtual items with projectId: ${projectId} [${resp.status}:${resp.statusText}]`,
             WORTAL_API.IAP_GET_CATALOG_ASYNC, API_URL.IAP_GET_CATALOG_ASYNC);
     } else if (!resp.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
         // else if response headers Content-Type does not contains application/json
@@ -249,7 +249,7 @@ async function fetchUserInventory({ projectId, token, ...rest }: {
 
     if (resp.status !== 200) {
         throw operationFailed(
-            `Failed to fetch user inventory: ${resp.status} ${resp.statusText}`,
+            `Failed to fetch user inventory with projectId: ${projectId} [${resp.status}:${resp.statusText}]`,
             WORTAL_API.IAP_GET_PURCHASES_ASYNC, API_URL.IAP_GET_PURCHASES_ASYNC);
     } else if (!resp.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
         // else if response headers Content-Type does not contains application/json
@@ -280,7 +280,7 @@ async function createOrderWithItem({ projectId, token, sku, ...rest }: CreateOrd
     );
     if (resp.status !== 200) {
         throw operationFailed(
-            `Failed to create order with item: ${resp.status} ${resp.statusText}`,
+            `Failed to create order with item: ${sku} with projectId: ${projectId} [${resp.status}:${resp.statusText}]`,
             WORTAL_API.IAP_MAKE_PURCHASE_ASYNC, API_URL.IAP_MAKE_PURCHASE_ASYNC);
     } else if (!resp.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
         // else if response headers Content-Type does not contains application/json
@@ -314,7 +314,7 @@ async function consumeItem({ projectId, token, ...rest }: ConsumeItemOptions): P
     );
     if (resp.status !== 200) {
         throw operationFailed(
-            `Failed to consume item: ${resp.status} ${resp.statusText}`,
+            `Failed to consume item: ${rest.sku} with projectId: ${projectId} [${resp.status}:${resp.statusText}]`,
             WORTAL_API.IAP_CONSUME_PURCHASE_ASYNC, API_URL.IAP_CONSUME_PURCHASE_ASYNC);
     }
 }
