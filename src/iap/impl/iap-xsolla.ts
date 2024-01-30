@@ -138,7 +138,9 @@ export class IAPXsolla extends IAPBase {
 
     protected async makePurchaseAsyncImpl(purchase: PurchaseConfig): Promise<Purchase> {
         const {projectId, token} = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_MAKE_PURCHASE_ASYNC, API_URL.IAP_MAKE_PURCHASE_ASYNC);
-        const sandbox = Wortal.session.getPlatform() === 'debug';
+        const sandbox = Wortal.session.getPlatform() === 'debug'
+            // use sandbox for crazy games qa tool
+            || (Wortal.session.getPlatform() === 'crazygames' && Wortal._internalPlatformSDK.isQaTool());
         const response = await createOrderWithItem({
             projectId,
             token,

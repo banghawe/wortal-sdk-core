@@ -1,5 +1,6 @@
 import { CoreAPI } from "./core/core-api";
 import { AddictingGamesSDK } from "./core/interfaces/addictinggames-sdk";
+import { CrazyGamesSDK } from "./core/interfaces/crazygames-sdk";
 import { FacebookSDK } from "./core/interfaces/facebook-sdk";
 import { GameMonetizeSDK } from "./core/interfaces/gamemonetize-sdk";
 import { GamePixSDK } from "./core/interfaces/gamepix-sdk";
@@ -101,7 +102,9 @@ declare global {
          * CrazyGames SDK
          * @hidden
          */
-        CrazyGames: CrazyGamesSDK;
+        CrazyGames: {
+            SDK: CrazyGamesSDK;
+        };
         /**
          * Yandex SDK
          * @hidden
@@ -114,10 +117,6 @@ declare global {
          * @hidden
          */
         shareGame: (destination: ShareTo, message: string) => void;
-    }
-
-    interface CrazyGamesSDK {
-        SDK: any;
     }
 
 

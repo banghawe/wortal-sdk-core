@@ -52,16 +52,22 @@ export async function getXsollaWidget(): Promise<XsollaLoginWidget> {
     if (!sdkParameters.xsollaLoginProjectID) {
         throw new Error("Xsolla Login Project ID is not set");
     }
-    const callbackUrl = "https://login.xsolla.com/api/social/oauth2/callback";
+
+    const currentUrl = new URL(window.location.href);
+    const payload = currentUrl.searchParams.get('pu') || undefined;
+    // set callbackUrl from cbu query param or use current url
+    const callbackUrl = currentUrl.searchParams.get('cbu') || window.location.href;
+    // use page redirect default to false
+    const redirect = Boolean(currentUrl.searchParams.get('rd'));
 
     xsollaWidget = new window.XsollaLogin.Widget({
         projectId: sdkParameters.xsollaLoginProjectID,
-        // scope: 'offline',
         callbackUrl,
+        payload,
         // set enablePostMessageLogin to `true` to use events to avoid redirect whenever possible
         // in order to support social login you must also set socialLoginFlow: "newTab"
-        enablePostMessageLogin: true,
-        socialLoginFlow: "newTab",
+        enablePostMessageLogin: !redirect,
+        socialLoginFlow: redirect ? "redirect" : "newTab"
     });
     return xsollaWidget!;
 }
