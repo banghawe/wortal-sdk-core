@@ -12,20 +12,12 @@ import { CoreBase } from "../core-base";
 export class CoreDebug extends CoreBase {
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
         // Xsolla login for Waves integration.
-        if (Wortal._internalIsXsollaEnabled) {
-            return this.defaultAuthenticateAsyncImpl(payload)
-                .then((response) => {
-                    Wortal._log.debug("Player authenticated successfully. Payload:", payload);
-                    return Promise.resolve(response);
-                });
-        }
+        return this.defaultAuthenticateAsyncImpl(payload)
+            .then((response) => {
+                Wortal._log.debug("Player authenticated successfully. Payload:", payload);
+                return Promise.resolve(response);
+            });
 
-        Wortal._log.debug("Player authenticated successfully. Payload:", payload);
-        const response: AuthResponse = {
-            status: "success",
-        };
-
-        return Promise.resolve(response);
     }
 
     protected initializeAsyncImpl(): Promise<void> {

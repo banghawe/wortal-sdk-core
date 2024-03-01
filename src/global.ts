@@ -1,5 +1,6 @@
 import { CoreAPI } from "./core/core-api";
 import { AddictingGamesSDK } from "./core/interfaces/addictinggames-sdk";
+import { CrazyGamesSDK } from "./core/interfaces/crazygames-sdk";
 import { FacebookSDK } from "./core/interfaces/facebook-sdk";
 import { GameMonetizeSDK } from "./core/interfaces/gamemonetize-sdk";
 import { GamePixSDK } from "./core/interfaces/gamepix-sdk";
@@ -13,6 +14,7 @@ import type { Platform } from "./session/types/session-types";
 
 declare global {
     const __VERSION__: string;
+    const __WORTAL_BASE_URL__: string;
 
     const LinkGame: LinkSDK;
     const ViberPlay: ViberSDK;
@@ -41,6 +43,26 @@ declare global {
          * @hidden
          */
         addictingGamesID: string;
+        /**
+         * Project ID of the game as set by Xsolla. This is included in wortal-data.js.
+         * @hidden
+         */
+        xsollaProjectID?: number;
+        /**
+         * Login Project ID of the game as set by Xsolla. This is included in wortal-data.js.
+         * @hidden
+         */
+        xsollaLoginProjectID?: string;
+        /**
+         * Xsolla Login SDK.
+         * @hidden
+         */
+        XsollaLogin: any;
+        /**
+         * Xsolla Jwt Token.
+         * @hidden
+         */
+        xsollaJwtToken?: string | null;
         /**
          * This is set by the Wortal backend and is used to identify a Wortal player via session.
          * @hidden
@@ -80,7 +102,9 @@ declare global {
          * CrazyGames SDK
          * @hidden
          */
-        CrazyGames: CrazyGamesSDK;
+        CrazyGames: {
+            SDK: CrazyGamesSDK;
+        };
         /**
          * Yandex SDK
          * @hidden
@@ -93,10 +117,6 @@ declare global {
          * @hidden
          */
         shareGame: (destination: ShareTo, message: string) => void;
-    }
-
-    interface CrazyGamesSDK {
-        SDK: any;
     }
 
 

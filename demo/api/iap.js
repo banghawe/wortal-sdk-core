@@ -2,6 +2,7 @@ let productID = "mock.product.123";
 let token = "mock.purchase.123";
 let subscriptionProductID = "subscription.test";
 let subscriptionToken = "mock.subscriptionPurchase.123";
+let purchase = null;
 
 function iapIsEnabled() {
     appendText(Wortal.iap.isEnabled());
@@ -25,12 +26,18 @@ function iapGetPurchasesAsync() {
 }
 
 function iapMakePurchaseAsync() {
-    Wortal.iap.makePurchaseAsync({productID: productID})
-        .then(result => appendText(JSON.stringify(result)))
+    const productID = window.prompt("Enter product ID", "mock.product.123");
+    Wortal.iap.makePurchaseAsync({productID})
+        .then(result => {
+            purchase = result;
+            token = purchase.purchaseToken;
+            appendText(JSON.stringify(result))
+        })
         .catch(error => appendText(error));
 }
 
 function iapConsumePurchaseAsync() {
+    const token = window.prompt("Enter product token", "mock.purchase.123");
     Wortal.iap.consumePurchaseAsync(token)
         .then("Purchase consumed")
         .catch(error => appendText(error));

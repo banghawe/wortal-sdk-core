@@ -5,8 +5,11 @@ import { ValidationResult } from "../errors/interfaces/validation-result";
 import Wortal from "../index";
 import { isValidNumber } from "../utils/validators";
 import { delayUntilConditionMet, removeLoadingCover } from "../utils/wortal-utils";
-import { API_URL, WORTAL_API } from "../data/core-data";
-import { xsollaLogin } from "../auth/xsolla";
+import { API_ENDPOINTS, API_URL, WORTAL_API } from "../data/core-data";
+import { loginAsync, parseXsollaToken } from "../auth/xsolla";
+import { XsollaPlayer } from "../player/classes/xsolla-player";
+import { SDKParameters, SDKParametersOptions } from "./interfaces/initialization-options";
+
 
 /**
  * Base class for implementations of the Wortal SDK core functionality. Extend this class to implement the core functionality.
@@ -94,6 +97,57 @@ export class CoreBase {
         return this._supportedAPIs;
     }
 
+    // to cache the SDK parameters
+    private _sdkParameters: SDKParameters | null = null;
+
+    /**
+     * Get SDK Parameters for the current game and platform
+     * @param options optional to override wortalGameID and platform
+     * @returns Promise<SDKParameters> containining wortalGameID, platform, xsollaProjectID, and xsollaLoginProjectID
+     */
+    public async getSDKParameters(options?: SDKParametersOptions): Promise<SDKParameters> {
+        options = options || {};
+        options.platform = options.platform || Wortal._internalPlatform;
+        options.wortalGameID = options.wortalGameID || Number(window.wortalGameID);
+
+        if (this._sdkParameters
+            && this._sdkParameters.wortalGameID === options.wortalGameID
+            && this._sdkParameters.platform === options.platform) {
+            // to avoid fetching the same SDK parameters multiple times
+            return this._sdkParameters;
+        }
+        try {
+            const resp = await fetch(
+                `${API_ENDPOINTS.WORTAL_SDK_PARAMETER}/${options.wortalGameID}?platform=${options.platform}`,
+            );
+            if (resp.status !== 200) {
+                throw operationFailed(
+                    `Failed to fetch SDK Parameters: ${resp.status} ${resp.statusText}`, 'getSDKParameters');
+            } else if (!resp.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
+                // else if response headers Content-Type does not contains application/json
+                throw operationFailed(
+                    `Failed to fetch SDK Parameters: invalid response content type`, 'getSDKParameters');
+            }
+            const payload = await resp.json() as SDKParameters;
+            if (payload.wortalGameID !== Number(options.wortalGameID)) {
+                throw operationFailed(
+                    `Failed to fetch SDK Parameters: invalid response content`, 'getSDKParameters');
+            }
+            payload['platform'] = options.platform;
+            this._sdkParameters = payload;
+            return this._sdkParameters;
+
+        } catch (error) {
+            // fallback to parameters attached to window object in wortal-data.js
+            return {
+                wortalGameID: Number(window.wortalGameID),
+                platform: options.platform,
+                xsollaProjectID: window.xsollaProjectID === undefined ? undefined : Number(window.xsollaProjectID),
+                xsollaLoginProjectID: window.xsollaLoginProjectID,
+            };
+        }
+    }
+
 //#endregion
 //#region Internal API
 
@@ -169,15 +223,17 @@ export class CoreBase {
     }
 
     protected async defaultAuthenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
-        return new Promise((resolve, reject) => {
-            // Xsolla integration is prioritized over Waves integration.
-            if (Wortal._internalIsXsollaEnabled) {
-                xsollaLogin().then(() => resolve({ status: "success"}));
-            } else {
-                // This is not an error state. It just means that Xsolla is not enabled, so we cannot authenticate.
-                resolve({status: "error"});
-            }
-        });
+        try {
+            const token = await loginAsync();
+            window.xsollaJwtToken = token;
+            const auth = parseXsollaToken(token);
+            Wortal._log.debug(`Player logged in: ${auth.name} (${auth.sub})`);
+            Wortal.player._internalPlayer = new XsollaPlayer(auth);
+            return { status: "success" };
+        } catch (error: any) {
+            Wortal._log.exception(`Login failed ${error.message}`, error);
+            return { status: "error" };
+        }
     }
 
 //#endregion

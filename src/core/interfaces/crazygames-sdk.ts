@@ -26,5 +26,8 @@ export interface CrazyGamesSDK {
         isUserAccountAvailable(callback: (error: Error_CrazyGames, result: boolean) => void): void;
         getUser(callback: (error: Error_CrazyGames, user: ICrazyGamesPlayer) => void): void;
         getUserToken(callback: (error: Error_CrazyGames, token: string) => void): void;
+        getXsollaUserToken(callback?: (error: Error_CrazyGames, token: string) => void): void | Promise<string>;
     };
+    isQaTool(): Promise<boolean>;
+    getEnvironment(): Promise<string>;
 }

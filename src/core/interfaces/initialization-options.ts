@@ -17,3 +17,21 @@ export interface InitializationOptions {
      */
     debugMode?: boolean,
 }
+
+/**
+ * The return value of getSDKParameters() to get the SDK parameters for the current game.
+ */
+export interface SDKParameters {
+    wortalGameID: number,
+    platform: Platform,
+    xsollaProjectID?: number,
+    xsollaLoginProjectID?: string,
+}
+
+/**
+ * Options to pass when getting the SDK parameters for the current game.
+ */
+export interface SDKParametersOptions {
+    wortalGameID?: number,
+    platform?: Platform,
+}

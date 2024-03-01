@@ -5,7 +5,7 @@ import { getXsollaToken, parseXsollaToken } from "../../auth/xsolla";
 import { generateRandomID } from "../../utils/wortal-utils";
 
 /**
- * Represents a CrazyGames player.
+ * Represents a Xsolla player.
  * @hidden
  */
 export class XsollaPlayer extends Player {
@@ -16,6 +16,9 @@ export class XsollaPlayer extends Player {
             this._data.id = player.sub || generateRandomID();
             this._data.name = player.username || "Player";
             this._data.photo = player.picture || "https://images.crazygames.com/userportal/avatars/4.png";
+            this.isAuthenticated = true;
+        } else {
+            this.isAuthenticated = false;
         }
     }
 
@@ -26,9 +29,12 @@ export class XsollaPlayer extends Player {
             this._data.id = parsedToken.sub;
             this._data.name = parsedToken.name;
             this._data.photo = parsedToken.picture;
+            this.isAuthenticated = true;
         }
 
         Wortal._log.debug("Player initialized: ", this._data);
         return Promise.resolve();
     }
+
+    public isAuthenticated: boolean = false;
 }

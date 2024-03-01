@@ -7,7 +7,7 @@ import { onPauseFunctions } from "../../utils/wortal-utils";
 import { CoreBase } from "../core-base";
 
 /**
- * CrazyGames implementation of the Wortal SDK core functionality.
+ * Addicting Games implementation of the Wortal SDK core functionality.
  * @hidden
  */
 export class CoreAddictingGames extends CoreBase {

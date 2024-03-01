@@ -27,8 +27,21 @@ export class PlayerWortal extends PlayerBase {
         return Promise.reject(notSupported(undefined, WORTAL_API.PLAYER_GET_CONNECTED_PLAYERS_ASYNC, API_URL.PLAYER_GET_CONNECTED_PLAYERS_ASYNC));
     }
 
-    protected getDataAsyncImpl(keys: string[]): Promise<any> {
-        return this.defaultGetDataAsyncImpl(keys);
+    protected async getDataAsyncImpl(keys: string[]): Promise<any> {
+        const local = await this.localStorageGetDataAsyncImpl(keys);
+        try {
+            const waves = await this.wavesGetDataAsyncImpl(keys);
+            if (!local.timestamp || local.timestamp < waves.timestamp) {
+                // if local data is 0/NaN or older than waves data, prioritize waves data
+                return { ...local.data, ...waves.data };
+            } else {
+                // if local data is newer than waves data, prioritize local data
+                return { ...waves.data, ...local.data };
+            }
+        } catch (error) {
+            // if waves data is not available, return local data
+            return local.data;
+        }
     }
 
     protected getSignedASIDAsyncImpl(): Promise<SignedASID> {
@@ -43,8 +56,16 @@ export class PlayerWortal extends PlayerBase {
         return this.defaultGetTokenAsyncImpl();
     }
 
-    protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
-        return this.defaultSetDataAsyncImpl(data);
+    protected async setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
+        let result = {
+            savedData: data,
+            timestamp: Date.now(),
+        }
+        try {
+            result = await this.wavesSetDataAsyncImpl(data);
+        } catch (error) { /* empty */ }
+
+        await this.localStorageSetDataAsyncImpl(result.savedData, result.timestamp);
     }
 
     protected subscribeBotAsyncImpl(): Promise<void> {

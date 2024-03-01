@@ -1,5 +1,5 @@
 import { API_URL, WORTAL_API } from "../data/core-data";
-import { implementationError, invalidParams, notInitialized, operationFailed } from "../errors/error-handler";
+import { implementationError, invalidParams, notSupported, notInitialized, operationFailed } from "../errors/error-handler";
 import { ValidationResult } from "../errors/interfaces/validation-result";
 import Wortal from "../index";
 import { ConnectedPlayer } from "./classes/connected-player";
@@ -9,6 +9,7 @@ import { SignedASID } from "./interfaces/facebook-player";
 import { SignedPlayerInfo } from "./interfaces/signed-player-info";
 import { fetchSaveData, patchSaveData } from "../utils/waves-api";
 import { getXsollaToken } from "../auth/xsolla";
+import { XsollaPlayer } from "./classes/xsolla-player";
 
 /**
  * Base class for the Player API. Extend this class to implement the Player API for a specific platform.
@@ -216,81 +217,146 @@ export class PlayerBase {
     protected subscribeBotAsyncImpl(): Promise<void> { throw implementationError(); };
 
     protected async defaultGetDataAsyncImpl(keys: string[]): Promise<any> {
+        // default implementation is using localStorage
         try {
-            let dataObj: Record<string, any> = {};
-
-            // getting localStorage save data along with the timestamp
-            const data = localStorage.getItem(`${Wortal.session._internalSession.gameID}-save-data`);
-            const timestamp = Number(localStorage.getItem(`${Wortal.session._internalSession.gameID}-save-data-timestamp`));
-            if (data) {
-                try {
-                    const localSaveData = JSON.parse(data);
-                    if (localSaveData) {
-                        dataObj = {...dataObj, ...localSaveData};
-                    }
-                } catch (error: any) {
-                    Wortal._log.exception(`Error loading object from localStorage: ${error.message}`);
-                }
-            }
-
-            // if Xsolla is enabled, we try to fetch the data from waves
-            if (Wortal._internalIsXsollaEnabled) {
-                try {
-                    const token = await this.getTokenAsyncImpl();
-                    if (token) {
-                        const wavesData = await fetchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID));
-                        if (wavesData.timestamp >= timestamp) {
-                            // if the data is newer than the local data, we update the local data
-                            dataObj = {...dataObj, ...wavesData.save_data};
-                            localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(dataObj));
-                        }
-                    }
-                } catch (error: any) {
-                    Wortal._log.exception("Error while fetching save data from waves.", error);
-                }
-            }
-
-            // The API allows the developer to request only a subset of the data, so we filter the result here.
-            const result: Record<string, any> = {};
-            keys.forEach((key: string) => {
-                result[key] = dataObj[key];
-            });
-
-            return result;
+            const local = await this.localStorageGetDataAsyncImpl(keys);
+            return local.data;
         } catch (error: any) {
-            throw operationFailed(`Error saving object to localStorage: ${error.message}`,
+            throw operationFailed(`Error loading data from localStorage: ${error.message}`,
                 WORTAL_API.PLAYER_GET_DATA_ASYNC, API_URL.PLAYER_GET_DATA_ASYNC);
         }
     }
 
-    protected async defaultSetDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
-        let timestamp = Date.now();
-        let savedData = data;
+    /**
+     * Gets the save data from localStorage.
+     * @param keys the keys to filter the data from localStorage
+     * @returns a promise with data and timestamp
+     */
+    protected async localStorageGetDataAsyncImpl(keys: string[]): Promise<{ data: Record<string, any>, timestamp: number }> {
+        const data: Record<string, any> = {};
 
-        // if Xsolla is enabled, we try to save the data to waves
-        if (Wortal._internalIsXsollaEnabled) {
+        // getting localStorage save data along with the timestamp
+        const savedDataJson = localStorage.getItem(`${Wortal.session._internalSession.gameID}-save-data`);
+        const timestamp = Number(localStorage.getItem(`${Wortal.session._internalSession.gameID}-save-data-timestamp`));
+        if (savedDataJson) {
             try {
-                const token = await this.getTokenAsyncImpl();
-                if (token) {
-                    const wavesData = await patchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID), data);
-                    savedData = wavesData.save_data;
-                    // we update the timestamp to use the timestamp values from waves server
-                    timestamp = wavesData.timestamp;
-                    Wortal._log.debug("Saved data to waves.");
-                }
+                const dataObj = JSON.parse(savedDataJson);
+
+                // The API allows the developer to request only a subset of the data, so we filter the result here.
+                keys.forEach((key: string) => {
+                    data[key] = dataObj[key];
+                });
+
             } catch (error: any) {
-                Wortal._log.exception("Error while saving data to waves.", error);
+                Wortal._log.exception(`Error loading object from localStorage: ${error.message}`);
             }
         }
+        return { data, timestamp };
+    }
 
+    /**
+     * To validate the player is authenticated and has a token.
+     * @param throwException if true, throws an exception if the token is not available
+     * @returns the token if available, empty string otherwise
+     */
+    protected validateWavesToken(throwException: boolean = true): string {
+        // check if _player is an XsollaPlayer instance
+        if (!this._player || !(this._player instanceof XsollaPlayer)) {
+            if (!throwException) {
+                return "";
+            }
+            throw notSupported(
+                `Error saving object to waves: player is not an XsollaPlayer instance.`,
+                WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+        }
+        // check if this player is authenticated
+        if (!this._player.isAuthenticated) {
+            if (!throwException) {
+                return "";
+            }
+            throw notSupported(
+                `Error saving object to waves: player is not authenticated.`,
+                WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+        }
+        const token = getXsollaToken();
+        if (!token) {
+            if (!throwException) {
+                return "";
+            }
+            throw notSupported(
+                `Error saving object to waves: cannot get player's token.`,
+                WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+        }
+        return token;
+    }
+
+    /**
+     * Gets the save data from waves.
+     * @param keys the keys to filter the data from waves
+     * @returns a promise with data and timestamp
+     */
+    protected async wavesGetDataAsyncImpl(keys: string[]): Promise<{ data: Record<string, any>, timestamp: number }> {
+        const token = this.validateWavesToken();
+        const data: Record<string, any> = {};
+        try {
+
+            const { save_data, timestamp } = await fetchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID));
+
+            keys.forEach((key: string) => {
+                data[key] = save_data[key];
+            });
+
+            return { data, timestamp };
+        } catch (error: any) {
+            Wortal._log.exception("Error while fetching save data from waves.", error);
+            throw error;
+        }
+    }
+
+    protected async defaultSetDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
+        // default implementation is using localStorage
+        await this.localStorageSetDataAsyncImpl(data, Date.now());
+    }
+
+    /**
+     * To save the game data to the localStorage
+     * @param data the data to save to localStorage
+     * @param timestamp the timestamp to saved along with the data
+     */
+    protected async localStorageSetDataAsyncImpl(data: Record<string, unknown>, timestamp: number): Promise<void> {
         try {
             // save the data to localStorage
-            localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(savedData));
+            localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data`, JSON.stringify(data));
             localStorage.setItem(`${Wortal.session._internalSession.gameID}-save-data-timestamp`, JSON.stringify(timestamp));
             Wortal._log.debug("Saved data to localStorage.");
         } catch (error: any) {
             //TODO: do we need to reject here?
             throw operationFailed(`Error saving object to localStorage: ${error.message}`,
+                WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
+        }
+    }
+
+    /**
+     * To save the game data to the waves server
+     * @param data the data to save to waves
+     * @returns a Promise with savedData and timestamp
+     */
+    protected async wavesSetDataAsyncImpl(data: Record<string, unknown>): Promise<{
+        savedData: Record<string, any>,
+        timestamp: number,
+    }> {
+        const token = this.validateWavesToken();
+        try {
+            const wavesData = await patchSaveData<Record<string, any>>(token, Number(Wortal.session._internalSession.gameID), data);
+            const savedData = wavesData.save_data as Record<string, any>;
+            // we update the timestamp to use the timestamp values from waves server
+            const timestamp = wavesData.timestamp as number;
+            Wortal._log.debug("Saved data to waves.");
+            return { savedData, timestamp };
+        } catch (error: any) {
+            Wortal._log.exception("Error while saving data to waves.", error);
+            throw operationFailed(
+                "Error while saving data to waves.",
                 WORTAL_API.PLAYER_SET_DATA_ASYNC, API_URL.PLAYER_SET_DATA_ASYNC);
         }
     }

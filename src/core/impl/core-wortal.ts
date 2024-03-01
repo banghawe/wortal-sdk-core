@@ -14,15 +14,11 @@ import { API_URL, SDK_SRC, WORTAL_API } from "../../data/core-data";
 export class CoreWortal extends CoreBase {
     protected authenticateAsyncImpl(payload?: AuthPayload): Promise<AuthResponse> {
         // Xsolla login for Waves integration.
-        if (Wortal._internalIsXsollaEnabled) {
-            return this.defaultAuthenticateAsyncImpl(payload)
-                .then((response) => {
-                    Wortal._log.debug("Player authenticated successfully. Payload:", payload);
-                    return Promise.resolve(response);
-                });
-        }
-
-        return Promise.reject(notSupported(undefined, WORTAL_API.AUTHENTICATE_ASYNC));
+        return this.defaultAuthenticateAsyncImpl(payload)
+            .then((response) => {
+                Wortal._log.debug("Player authenticated successfully. Payload:", payload);
+                return Promise.resolve(response);
+            });
     }
 
     protected initializeAsyncImpl(): Promise<void> {

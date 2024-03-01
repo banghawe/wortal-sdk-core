@@ -37,7 +37,9 @@ export const API_ENDPOINTS = {
     ADS: "https://html5gameportal.com/api/v1/fig/ads/",
     VIBER: "https://html5gameportal.com/api/v1/viber/",
     NOTIFICATIONS: "https://html5gameportal.com/api/v1/notification/",
-    WAVES_API_BASE_URL: "https://html5gameportal.com/api/v1/waves/",
+    XSOLLA_STORE: 'https://store.xsolla.com/api',
+    WAVES_API_BASE_URL: `${__WORTAL_BASE_URL__}/api/v1/waves`,
+    WORTAL_SDK_PARAMETER: `${__WORTAL_BASE_URL__}/api/v1/game-sdk-param`,
 }
 
 /**
