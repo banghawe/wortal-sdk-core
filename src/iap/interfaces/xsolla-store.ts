@@ -72,7 +72,7 @@ export interface OrderRequestBody {
         return_url?: string;
         redirect_policy?: {
             redirect_conditions?: string,
-            manual_redirection_action?: string,
+            delay?: number,
             status_for_manual_redirection?: string
         }
     };

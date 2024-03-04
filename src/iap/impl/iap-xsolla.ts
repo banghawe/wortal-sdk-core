@@ -138,7 +138,6 @@ export class IAPXsolla extends IAPBase {
 
     protected async makePurchaseAsyncImpl(purchase: PurchaseConfig): Promise<Purchase> {
         return new Promise(async (resolve, reject) => {
-            const iframe = document.createElement('iframe');
             try {
                 const { projectId, token } = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_MAKE_PURCHASE_ASYNC, API_URL.IAP_MAKE_PURCHASE_ASYNC);
                 const sandbox = Wortal.session.getPlatform() === 'debug' || (Wortal.session.getPlatform() === 'crazygames' && await Wortal._internalPlatformSDK.isQaTool());
@@ -149,27 +148,22 @@ export class IAPXsolla extends IAPBase {
                     sku: purchase.productID,
                     quantity: 1,
                     settings: {
+                        return_url: "https://games.wortal.ai/redirected.html",
                         redirect_policy: {
                             redirect_conditions: 'any',
-                            manual_redirection_action: 'postmessage',
-                            status_for_manual_redirection: 'any'
+                            delay: 5,
+                            status_for_manual_redirection: 'none'
                         }
                     }
                 });
-    
-                iframe.style.position = 'fixed';
-                iframe.style.top = '0';
-                iframe.style.left = '0';
-                iframe.style.width = '100vw';
-                iframe.style.height = '100vh';
-                iframe.style.border = 'none';
-                iframe.style.zIndex = '9999';
-                document.body.appendChild(iframe);
+
+                const paymentUrl = sandbox ? `https://sandbox-secure.xsolla.com/paystation4/?token=${response.token}` : `https://secure.xsolla.com/paystation4/?token=${response.token}`;
+                const paymentWindow = window.open(paymentUrl, "payment", "popup");
     
                 window.addEventListener('message', receiveMessage, false);
     
                 async function receiveMessage(event: any) {
-                    if (event.source !== iframe.contentWindow) {
+                    if (event.source !== paymentWindow) {
                         return;
                     }
 
@@ -192,14 +186,9 @@ export class IAPXsolla extends IAPBase {
                         }
                         
                         window.removeEventListener('message', receiveMessage);
-                        document.body.removeChild(iframe);
                     }
                 }
-    
-                const paymentUrl = sandbox ? `https://sandbox-secure.xsolla.com/paystation4/?token=${response.token}` : `https://secure.xsolla.com/paystation4/?token=${response.token}`;
-                iframe.src = paymentUrl;
             } catch (error) {
-                document.body.removeChild(iframe);
                 reject(error); // Reject the promise if any error occurs
             }
         });
