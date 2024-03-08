@@ -106,7 +106,7 @@ export class CoreCrazyGames extends CoreBase {
         });
     }
 
-    protected async _initializeSDKAsyncImpl(): Promise<void> {
+    protected _initializeSDKAsyncImpl(): Promise<void> {
         return this.defaultInitializeSDKAsyncImpl();
     }
 
