@@ -79,29 +79,23 @@ export class CoreCrazyGames extends CoreBase {
             const crazyGamesSDK = document.createElement("script");
             crazyGamesSDK.src = SDK_SRC.CRAZY_GAMES;
 
-            crazyGamesSDK.onload = () => {
+            crazyGamesSDK.onload = async () => {
                 if (typeof window.CrazyGames.SDK === "undefined") {
                     reject(initializationError("Failed to load Crazy Games SDK.", "_initializePlatformAsyncImpl"));
                 }
-
+                
                 Wortal._log.debug("Crazy Games platform SDK loaded.");
+                await (window.CrazyGames.SDK as any).init();
                 Wortal._internalPlatformSDK = window.CrazyGames.SDK;
-
-                const callback = (error: Error_CrazyGames, result: any) => {
-                    if (error) {
-                        // Don't reject here because not being able to check for adblock shouldn't prevent the SDK from working.
-                        Wortal._log.exception(error);
-                        resolve();
-                    } else {
-                        // This seems to always return false as of v1.6.9. We still guard against this when we show ads
-                        // as the CrazyGames SDK will return the adError callback, which triggers our noFill callback.
-                        Wortal._log.debug("CrazyGames adblock check complete.", result);
-                        Wortal.ads._internalAdConfig.setAdBlocked(result);
-                        resolve();
-                    }
-                };
-
-                Wortal._internalPlatformSDK.ad.hasAdblock(callback);
+                try {
+                    const result = await Wortal._internalPlatformSDK.ad.hasAdblock();
+                    Wortal._log.debug("CrazyGames adblock check complete.", result);
+                    Wortal.ads._internalAdConfig.setAdBlocked(result);
+                } catch (error: any) {
+                    Wortal._log.exception(error);
+                }
+                
+                resolve();
             }
 
             crazyGamesSDK.onerror = () => {
@@ -112,7 +106,7 @@ export class CoreCrazyGames extends CoreBase {
         });
     }
 
-    protected _initializeSDKAsyncImpl(): Promise<void> {
+    protected async _initializeSDKAsyncImpl(): Promise<void> {
         return this.defaultInitializeSDKAsyncImpl();
     }
 

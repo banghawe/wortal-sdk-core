@@ -29,16 +29,7 @@ export class IAPXsolla extends IAPBase {
         let token: string | null | undefined = undefined;
 
         if (Wortal.session.getPlatform() === 'crazygames') {
-            // get the xsolla token from crazygames
-            token = await new Promise((resolve, reject) => {
-                Wortal._internalPlatformSDK.user.getXsollaUserToken((error: any, token: string) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(token);
-                    }
-                })
-            });
+            token = await Wortal._internalPlatformSDK.user.getXsollaUserToken();
         } else {
             token = await Wortal.player.getTokenAsync();
         }
@@ -140,7 +131,7 @@ export class IAPXsolla extends IAPBase {
         return new Promise(async (resolve, reject) => {
             try {
                 const { projectId, token } = await this.validateXsollaProjectIDAndToken(WORTAL_API.IAP_MAKE_PURCHASE_ASYNC, API_URL.IAP_MAKE_PURCHASE_ASYNC);
-                const sandbox = Wortal.session.getPlatform() === 'debug' || (Wortal.session.getPlatform() === 'crazygames' && await Wortal._internalPlatformSDK.isQaTool());
+                const sandbox = Wortal.session.getPlatform() === 'debug' || (Wortal.session.getPlatform() === 'crazygames' && Wortal._internalPlatformSDK.isQaTool);
                 const response = await createOrderWithItem({
                     projectId,
                     token,
@@ -170,10 +161,9 @@ export class IAPXsolla extends IAPBase {
                     const data = JSON.parse(event.data);
                     console.log(data);
     
-                    if (data.command === 'return' || data.command === 'close') {
-                        const orderId = response.order_id.toString()
-                        const order = await getOrder({projectId, token, orderId})
-                        if (order.status === 'paid') {
+                    if (data.command === 'status') {
+                        const orderStatus = data.data.paymentInfo.status;
+                        if (orderStatus === 'done' || orderStatus === 'paid') {
                             resolve({
                                 productID: purchase.productID,
                                 purchaseToken: purchase.productID,

@@ -54,15 +54,15 @@ export class SessionCrazyGames extends SessionBase {
     protected _gameLoadingStartImpl(): void {
         if (!Wortal._internalIsPlatformInitialized) {
             delayUntilConditionMet(() => Wortal._internalIsPlatformInitialized).then(() => {
-                return Wortal._internalPlatformSDK.game.sdkGameLoadingStart();
+                return Wortal._internalPlatformSDK.game.loadingStart();
             });
         } else {
-            return Wortal._internalPlatformSDK.game.sdkGameLoadingStart();
+            return Wortal._internalPlatformSDK.game.loadingStop();
         }
     }
 
     protected _gameLoadingStopImpl(): void {
-        return Wortal._internalPlatformSDK.game.sdkGameLoadingStop();
+        return Wortal._internalPlatformSDK.game.loadingStop();
     }
 
 }
