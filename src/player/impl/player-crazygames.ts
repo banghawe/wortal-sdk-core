@@ -58,12 +58,43 @@ export class PlayerCrazyGames extends PlayerBase {
         return (Wortal._internalPlatformSDK as CrazyGamesSDK).user.getXsollaUserToken() as Promise<string>;
     }
 
-    protected getDataAsyncImpl(keys: string[]): Promise<any> {
-        return this.defaultGetDataAsyncImpl(keys);
+    protected async getDataAsyncImpl(keys: string[]): Promise<any> {
+        const data: Record<string, any> = {};
+
+        try {
+            const gameId = Wortal.session._internalSession.gameID;
+            const key = `${gameId}-save-data`;
+
+            let stringData = Wortal._internalPlatformSDK.data.getItem(key);
+            if (!stringData) {
+                stringData = localStorage.getItem(key);
+            }
+
+            const dataObj = JSON.parse(stringData);
+
+            keys.forEach((key: string) => {
+                data[key] = dataObj[key];
+            });
+        } catch (error: any) {
+            throw new Error(`Error getting saved data: ${error.message}`);
+        }
+
+        return data;
     }
 
-    protected setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
-        return this.defaultSetDataAsyncImpl(data);
+    protected async setDataAsyncImpl(data: Record<string, unknown>): Promise<void> {
+        try {
+            // Save the data to localStorage
+            const gameId = Wortal.session._internalSession.gameID;
+            const key = `${gameId}-save-data`;
+            const jsonData = JSON.stringify(data);
+    
+            Wortal._internalPlatformSDK.data.setItem(key, jsonData);
+            Wortal._log.debug("Saved data to cloud.");
+        } catch (error: any) {
+            // Handle errors and reject the promise if needed
+            throw new Error(`Error saving object to cloud: ${error.message}`);
+        }
     }
 
     protected subscribeBotAsyncImpl(): Promise<void> {

@@ -16,8 +16,8 @@ export interface CrazyGamesSDK {
         inviteLink(data: any, callback: (error: Error_CrazyGames, link: string) => void): void;
         gameplayStart(): void;
         gameplayStop(): void;
-        sdkGameLoadingStart(): void;
-        sdkGameLoadingStop(): void;
+        loadingStart(): void;
+        loadingStop(): void;
         happytime(): void;
     };
     user: {

@@ -1,5 +1,6 @@
 type ItemType = "consumable" | "expiration" | "permanent" | "lootboxes" | "physical";
 type VirtualItemType = "consumable" | "non_consumable" | "non_renewing_subscription";
+type OrderStatus = "new" | "paid" | "done" | "cancelled";
 
 export interface VirtualItem {
     item_id: string;
@@ -37,6 +38,17 @@ export interface InventoryItemList {
     items: InventoryItem[];
 }
 
+export interface GetOrderOptions {
+    projectId: number,
+    token: string,
+    orderId: string
+}
+
+export interface Order {
+    order_id: string;
+    status: OrderStatus;
+}
+
 export interface OrderRequestBody {
     sandbox: boolean;
     quantity: number;
@@ -58,6 +70,11 @@ export interface OrderRequestBody {
         };
         payment_method?: number;
         return_url?: string;
+        redirect_policy?: {
+            redirect_conditions?: string,
+            delay?: number,
+            status_for_manual_redirection?: string
+        }
     };
     custom_parameters?: {
         [key: string]: any;

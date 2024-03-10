@@ -27,7 +27,7 @@ export const PLATFORM_DOMAINS: PlatformDomains = {
  * to the game bundle in the backend.
  * @hidden
  */
-export const LOCAL_CHUNKS_ONLY: Platform[] = ["poki", "yandex"];
+export const LOCAL_CHUNKS_ONLY: Platform[] = ["poki", "yandex", "crazygames"];
 
 /**
  * Different endpoints for Wortal API. Always ends with a slash.
@@ -52,7 +52,7 @@ export const SDK_SRC = {
     VIBER: "https://vbrpl.io/libs/viber-play-sdk/1.14.0/bundle.js",
     FACEBOOK: "https://connect.facebook.net/en_US/fbinstant.7.1.js",
     GD: "https://html5.api.gamedistribution.com/main.min.js",
-    CRAZY_GAMES: "https://sdk.crazygames.com/crazygames-sdk-v2.js",
+    CRAZY_GAMES: "https://sdk.crazygames.com/crazygames-sdk-v3.js",
     GAME_PIX: "https://integration.gamepix.com/sdk/v3/gamepix.sdk.js",
     GAME_MONETIZE: "https://api.gamemonetize.com/sdk.js",
     POKI: "https://game-cdn.poki.com/scripts/v2/poki-sdk.js",
