@@ -27,7 +27,7 @@ export const PLATFORM_DOMAINS: PlatformDomains = {
  * to the game bundle in the backend.
  * @hidden
  */
-export const LOCAL_CHUNKS_ONLY: Platform[] = ["poki", "yandex", "crazygames"];
+export const LOCAL_CHUNKS_ONLY: Platform[] = ["poki", "yandex"];
 
 /**
  * Different endpoints for Wortal API. Always ends with a slash.
