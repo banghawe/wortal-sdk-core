@@ -1,11 +1,8 @@
 import { AuthPayload } from "../../auth/interfaces/auth-payload";
 import { AuthResponse } from "../../auth/interfaces/auth-response";
-import { AuthResponse_CrazyGames } from "../../auth/interfaces/crazygames-auth";
 import { initializationError, notSupported, rethrowError_CrazyGames } from "../../errors/error-handler";
-import { Error_CrazyGames } from "../../errors/types/crazygames-error-types";
 import Wortal from "../../index";
 import { CrazyGamesPlayer } from "../../player/classes/crazygames-player";
-import { ICrazyGamesPlayer } from "../../player/interfaces/crazygames-player";
 import { onPauseFunctions } from "../../utils/wortal-utils";
 import { CoreBase } from "../core-base";
 import { API_URL, SDK_SRC, WORTAL_API } from "../../data/core-data";
