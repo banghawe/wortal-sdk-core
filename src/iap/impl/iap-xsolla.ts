@@ -189,37 +189,6 @@ export class IAPXsolla extends IAPBase {
                 })
 
                 Wortal.iap._payStationWidget.open();
-
-                // const paymentUrl = sandbox ? `https://sandbox-secure.xsolla.com/paystation4/?token=${response.token}` : `https://secure.xsolla.com/paystation4/?token=${response.token}`;
-                // const paymentWindow = window.open(paymentUrl, "payment", "popup");
-    
-                // window.addEventListener('message', receiveMessage, false);
-    
-                // async function receiveMessage(event: any) {
-                //     if (event.source !== paymentWindow) {
-                //         return;
-                //     }
-
-                //     const data = JSON.parse(event.data);
-                //     console.log(data);
-    
-                //     if (data.command === 'status') {
-                //         const orderStatus = data.data.paymentInfo.status;
-                //         if (orderStatus === 'done' || orderStatus === 'paid' || orderStatus === 'delivering') {
-                //             resolve({
-                //                 productID: purchase.productID,
-                //                 purchaseToken: purchase.productID,
-                //                 purchaseTime: new Date().toJSON(),
-                //                 signedRequest: response.token,
-                //                 paymentID: response.order_id.toString(),
-                //             });
-                //         } else if(orderStatus === 'troubled') {
-                //             reject(new Error('payment cancelled'));
-                //         }
-                        
-                //         window.removeEventListener('message', receiveMessage);
-                //     }
-                // }
             } catch (error) {
                 reject(error); // Reject the promise if any error occurs
             }
