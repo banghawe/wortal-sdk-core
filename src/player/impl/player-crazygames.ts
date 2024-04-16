@@ -1,13 +1,11 @@
 import { API_URL, WORTAL_API } from "../../data/core-data";
-import { notSupported, operationFailed, rethrowError_CrazyGames } from "../../errors/error-handler";
-import { Error_CrazyGames } from "../../errors/types/crazygames-error-types";
+import { notSupported, rethrowError_CrazyGames } from "../../errors/error-handler";
 import Wortal from "../../index";
 import { ConnectedPlayer } from "../classes/connected-player";
 import { ConnectedPlayerPayload } from "../interfaces/connected-player-payload";
 import { SignedASID } from "../interfaces/facebook-player";
 import { SignedPlayerInfo } from "../interfaces/signed-player-info";
 import { PlayerBase } from "../player-base";
-import { fetchSaveData, patchSaveData } from "../../utils/waves-api";
 import { CrazyGamesSDK } from "../../core/interfaces/crazygames-sdk";
 
 
@@ -41,16 +39,13 @@ export class PlayerCrazyGames extends PlayerBase {
     }
 
     protected getTokenAsyncImpl(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const callback = (error: Error_CrazyGames, token: string) => {
-                if (error) {
-                    reject(rethrowError_CrazyGames(error, WORTAL_API.PLAYER_GET_TOKEN_ASYNC, API_URL.PLAYER_GET_TOKEN_ASYNC));
-                } else {
-                    resolve(token);
-                }
-            };
-
-            (Wortal._internalPlatformSDK as CrazyGamesSDK).user.getUserToken(callback);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const token = await Wortal._internalPlatformSDK.user.getUserToken();
+                resolve(token);
+            } catch(error: any) {
+                reject(rethrowError_CrazyGames(error, WORTAL_API.PLAYER_GET_TOKEN_ASYNC, API_URL.PLAYER_GET_TOKEN_ASYNC));
+            }
         });
     }
 
