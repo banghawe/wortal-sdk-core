@@ -1,6 +1,5 @@
 import { rethrowError_CrazyGames } from "../../errors/error-handler";
 import { ErrorMessage } from "../../errors/interfaces/error-message";
-import { Error_CrazyGames } from "../../errors/types/crazygames-error-types";
 import Wortal from "../../index";
 import { delayUntilConditionMet, generateRandomID } from "../../utils/wortal-utils";
 import { ICrazyGamesPlayer } from "../interfaces/crazygames-player";
@@ -72,31 +71,22 @@ export class CrazyGamesPlayer extends Player {
 
     private _checkIsUserAPIAvailable(): Promise<boolean> {
         return new Promise((resolve) => {
-            const callback = (error: Error_CrazyGames, isAvailable: boolean) => {
-                if (error) {
-                    rethrowError_CrazyGames(error, "isUserAccountAvailable");
-                } else {
-                    Wortal._log.debug("User API available: ", isAvailable);
-                    resolve(isAvailable);
-                }
-            };
-
-            Wortal._internalPlatformSDK.user.isUserAccountAvailable(callback);
+            const isAvailable = Wortal._internalPlatformSDK.user.isUserAccountAvailable;
+            Wortal._log.debug("User API available: ", isAvailable);
+            resolve(isAvailable);
         });
     }
 
     private _fetchCrazyGamesPlayer(): Promise<any> {
-        return new Promise((resolve) => {
-            const callback = (error: Error_CrazyGames, player: ICrazyGamesPlayer) => {
-                if (error) {
-                    rethrowError_CrazyGames(error, "getUser");
-                } else {
-                    Wortal._log.debug("CrazyGames player fetched:", player);
-                    resolve(player);
-                }
-            };
-
-            Wortal._internalPlatformSDK.user.getUser(callback);
+        return new Promise(async (resolve) => {
+            try {
+                let player: ICrazyGamesPlayer
+                player = await Wortal._internalPlatformSDK.user.getUser();
+                Wortal._log.debug("CrazyGames player fetched:", player);
+                resolve(player);
+            } catch (error: any) {
+                rethrowError_CrazyGames(error, "getUser");
+            }
         });
     }
 

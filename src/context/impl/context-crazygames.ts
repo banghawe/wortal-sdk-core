@@ -52,15 +52,12 @@ export class ContextCrazyGames extends ContextBase {
 
     protected shareLinkAsyncImpl(payload: LinkSharePayload): Promise<string | void> {
         return new Promise((resolve, reject) => {
-            const callback = (error: Error_CrazyGames, link: string) => {
-                if (error) {
-                    reject(rethrowError_CrazyGames(error, WORTAL_API.CONTEXT_SHARE_LINK_ASYNC, API_URL.CONTEXT_SHARE_LINK_ASYNC));
-                } else {
-                    resolve(link);
-                }
-            };
-
-            Wortal._internalPlatformSDK.game.inviteLink(payload.data, callback);
+            const link = Wortal._internalPlatformSDK.game.inviteLink(payload.data);
+            try {
+                resolve(link);
+            } catch (error: any) {
+                reject(rethrowError_CrazyGames(error, WORTAL_API.CONTEXT_SHARE_LINK_ASYNC, API_URL.CONTEXT_SHARE_LINK_ASYNC));
+            }
         });
     }
 
